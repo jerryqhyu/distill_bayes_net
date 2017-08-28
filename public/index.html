@@ -196,23 +196,23 @@
     var curve = GaussianCurve(0, 1, d3.select("#curve"));
     var draw = curve.drawLine
     var update = curve.update
-    var sdScaler = d3.scaleLinear().domain([0,2]).range([0.5,1.5])
+    var sdScaler = d3.scaleLinear().domain([0,3]).range([0.5,2.5])
 
     var sliderc = sliderGen([230, 40])
-    .ticks([0,5,10])
-    .ticktitles( function(d,i) { return ["-5", "0", "5"][i]})
+    .ticks([0,5,10,15,20])
+    .ticktitles( function(d,i) { return ["-10", "-5", "0", "5", "10"][i]})
     .change( function (i) {
-        d3.select("#sliderTri").selectAll(".figtext").html("Mean μ = " + (getmean()-5).toPrecision(2) )
-        update(getmean()-5, sdScaler(getsd()))
+        d3.select("#sliderTri").selectAll(".figtext").html("Mean μ = " + (getmean()-10).toPrecision(2) )
+        update(getmean()-10, sdScaler(getsd()))
     } )
-    .startxval(5)
+    .startxval(10)
     .cRadius(7)
     .shifty(-12)
     .margins(20,20)
 
     var sliderd = sliderGen([230, 40])
-    .ticks([0,1,2])
-    .ticktitles( function(d,i) { return ["0.5", "1", "1.5"][i]})
+    .ticks([0,1,2,3,4])
+    .ticktitles( function(d,i) { return ["0.5", "1", "1.5", "2", "2.5"][i]})
     .change( function (i) {
         d3.select("#sliderQuad").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2) )
         update(getmean()-5, sdScaler(getsd()))

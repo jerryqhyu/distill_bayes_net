@@ -1,6 +1,6 @@
 var w = 984
 var h = 300
-var xScale = d3.scaleLinear().domain([-10,10]).range([0,w])
+var xScale = d3.scaleLinear().domain([-12,12]).range([0,w])
 var yScale = d3.scaleLinear().domain([-0.15,0.5]).range([h,0])
 var lineVariable = d3.line()
 .x(function(d) {
