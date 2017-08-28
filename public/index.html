@@ -196,7 +196,7 @@
     var curve = GaussianCurve(0, 1, d3.select("#curve"));
     var draw = curve.drawLine
     var update = curve.update
-    var sdScaler = d3.scaleLinear().domain([0,3]).range([0.5,2.5])
+    var sdScaler = d3.scaleLinear().domain([0,4]).range([0.5,2.5])
 
     var sliderc = sliderGen([230, 40])
     .ticks([0,5,10,15,20])
