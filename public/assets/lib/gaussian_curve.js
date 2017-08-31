@@ -1,37 +1,37 @@
-var w = 984
-var h = 300
-var xScale = d3.scaleLinear().domain([-12,12]).range([0,w])
-var yScale = d3.scaleLinear().domain([-0.15,0.5]).range([h,0])
-var lineVariable = d3.line()
-.x(function(d) {
-    return xScale(d.x);
-})
-.y(function(d) {
-    return yScale(d.y);
-})
-var lineFixed = d3.line()
-.x(function(d) {
-    return xScale(d.x);
-})
-.y(function(d) {
-    return yScale(d.y);
-})
-var lineKL = d3.line()
-.x(function(d) {
-    return xScale(d.x);
-})
-.y(function(d) {
-    return yScale(d.y);
-})
-var lineJS = d3.line()
-.x(function(d) {
-    return xScale(d.x);
-})
-.y(function(d) {
-    return yScale(d.y);
-})
-
 function GaussianCurve(mean, sd, div) {
+
+    var w = 984
+    var h = 300
+    var xScale = d3.scaleLinear().domain([-12,12]).range([0,w])
+    var yScale = d3.scaleLinear().domain([-0.15,0.5]).range([h,0])
+    var lineVariable = d3.line()
+    .x(function(d) {
+        return xScale(d.x);
+    })
+    .y(function(d) {
+        return yScale(d.y);
+    })
+    var lineFixed = d3.line()
+    .x(function(d) {
+        return xScale(d.x);
+    })
+    .y(function(d) {
+        return yScale(d.y);
+    })
+    var lineKL = d3.line()
+    .x(function(d) {
+        return xScale(d.x);
+    })
+    .y(function(d) {
+        return yScale(d.y);
+    })
+    var lineJS = d3.line()
+    .x(function(d) {
+        return xScale(d.x);
+    })
+    .y(function(d) {
+        return yScale(d.y);
+    })
 
     var state_mean = mean;
     var state_sd = sd;
@@ -115,7 +115,7 @@ function GaussianCurve(mean, sd, div) {
         .attr('fill', "darkslategray")
         .attr('opacity', 0.35)
         svg.append('path')
-        .attr('d', lineKL(data.js))
+        .attr('d', lineJS(data.js))
         .attr('stroke', "darkorange")
         .attr('stroke-width', 1)
         .attr('fill', "darkorange")
@@ -147,7 +147,7 @@ function GaussianCurve(mean, sd, div) {
         .attr('fill', "darkslategray")
         .attr('opacity', 0.35)
         svg.append('path')
-        .attr('d', lineKL(data.js))
+        .attr('d', lineJS(data.js))
         .attr('stroke', "darkorange")
         .attr('stroke-width', 1)
         .attr('fill', "darkorange")

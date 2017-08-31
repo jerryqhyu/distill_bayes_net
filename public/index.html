@@ -4,7 +4,6 @@
 <script src="https://distill.pub/template.v1.js"></script>
 
 <dt-article class="centered">
-
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <script src="assets/lib/lib.js"></script>
     <script src="assets/utils.js"></script>
@@ -135,23 +134,35 @@
     </figure>
     <figure style = "position:relative; width:984px; height:400px;">
         <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <div id="sliderTri" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
+        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
         </div>
-        <div id="sliderQuad" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
+        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
         </div>
         <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
             If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the areas. Do these measures agree?
         </figcaption>
     </figure>
+    <figure style = "position:relative; width:984px; height:400px;">
+        <div id="nn_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <button type="button" onclick="net.train()">Train</button>
+        <button type="button">Reset</button>
+        <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            How a 3 layer neural network fit the sine curve when it observes full data.
+        </figcaption>
+    </figure>
+
 
     <script src="assets/lib/gaussian_curve.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
+    <script src="assets/lib/nn_full.js"></script>
+    <script src="assets/lib/convnet_min.js"></script>
     <script src="assets/iterates.js"></script>
 
     <script>
 
+    //THE DIAGRAM FROM MOMENTUM
     var iterControl = genIterDiagram(bananaf, [1,1/3], [[-2,2],[2/3 + 0.4,-2/3 + 0.4]])
     .alpha(0.003)
     .beta(0)
@@ -193,6 +204,7 @@
 
     iterChange(getalpha(), getbeta(), getw0() )
 
+    //DIVERGENCES
     var curve = GaussianCurve(0, 1, d3.select("#curve"));
     var draw = curve.drawLine
     var update = curve.update
@@ -202,7 +214,7 @@
     .ticks([0,5,10,15,20])
     .ticktitles( function(d,i) { return ["-10", "-5", "0", "5", "10"][i]})
     .change( function (i) {
-        d3.select("#sliderTri").selectAll(".figtext").html("Mean μ = " + (getmean()-10).toPrecision(2) )
+        d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean()-10).toPrecision(2) )
         update(getmean()-10, sdScaler(getsd()))
     } )
     .startxval(10)
@@ -213,19 +225,23 @@
     var sliderd = sliderGen([230, 40])
     .ticks([0,1,2,3,4])
     .ticktitles( function(d,i) { return ["0.5", "1", "1.5", "2", "2.5"][i]})
-    .change( function (i) {
-        d3.select("#sliderQuad").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2) )
-        update(getmean()-5, sdScaler(getsd()))
+    .change( function (i) {2
+        d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2) )
+        update(getmean()-10, sdScaler(getsd()))
     } )
     .cRadius(7)
     .shifty(-12)
     .startxval(1)
     .margins(20,20)
 
-    var getmean = sliderc( d3.select("#sliderTri")).xval
-    var getsd  = sliderd( d3.select("#sliderQuad")).xval
+    var getmean = sliderc( d3.select("#slider3")).xval
+    var getsd  = sliderd( d3.select("#slider4")).xval
     draw();
 
+
+    //training NN on sine
+    var net = nn_full(d3.select("#nn_full"));
+    net.draw_line()
     </script>
 
 </dt-article>
