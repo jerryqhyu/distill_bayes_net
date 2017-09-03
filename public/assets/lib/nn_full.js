@@ -1,5 +1,6 @@
 function nn_full(div) {
 
+    //svg properties
     var w = 984
     var h = 300
     var xScale = d3.scaleLinear().domain([-5,5]).range([0,w])
@@ -42,7 +43,7 @@ function nn_full(div) {
     // l2_decay: 0, momentum: 0.9, batch_size: 50,
     // l1_decay: 0});
 
-
+    //diagram parameters
     var step_size = 0.1;
     var div = div;
     var intDiv = div.style("width", w + "px")
@@ -51,6 +52,9 @@ function nn_full(div) {
     var svg = div.selectAll("svg").data([0]);
     svg.attr("width", w)
     .attr("height", h)
+
+    //interval controller
+    var interval_id = -1;
 
     function get_points() {
         var data = {};
@@ -71,28 +75,37 @@ function nn_full(div) {
 
     function drawLine() {
         data = get_points();
+        //sine curve
         svg.append('path')
         .attr('d', line_true(data.real))
         .attr('stroke', "black")
         .attr('stroke-width', 2)
-        .attr('fill', "none")
+        .attr('fill', "none");
+
+        //NN prediction
         svg.append('path')
         .attr('d', line_predicted(data.pred))
-        .attr('stroke', "red")
+        .attr('stroke', "darkorange")
         .attr('stroke-width', 2)
         .attr('fill', "none")
+        .attr('opacity', 0.9);
+
+        //training data points
         for (var j = 0; j < train_points.length; j++) {
             svg.append("circle")
             .attr("cx", xScale(train_points[j]))
             .attr("cy", yScale(Math.sin(train_points[j])+noise[j]))
-            .attr("r", 2)
-            .attr("fill", "red");
+            .attr("r", 3)
+            .attr("fill", "red")
+            .attr("opacity", 0.7);
         }
     }
 
     function train() {
-        drawLine();
-        setInterval(train_epoch, 10);
+        if (interval_id == -1) {
+            drawLine();
+            interval_id = setInterval(train_epoch, 10);
+        }
     }
 
     function train_epoch() {
@@ -105,8 +118,27 @@ function nn_full(div) {
         drawLine();
     }
 
+    function reset() {
+        layer_defs = [];
+        layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
+        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'regression', num_neurons:1});
+        net = new convnetjs.Net();
+        net.makeLayers(layer_defs);
+        trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
+        svg.selectAll("*").remove();
+        drawLine();
+        if (interval_id != -1) {
+            clearInterval(interval_id)
+            interval_id = -1
+        }
+    }
+
     return {
         train: train,
         draw_line: drawLine,
+        reset: reset
     };
 }
