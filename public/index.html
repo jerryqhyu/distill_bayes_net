@@ -157,7 +157,7 @@
     <script src="assets/lib/gaussian_curve.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/nn_full.js"></script>
-    <script src="assets/lib/convnet_min.js"></script>
+    <script src="assets/lib/convnet.js"></script>
     <script src="assets/iterates.js"></script>
 
     <script>
@@ -225,7 +225,7 @@
     var sliderd = sliderGen([230, 40])
     .ticks([0,1,2,3,4])
     .ticktitles( function(d,i) { return ["0.5", "1", "1.5", "2", "2.5"][i]})
-    .change( function (i) {2
+    .change( function (i) {
         d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2) )
         update(getmean()-10, sdScaler(getsd()))
     } )
