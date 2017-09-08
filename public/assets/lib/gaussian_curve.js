@@ -91,13 +91,11 @@ function GaussianCurve(mean, sd, div) {
         data.fixed = fixed;
         data.kl = kl;
         data.js = js;
-        console.log(data);
         return data;
     }
 
     function drawLine() {
         data = getGaussianFunctionPoints()
-        console.log(data);
         svg.append('path')
         .attr('d', lineVariable(data.variable))
         .attr('stroke', "black")

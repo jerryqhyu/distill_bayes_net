@@ -48,7 +48,6 @@ function WeirdCurve(div) {
             fixed.push({x:i,y:f});
             discrepancy.push({x:i,y:d});
         }
-        console.log(data);
         data.push(variable);
         data.push(fixed);
         data.push(discrepancy);
@@ -72,7 +71,6 @@ function WeirdCurve(div) {
                 .attr('stroke', "black")
                 .attr('stroke-width', 3)
                 .attr('fill', "white")
-        console.log("WTF");
     }
 
     function redrawLine(mean, sd) {

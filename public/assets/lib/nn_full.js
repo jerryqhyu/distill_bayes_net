@@ -33,7 +33,7 @@ function nn_full(div) {
     layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
     layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
     layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
-    layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+    layer_defs.push({type:'fc', num_neurons:2, activation:'tanh'});
     layer_defs.push({type:'regression', num_neurons:1});
     var net = new convnetjs.Net();
     net.makeLayers(layer_defs);
@@ -103,6 +103,7 @@ function nn_full(div) {
 
     function train() {
         if (interval_id == -1) {
+            net.freezeAllButLast();
             drawLine();
             interval_id = setInterval(train_epoch, 10);
         }
@@ -114,6 +115,11 @@ function nn_full(div) {
             x = new convnetjs.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise[j]]);
         }
+        weights = net.getLayer(7).filters[0].w;
+        console.log(weights);
+        //not yet implemented
+        //plot_weights(weights);
+
         svg.selectAll("*").remove();
         drawLine();
     }
@@ -123,7 +129,7 @@ function nn_full(div) {
         layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
         layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
-        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'fc', num_neurons:2, activation:'tanh'});
         layer_defs.push({type:'regression', num_neurons:1});
         net = new convnetjs.Net();
         net.makeLayers(layer_defs);
