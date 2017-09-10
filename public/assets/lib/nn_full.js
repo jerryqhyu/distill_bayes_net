@@ -28,8 +28,14 @@ function nn_full(div) {
         0.26032293,  0.05870727, -0.02125257, -0.12151286, -0.02832058,
         0.03619698, -0.00548018, -0.18057678,  0.23171462,  0.31800257];
 
+    //hard coded optimum value
+    var opt_layer1 = [[1.194], [-0.246], [-1.272], [-0.278]];
+    var opt_layer3 = [[1.039, 1.153, 0.349, 0.187], [-0.443, 0.571, -1.195, -0.698], [0.967, 0.569, 0.402, 0.6], [0.050, -1.268, -1.835, 0.093]];
+    var opt_layer5 = [[-0.537, 0.544, -0.548, -0.133], [0.468, 0.571, 0.696, 0.972]];
+    var opt_layer7 = [[-1,1]];
     //define a neural network 3*3
     var layer_defs = [];
+    var epoch = 0;
     layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
     layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
     layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
@@ -38,6 +44,10 @@ function nn_full(div) {
     var net = new convnetjs.Net();
     net.makeLayers(layer_defs);
     var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
+    net.getLayer(1).setWeights(opt_layer1);
+    net.getLayer(3).setWeights(opt_layer3);
+    net.getLayer(5).setWeights(opt_layer5);
+    net.getLayer(7).setWeights(opt_layer7);
 
     // var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
     // l2_decay: 0, momentum: 0.9, batch_size: 50,
@@ -115,13 +125,23 @@ function nn_full(div) {
             x = new convnetjs.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise[j]]);
         }
-        weights = net.getLayer(7).filters[0].w;
-        console.log(weights);
+        if (epoch === 3000) {
+            for (var i = 0; i < net.layers.length; i++) {
+                layer = net.getLayer(i);
+                if (layer.filters) {
+                    console.log("This is layer" + i);
+                    for (var j = 0; j < layer.filters.length; j++) {
+                        console.log(layer.filters[j].w);
+                    }
+                }
+            }
+        }
         //not yet implemented
         //plot_weights(weights);
 
         svg.selectAll("*").remove();
         drawLine();
+        epoch++;
     }
 
     function reset() {
@@ -133,6 +153,11 @@ function nn_full(div) {
         layer_defs.push({type:'regression', num_neurons:1});
         net = new convnetjs.Net();
         net.makeLayers(layer_defs);
+        net.getLayer(1).setWeights(opt_layer1);
+        net.getLayer(3).setWeights(opt_layer3);
+        net.getLayer(5).setWeights(opt_layer5);
+        net.getLayer(7).setWeights(opt_layer7);
+
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
         svg.selectAll("*").remove();
         drawLine();
@@ -140,6 +165,7 @@ function nn_full(div) {
             clearInterval(interval_id)
             interval_id = -1
         }
+        epoch = 0;
     }
 
     return {

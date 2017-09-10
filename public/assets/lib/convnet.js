@@ -597,6 +597,11 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     freeze: function() {
         this.frozen = true;
     },
+    setWeights: function(w_list) {
+        for (var i = 0; i < this.filters.length; i++) {
+            this.filters[i].w = w_list[i];
+        }
+    },
     toJSON: function() {
       var json = {};
       json.out_depth = this.out_depth;
