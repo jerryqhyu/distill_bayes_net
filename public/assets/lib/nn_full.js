@@ -1,23 +1,29 @@
 function nn_full(div) {
 
     //svg properties
-    var w = 984
+    var w = 684
     var h = 300
-    var xScale = d3.scaleLinear().domain([-5,5]).range([0,w])
-    var yScale = d3.scaleLinear().domain([-2,2]).range([h,0])
+    var w_2 = 300
+    var h_2 = 300
+    var x_scale_left = d3.scaleLinear().domain([-5,5]).range([0,w])
+    var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
+
+    var x_scale_right = d3.scaleLinear().domain([-3,3]).range([0,w_2])
+    var y_scale_right = d3.scaleLinear().domain([-2,2]).range([h,0])
+
     var line_true = d3.line()
     .x(function(d) {
-        return xScale(d.x);
+        return x_scale_left(d.x);
     })
     .y(function(d) {
-        return yScale(d.y);
+        return y_scale_left(d.y);
     })
     var line_predicted = d3.line()
     .x(function(d) {
-        return xScale(d.x);
+        return x_scale_left(d.x);
     })
     .y(function(d) {
-        return yScale(d.y);
+        return y_scale_left(d.y);
     })
     var train_points = [-2.9, -2.7, -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, -0.5, -0.3, -0.1, 0.1,
         0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9];
@@ -65,12 +71,16 @@ function nn_full(div) {
     //diagram parameters
     var step_size = 0.1;
     var div = div;
-    var intDiv = div.style("width", w + "px")
+    var intDiv = div.style("width", w+w_2 + "px")
     .style("height", h + "px")
-    div.selectAll("svg").data([0]).enter().append("svg");
-    var svg = div.selectAll("svg").data([0]);
+    var svg = div.append("svg");
+    var svg2 = div.append("svg");
+    // var svg = div.selectAll("svg").data([0]);
+    // var svg2 = div.selectAll("svg").data([1]);
     svg.attr("width", w)
-    .attr("height", h)
+    .attr("height", h);
+    svg2.attr("width", w_2)
+    .attr("height", h_2);
 
     //interval controller
     var interval_id = -1;
@@ -90,6 +100,10 @@ function nn_full(div) {
         data.real = real;
         data.pred = pred;
         return data;
+    }
+
+    function get_last_two_weights() {
+        return net.getLayer(7).filters[0].w;
     }
 
     function drawLine() {
@@ -112,18 +126,31 @@ function nn_full(div) {
         //training data points
         for (var j = 0; j < train_points.length; j++) {
             svg.append("circle")
-            .attr("cx", xScale(train_points[j]))
-            .attr("cy", yScale(Math.sin(train_points[j])+noise[j]))
+            .attr("cx", x_scale_left(train_points[j]))
+            .attr("cy", y_scale_left(Math.sin(train_points[j])+noise[j]))
             .attr("r", 3)
             .attr("fill", "red")
             .attr("opacity", 0.7);
         }
     }
 
+    function drawWeight() {
+        weights = get_last_two_weights();
+        console.log(weights);
+        svg2.append("circle")
+        .attr("cx", x_scale_right(weights[0]))
+        .attr("cy", y_scale_right(weights[1]))
+        .attr("r", 5)
+        .attr("fill", "black")
+        .attr("opacity", 1);
+    }
+
     function train() {
+        console.log("started training");
         if (interval_id == -1) {
             net.freezeAllButLast();
             drawLine();
+            drawWeight();
             interval_id = setInterval(train_epoch, 10);
         }
     }
@@ -151,7 +178,9 @@ function nn_full(div) {
         //plot_weights(weights);
 
         svg.selectAll("*").remove();
+        svg2.selectAll("*").remove();
         drawLine();
+        drawWeight();
         epoch++;
     }
 
@@ -175,10 +204,12 @@ function nn_full(div) {
 
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
         svg.selectAll("*").remove();
+        svg2.selectAll("*").remove();
         drawLine();
+        drawWeight();
         if (interval_id != -1) {
-            clearInterval(interval_id)
-            interval_id = -1
+            clearInterval(interval_id);
+            interval_id = -1;
         }
         epoch = 0;
     }
@@ -186,6 +217,7 @@ function nn_full(div) {
     return {
         train: train,
         draw_line: drawLine,
+        draw_weight: drawWeight,
         reset: reset
     };
 }
