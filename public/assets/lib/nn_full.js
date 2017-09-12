@@ -5,9 +5,12 @@ function nn_full(div) {
     var h = 300
     var w_2 = 300
     var h_2 = 300
+
+    //scale for diagram on the left
     var x_scale_left = d3.scaleLinear().domain([-5,5]).range([0,w])
     var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
 
+    //scale for diagram on the right
     var x_scale_right = d3.scaleLinear().domain([-3,3]).range([0,w_2])
     var y_scale_right = d3.scaleLinear().domain([-2,2]).range([h,0])
 
@@ -25,6 +28,8 @@ function nn_full(div) {
     .y(function(d) {
         return y_scale_left(d.y);
     })
+
+    //hard coded points for consistentcy
     var train_points = [-2.9, -2.7, -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, -0.5, -0.3, -0.1, 0.1,
         0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9];
     var noise = [ 0.10408689,  0.10999347, -0.21092732,  0.21040211, -0.05441124,
@@ -55,10 +60,11 @@ function nn_full(div) {
     var net = new convnetjs.Net();
     net.makeLayers(layer_defs);
     var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
+    //set all parameters
     net.getLayer(1).setWeights(opt_layer1_w);
     net.getLayer(3).setWeights(opt_layer3_w);
     net.getLayer(5).setWeights(opt_layer5_w);
-    // net.getLayer(7).setWeights(opt_layer7_w);
+
     net.getLayer(1).setBiases(opt_layer1_b);
     net.getLayer(3).setBiases(opt_layer3_b);
     net.getLayer(5).setBiases(opt_layer5_b);
@@ -106,7 +112,7 @@ function nn_full(div) {
         return net.getLayer(7).filters[0].w;
     }
 
-    function drawLine() {
+    function draw_line() {
         data = get_points();
         //sine curve
         svg.append('path')
@@ -134,9 +140,8 @@ function nn_full(div) {
         }
     }
 
-    function drawWeight() {
+    function draw_weight() {
         weights = get_last_two_weights();
-        console.log(weights);
         svg2.append("circle")
         .attr("cx", x_scale_right(weights[0]))
         .attr("cy", y_scale_right(weights[1]))
@@ -145,12 +150,20 @@ function nn_full(div) {
         .attr("opacity", 1);
     }
 
+    function clear() {
+        svg.selectAll("*").remove();
+        svg2.selectAll("*").remove();
+    }
+
+    function draw() {
+        draw_line();
+        draw_weight();
+    }
+
     function train() {
-        console.log("started training");
         if (interval_id == -1) {
+            console.log("started training");
             net.freezeAllButLast();
-            drawLine();
-            drawWeight();
             interval_id = setInterval(train_epoch, 10);
         }
     }
@@ -161,26 +174,22 @@ function nn_full(div) {
             x = new convnetjs.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise[j]]);
         }
-        if (epoch === 5000) {
-            for (var i = 0; i < net.layers.length; i++) {
-                layer = net.getLayer(i);
-                if (layer.filters) {
-                    console.log("This is layer" + i);
-                    console.log("Biases");
-                    console.log(layer.biases.w);
-                    for (var j = 0; j < layer.filters.length; j++) {
-                        console.log(layer.filters[j].w);
-                    }
-                }
-            }
-        }
-        //not yet implemented
-        //plot_weights(weights);
+        // if (epoch === 5000) {
+        //     for (var i = 0; i < net.layers.length; i++) {
+        //         layer = net.getLayer(i);
+        //         if (layer.filters) {
+        //             console.log("This is layer" + i);
+        //             console.log("Biases");
+        //             console.log(layer.biases.w);
+        //             for (var j = 0; j < layer.filters.length; j++) {
+        //                 console.log(layer.filters[j].w);
+        //             }
+        //         }
+        //     }
+        // }
 
-        svg.selectAll("*").remove();
-        svg2.selectAll("*").remove();
-        drawLine();
-        drawWeight();
+        clear();
+        draw();
         epoch++;
     }
 
@@ -203,10 +212,8 @@ function nn_full(div) {
         net.getLayer(7).setBiases(opt_layer7_b);
 
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
-        svg.selectAll("*").remove();
-        svg2.selectAll("*").remove();
-        drawLine();
-        drawWeight();
+        clear();
+        draw();
         if (interval_id != -1) {
             clearInterval(interval_id);
             interval_id = -1;
@@ -216,8 +223,7 @@ function nn_full(div) {
 
     return {
         train: train,
-        draw_line: drawLine,
-        draw_weight: drawWeight,
+        draw: draw,
         reset: reset
     };
 }
