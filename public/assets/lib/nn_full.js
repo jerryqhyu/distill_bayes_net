@@ -29,10 +29,15 @@ function nn_full(div) {
         0.03619698, -0.00548018, -0.18057678,  0.23171462,  0.31800257];
 
     //hard coded optimum value
-    var opt_layer1 = [[1.194], [-0.246], [-1.272], [-0.278]];
-    var opt_layer3 = [[1.039, 1.153, 0.349, 0.187], [-0.443, 0.571, -1.195, -0.698], [0.967, 0.569, 0.402, 0.6], [0.050, -1.268, -1.835, 0.093]];
-    var opt_layer5 = [[-0.537, 0.544, -0.548, -0.133], [0.468, 0.571, 0.696, 0.972]];
-    var opt_layer7 = [[-1,1]];
+    var opt_layer1_w = [[0.4192284525818726], [-4.632616835554741], [3.9243368339649196], [3.007595350590139]];
+    var opt_layer1_b = [0.7387670254211024, 2.7824153174038213, 0.2444733033082039, 0.501684733161062];
+    var opt_layer3_w = [[-2.116031388782301, -0.2678318154538704, -0.32568638911346537, -0.48299422168750644], [0.9719684653689481, -2.915204139102752, 2.389421278369706, 0.7084161317375112], [1.361639935467432, 0.4988850894321718, -0.746099613716224, -0.6611748808451762], [-0.3633784464695688, -4.356958010471985, 0.33555515720941714, 1.7905782720048318]];
+    var opt_layer3_b = [0.11184642289580203, -0.8811859534301382, 0.08163456672122071, -0.3890155005638783];
+    var opt_layer5_w = [[1.1441634172101276, -0.7957053928418958, -3.741088356272393, -1.0003872580823125], [3.43546769606019, -0.5556880998853753, -0.587307130090077, 0.34996873441168774]];
+    var opt_layer5_b = [0.8820188720910388, -0.0033133460236606177];
+    var opt_layer7_w = [[1.3540954016648952, -0.9209768713048309]];
+    var opt_layer7_b = [0.08352788520153473];
+
     //define a neural network 3*3
     var layer_defs = [];
     var epoch = 0;
@@ -44,10 +49,14 @@ function nn_full(div) {
     var net = new convnetjs.Net();
     net.makeLayers(layer_defs);
     var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
-    net.getLayer(1).setWeights(opt_layer1);
-    net.getLayer(3).setWeights(opt_layer3);
-    net.getLayer(5).setWeights(opt_layer5);
-    net.getLayer(7).setWeights(opt_layer7);
+    net.getLayer(1).setWeights(opt_layer1_w);
+    net.getLayer(3).setWeights(opt_layer3_w);
+    net.getLayer(5).setWeights(opt_layer5_w);
+    // net.getLayer(7).setWeights(opt_layer7_w);
+    net.getLayer(1).setBiases(opt_layer1_b);
+    net.getLayer(3).setBiases(opt_layer3_b);
+    net.getLayer(5).setBiases(opt_layer5_b);
+    net.getLayer(7).setBiases(opt_layer7_b);
 
     // var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
     // l2_decay: 0, momentum: 0.9, batch_size: 50,
@@ -125,11 +134,13 @@ function nn_full(div) {
             x = new convnetjs.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise[j]]);
         }
-        if (epoch === 3000) {
+        if (epoch === 5000) {
             for (var i = 0; i < net.layers.length; i++) {
                 layer = net.getLayer(i);
                 if (layer.filters) {
                     console.log("This is layer" + i);
+                    console.log("Biases");
+                    console.log(layer.biases.w);
                     for (var j = 0; j < layer.filters.length; j++) {
                         console.log(layer.filters[j].w);
                     }
@@ -153,10 +164,14 @@ function nn_full(div) {
         layer_defs.push({type:'regression', num_neurons:1});
         net = new convnetjs.Net();
         net.makeLayers(layer_defs);
-        net.getLayer(1).setWeights(opt_layer1);
-        net.getLayer(3).setWeights(opt_layer3);
-        net.getLayer(5).setWeights(opt_layer5);
-        net.getLayer(7).setWeights(opt_layer7);
+        net.getLayer(1).setWeights(opt_layer1_w);
+        net.getLayer(3).setWeights(opt_layer3_w);
+        net.getLayer(5).setWeights(opt_layer5_w);
+        // net.getLayer(7).setWeights(opt_layer7_w);
+        net.getLayer(1).setBiases(opt_layer1_b);
+        net.getLayer(3).setBiases(opt_layer3_b);
+        net.getLayer(5).setBiases(opt_layer5_b);
+        net.getLayer(7).setBiases(opt_layer7_b);
 
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
         svg.selectAll("*").remove();
