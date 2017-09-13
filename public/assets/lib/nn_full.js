@@ -32,12 +32,20 @@ function nn_full(div) {
     //hard coded points for consistentcy
     var train_points = [-2.9, -2.7, -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, -0.5, -0.3, -0.1, 0.1,
         0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9];
-    var noise = [ 0.10408689,  0.10999347, -0.21092732,  0.21040211, -0.05441124,
+    var validation_points = [-1.01021662, -1.00600723,  0.25150535, -0.64289366, -2.83217944,
+       -1.27447894,  0.72586946,  1.96606265, -2.32743642, -0.43405676,
+        1.30609116,  1.31220319,  2.52755886,  0.49622151,  2.37028589,
+       -2.05782618,  1.05461402,  1.33289417, -1.96113098, -0.38732774];
+    var noise_train = [ 0.10408689,  0.10999347, -0.21092732,  0.21040211, -0.05441124,
         0.32326489, -0.25552701, -0.47457946,  0.02745911,  0.10275629,
         0.22240206,  0.52373514,  0.18365871,  0.07530947, -0.29227835,
         0.18867107,  0.52420313,  0.04456809, -0.24384817,  0.40080137,
         0.26032293,  0.05870727, -0.02125257, -0.12151286, -0.02832058,
         0.03619698, -0.00548018, -0.18057678,  0.23171462,  0.31800257];
+    var noise_validation = [ 0.00282537,  0.14827248,  0.10214164,  0.10019915, -0.28734113,
+        0.15081431,  0.06890339,  0.10747714, -0.27386861, -0.43052074,
+        0.01162471, -0.08062783,  0.10436563,  0.14189259,  0.3117031 ,
+        0.23507118, -0.1050833 ,  0.38510908, -0.02797407,  0.01287228];
 
     //hard coded optimum value
     var opt_layer1_w = [[0.4192284525818726], [-4.632616835554741], [3.9243368339649196], [3.007595350590139]];
@@ -50,25 +58,10 @@ function nn_full(div) {
     var opt_layer7_b = [0.08352788520153473];
 
     //define a neural network 3*3
-    var layer_defs = [];
+    var net = make_preset_net();
     var epoch = 0;
-    layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
-    layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
-    layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
-    layer_defs.push({type:'fc', num_neurons:2, activation:'tanh'});
-    layer_defs.push({type:'regression', num_neurons:1});
-    var net = new convnetjs.Net();
-    net.makeLayers(layer_defs);
     var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
-    //set all parameters
-    net.getLayer(1).setWeights(opt_layer1_w);
-    net.getLayer(3).setWeights(opt_layer3_w);
-    net.getLayer(5).setWeights(opt_layer5_w);
 
-    net.getLayer(1).setBiases(opt_layer1_b);
-    net.getLayer(3).setBiases(opt_layer3_b);
-    net.getLayer(5).setBiases(opt_layer5_b);
-    net.getLayer(7).setBiases(opt_layer7_b);
 
     // var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
     // l2_decay: 0, momentum: 0.9, batch_size: 50,
@@ -88,6 +81,7 @@ function nn_full(div) {
     svg2.attr("width", w_2)
     .attr("height", h_2);
 
+    plot_total_loss();
     //interval controller
     var interval_id = -1;
 
@@ -100,7 +94,7 @@ function nn_full(div) {
         for (var i = -20; i < 20; i+=step_size) {
             real.push({x:i,y:Math.sin(i)});
             x_val = new convnetjs.Vol([i]);
-            var predicted_value = net.forward(x_val);
+            predicted_value = net.forward(x_val);
             pred.push({x:i,y:predicted_value.w[0]});
         }
         data.real = real;
@@ -112,7 +106,7 @@ function nn_full(div) {
         return net.getLayer(7).filters[0].w;
     }
 
-    function draw_line() {
+    function plot_line() {
         data = get_points();
         //sine curve
         svg.append('path')
@@ -133,14 +127,24 @@ function nn_full(div) {
         for (var j = 0; j < train_points.length; j++) {
             svg.append("circle")
             .attr("cx", x_scale_left(train_points[j]))
-            .attr("cy", y_scale_left(Math.sin(train_points[j])+noise[j]))
+            .attr("cy", y_scale_left(Math.sin(train_points[j])+noise_train[j]))
             .attr("r", 3)
             .attr("fill", "red")
             .attr("opacity", 0.7);
         }
+
+        //validation data points
+        for (var k = 0; k < validation_points.length; k++) {
+            svg.append("circle")
+            .attr("cx", x_scale_left(validation_points[k]))
+            .attr("cy", y_scale_left(Math.sin(validation_points[k])+noise_validation[k]))
+            .attr("r", 3)
+            .attr("fill", "teal")
+            .attr("opacity", 0.7);
+        }
     }
 
-    function draw_weight() {
+    function plot_weight() {
         weights = get_last_two_weights();
         svg2.append("circle")
         .attr("cx", x_scale_right(weights[0]))
@@ -150,14 +154,52 @@ function nn_full(div) {
         .attr("opacity", 1);
     }
 
-    function clear() {
-        svg.selectAll("*").remove();
-        svg2.selectAll("*").remove();
+    function plot_total_loss() {
+        var dummy_net = make_preset_net();
+        var color_scale = d3.scaleLinear().domain([0, 2, 15, 80]).range(["darkgreen", "yellow",  "orange", "red"]);
+        var x_val;
+        var total_loss;
+        var true_label;
+        var predicted;
+        var scaled_width = Math.abs(x_scale_right(0.1) - x_scale_right(0)) + 0.1;
+        var scaled_height = Math.abs(y_scale_right(0.1) - y_scale_right(0)) + 0.1;
+
+        for (var w_1 = -3; w_1 < 3; w_1+=0.1) {
+            for (var w_2 = -2; w_2 < 2; w_2+=0.1) {
+                dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
+                total_loss = 0;
+                // for (var i = 0; i < train_points.length; i++) {
+                //     x_val = new convnetjs.Vol([train_points[i]]);
+                //     true_label = Math.sin(train_points[i]) + noise_train[i];
+                //     predicted = dummy_net.forward(x_val).w[0];
+                //     total_loss += (true_label - predicted) * (true_label - predicted);
+                // }
+                for (var j = 0; j < validation_points.length; j++) {
+                    x_val = new convnetjs.Vol([validation_points[j]]);
+                    true_label = Math.sin(validation_points[j]) + noise_validation[j];
+                    predicted = dummy_net.forward(x_val).w[0];
+                    total_loss += (true_label - predicted) * (true_label - predicted);
+                }
+                svg2.append("rect")
+                .attr("x", x_scale_right(w_1))
+                .attr("y", y_scale_right(w_2))
+                .attr("width", scaled_width)
+                .attr("height", scaled_height)
+                .attr("fill", color_scale(total_loss))
+                .attr("opacity", 0.7);
+            }
+        }
     }
 
-    function draw() {
-        draw_line();
-        draw_weight();
+    function clear() {
+        svg.selectAll("*").remove();
+        svg2.selectAll("circle").remove();
+    }
+
+    function plot() {
+        plot_line();
+        plot_weight();
+        // plot_total_loss();
     }
 
     function train() {
@@ -172,7 +214,7 @@ function nn_full(div) {
         var x;
         for (var j = 0; j < train_points.length; j++) {
             x = new convnetjs.Vol([train_points[j]]);
-            trainer.train(x, [Math.sin(train_points[j])+noise[j]]);
+            trainer.train(x, [Math.sin(train_points[j])+noise_train[j]]);
         }
         // if (epoch === 5000) {
         //     for (var i = 0; i < net.layers.length; i++) {
@@ -189,31 +231,35 @@ function nn_full(div) {
         // }
 
         clear();
-        draw();
+        plot();
         epoch++;
     }
 
-    function reset() {
-        layer_defs = [];
+    function make_preset_net() {
+        var layer_defs = [];
         layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
         layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'fc', num_neurons:2, activation:'tanh'});
         layer_defs.push({type:'regression', num_neurons:1});
-        net = new convnetjs.Net();
-        net.makeLayers(layer_defs);
-        net.getLayer(1).setWeights(opt_layer1_w);
-        net.getLayer(3).setWeights(opt_layer3_w);
-        net.getLayer(5).setWeights(opt_layer5_w);
+        var new_net = new convnetjs.Net();
+        new_net.makeLayers(layer_defs);
+        new_net.getLayer(1).setWeights(opt_layer1_w);
+        new_net.getLayer(3).setWeights(opt_layer3_w);
+        new_net.getLayer(5).setWeights(opt_layer5_w);
         // net.getLayer(7).setWeights(opt_layer7_w);
-        net.getLayer(1).setBiases(opt_layer1_b);
-        net.getLayer(3).setBiases(opt_layer3_b);
-        net.getLayer(5).setBiases(opt_layer5_b);
-        net.getLayer(7).setBiases(opt_layer7_b);
+        new_net.getLayer(1).setBiases(opt_layer1_b);
+        new_net.getLayer(3).setBiases(opt_layer3_b);
+        new_net.getLayer(5).setBiases(opt_layer5_b);
+        new_net.getLayer(7).setBiases(opt_layer7_b);
+        return new_net;
+    }
 
+    function reset() {
+        net = make_preset_net();
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
         clear();
-        draw();
+        plot();
         if (interval_id != -1) {
             clearInterval(interval_id);
             interval_id = -1;
@@ -223,7 +269,7 @@ function nn_full(div) {
 
     return {
         train: train,
-        draw: draw,
+        plot: plot,
         reset: reset
     };
 }
