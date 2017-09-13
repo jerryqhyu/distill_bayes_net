@@ -602,6 +602,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
             this.filters[i].w = w_list[i];
         }
     },
+    setBiases:  function(b_list) {
+        this.biases.w = b_list;
+    },
     toJSON: function() {
       var json = {};
       json.out_depth = this.out_depth;
