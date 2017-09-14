@@ -86,7 +86,8 @@ function nn_full(div) {
 
     plot_total_loss();
     //interval controller
-    var interval_id = -1;
+    var currently_training = 0;
+    var was_training = 0;
 
     function get_points() {
         var data = {};
@@ -152,7 +153,7 @@ function nn_full(div) {
         svg2.append("circle")
         .attr("cx", x_scale_right(weights[0]))
         .attr("cy", y_scale_right(weights[1]))
-        .attr("r", 4)
+        .attr("r", 5)
         .attr("fill", "black")
         .attr("opacity", 1)
         .call(d3.drag()
@@ -163,6 +164,11 @@ function nn_full(div) {
 
     function start_drag(d) {
         d3.select(this).raise().classed("active", true);
+        if (currently_training) {
+            was_training = 1;
+        } else {
+            was_training = 0;
+        }
         pause_training();
     }
 
@@ -170,13 +176,17 @@ function nn_full(div) {
         var new_x = d3.event.x;
         var new_y = d3.event.y;
         d3.select(this).attr("cx", new_x).attr("cy", new_y);
-        net.getLayer(7).setWeights([[x_scale_right_inverse(new_x), y_scale_right_inverse(new_y)]])
+        net.getLayer(7).setWeights([[x_scale_right_inverse(new_x), y_scale_right_inverse(new_y)]]);
+        clear();
+        plot();
         console.log(d3.event.x);
     }
 
     function end_drag(d) {
         d3.select(this).raise().classed("active", false);
-        train();
+        if (was_training) {
+            train();
+        }
     }
 
     function plot_total_loss() {
@@ -190,21 +200,14 @@ function nn_full(div) {
         var scaled_height = Math.abs(y_scale_right(0.03) - y_scale_right(0)) + 0.1;
 
         for (var w_1 = -1; w_1 < 3; w_1+=0.03) {
-            for (var w_2 = -2; w_2 < 1; w_2+=0.03) {
-                dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
-                total_loss = 0;
+            for (var w_2 = -1.97; w_2 < 1.03; w_2+=0.03) {
                 // for (var i = 0; i < train_points.length; i++) {
                 //     x_val = new convnetjs.Vol([train_points[i]]);
                 //     true_label = Math.sin(train_points[i]) + noise_train[i];
                 //     predicted = dummy_net.forward(x_val).w[0];
                 //     total_loss += (true_label - predicted) * (true_label - predicted);
                 // }
-                for (var j = 0; j < validation_points.length; j++) {
-                    x_val = new convnetjs.Vol([validation_points[j]]);
-                    true_label = Math.sin(validation_points[j]) + noise_validation[j];
-                    predicted = dummy_net.forward(x_val).w[0];
-                    total_loss += (true_label - predicted) * (true_label - predicted);
-                }
+                total_loss = compute_validation_loss(dummy_net, w_1, w_2);
                 svg2.append("rect")
                 .attr("x", x_scale_right(w_1))
                 .attr("y", y_scale_right(w_2))
@@ -214,6 +217,18 @@ function nn_full(div) {
                 .attr("opacity", 0.7);
             }
         }
+    }
+
+    function compute_validation_loss(dummy_net, w_1, w_2) {
+        total_loss = 0
+        dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
+        for (var j = 0; j < validation_points.length; j++) {
+            x_val = new convnetjs.Vol([validation_points[j]]);
+            true_label = Math.sin(validation_points[j]) + noise_validation[j];
+            predicted = dummy_net.forward(x_val).w[0];
+            total_loss += (true_label - predicted) * (true_label - predicted);
+        }
+        return total_loss;
     }
 
     function clear() {
@@ -228,10 +243,10 @@ function nn_full(div) {
     }
 
     function train() {
-        if (interval_id == -1) {
+        if (!currently_training) {
             console.log("started training");
             net.freezeAllButLast();
-            interval_id = setInterval(train_epoch, 10);
+            currently_training = setInterval(train_epoch, 10);
         }
     }
 
@@ -281,9 +296,9 @@ function nn_full(div) {
     }
 
     function pause_training() {
-        if (interval_id != -1) {
-            clearInterval(interval_id);
-            interval_id = -1;
+        if (currently_training) {
+            clearInterval(currently_training);
+            currently_training = 0;
         }
     }
 
