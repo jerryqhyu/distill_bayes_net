@@ -14,6 +14,9 @@ function nn_full(div) {
     var x_scale_right = d3.scaleLinear().domain([-1,3]).range([0,w_2])
     var y_scale_right = d3.scaleLinear().domain([-2,1]).range([h,0])
 
+    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([-1,3])
+    var y_scale_right_inverse = d3.scaleLinear().domain([h,0]).range([-2,1])
+
     var line_true = d3.line()
     .x(function(d) {
         return x_scale_left(d.x);
@@ -151,7 +154,29 @@ function nn_full(div) {
         .attr("cy", y_scale_right(weights[1]))
         .attr("r", 4)
         .attr("fill", "black")
-        .attr("opacity", 1);
+        .attr("opacity", 1)
+        .call(d3.drag()
+            .on("start", start_drag)
+            .on("drag", dragged)
+            .on("end", end_drag));
+    }
+
+    function start_drag(d) {
+        d3.select(this).raise().classed("active", true);
+        pause_training();
+    }
+
+    function dragged(d) {
+        var new_x = d3.event.x;
+        var new_y = d3.event.y;
+        d3.select(this).attr("cx", new_x).attr("cy", new_y);
+        net.getLayer(7).setWeights([[x_scale_right_inverse(new_x), y_scale_right_inverse(new_y)]])
+        console.log(d3.event.x);
+    }
+
+    function end_drag(d) {
+        d3.select(this).raise().classed("active", false);
+        train();
     }
 
     function plot_total_loss() {
@@ -255,15 +280,19 @@ function nn_full(div) {
         return new_net;
     }
 
+    function pause_training() {
+        if (interval_id != -1) {
+            clearInterval(interval_id);
+            interval_id = -1;
+        }
+    }
+
     function reset() {
         net = make_preset_net();
         trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
         clear();
         plot();
-        if (interval_id != -1) {
-            clearInterval(interval_id);
-            interval_id = -1;
-        }
+        pause_training();
         epoch = 0;
     }
 
