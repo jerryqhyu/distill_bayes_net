@@ -11,8 +11,8 @@ function nn_full(div) {
     var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
 
     //scale for diagram on the right
-    var x_scale_right = d3.scaleLinear().domain([-3,3]).range([0,w_2])
-    var y_scale_right = d3.scaleLinear().domain([-2,2]).range([h,0])
+    var x_scale_right = d3.scaleLinear().domain([-1,3]).range([0,w_2])
+    var y_scale_right = d3.scaleLinear().domain([-2,1]).range([h,0])
 
     var line_true = d3.line()
     .x(function(d) {
@@ -140,7 +140,7 @@ function nn_full(div) {
             .attr("cy", y_scale_left(Math.sin(validation_points[k])+noise_validation[k]))
             .attr("r", 3)
             .attr("fill", "teal")
-            .attr("opacity", 0.7);
+            .attr("opacity", 0.5);
         }
     }
 
@@ -149,23 +149,23 @@ function nn_full(div) {
         svg2.append("circle")
         .attr("cx", x_scale_right(weights[0]))
         .attr("cy", y_scale_right(weights[1]))
-        .attr("r", 5)
+        .attr("r", 4)
         .attr("fill", "black")
         .attr("opacity", 1);
     }
 
     function plot_total_loss() {
         var dummy_net = make_preset_net();
-        var color_scale = d3.scaleLinear().domain([0, 2, 15, 80]).range(["darkgreen", "yellow",  "orange", "red"]);
+        var color_scale = d3.scaleLinear().domain([0, 1, 3, 15, 30]).range(["darkgreen", "green", "yellow",  "orange", "red"]);
         var x_val;
         var total_loss;
         var true_label;
         var predicted;
-        var scaled_width = Math.abs(x_scale_right(0.1) - x_scale_right(0)) + 0.1;
-        var scaled_height = Math.abs(y_scale_right(0.1) - y_scale_right(0)) + 0.1;
+        var scaled_width = Math.abs(x_scale_right(0.03) - x_scale_right(0)) + 0.1;
+        var scaled_height = Math.abs(y_scale_right(0.03) - y_scale_right(0)) + 0.1;
 
-        for (var w_1 = -3; w_1 < 3; w_1+=0.1) {
-            for (var w_2 = -2; w_2 < 2; w_2+=0.1) {
+        for (var w_1 = -1; w_1 < 3; w_1+=0.03) {
+            for (var w_2 = -2; w_2 < 1; w_2+=0.03) {
                 dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
                 total_loss = 0;
                 // for (var i = 0; i < train_points.length; i++) {
