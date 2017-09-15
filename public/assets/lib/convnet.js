@@ -1695,8 +1695,8 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       }
       return maxi; // return index of the class with highest class probability
     },
-    freezeAllButLast: function() {
-        for (var i = 0; i < this.layers.length-2; i++) {
+    freezeAllButFirst: function() {
+        for (var i = 2; i < this.layers.length; i++) {
             this.layers[i].freeze();
         }
     },
