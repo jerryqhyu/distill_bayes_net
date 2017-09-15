@@ -1,15 +1,36 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
+
 <script src="https://distill.pub/template.v1.js"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="https://d3js.org/d3-contour.v1.min.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 
+<link rel="stylesheet" href="assets/lib/katex.min.css">
+<link rel="stylesheet" type="text/css" href="assets/widgets.css">
+
+
+<title>Bayesian Neural Networks</title>
+
+<body><html>
+
+
+
+
 <dt-article class="centered">
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
+
+
+<H1>Bayesian Neural Networks</H1>
+
+<p>
+asdfasdfad
+</p>
+
+
 
     <script>
     var renderQueue = [];
@@ -38,10 +59,9 @@
         .style("opacity", 1)
 
         return function(callback) { loadingScreen.remove() };
-
     }
-
     </script>
+
     <div id="math-cache" style="display: none;">
         <dt-math class="star">\star</dt-math>
         <dt-math class="plus">+</dt-math>
@@ -68,11 +88,13 @@
         <dt-math class="xi-i">\xi_i</dt-math>
         <dt-math class="beta-equals-one-minus">\beta = (1 - \sqrt{\alpha \lambda_i})^2</dt-math>
     </div>
+
     <script>
     function MathCache(id) {
         return document.querySelector("#math-cache ." + id).innerHTML;
     }
     </script>
+
     <svg style="display: none;">
         <g id="pointerThingy">
             <circle fill="none" stroke="#FF6C00" stroke-linecap="round" cx="0" cy="0" r="14"/>
@@ -122,19 +144,6 @@
         </g>
     </svg>
 
-<!--
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="banana" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <div id="sliderAlpha" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Step-size α = 0.02</text>
-        </div>
-        <div id="sliderBeta" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Momentum β = 0.99</text>
-        </div>
-        <figcaption id="Bananacaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            We often think of Momentum as a means of dampening oscillations and speeding up the iterations, leading to faster convergence. But it has other interesting behavior. It allows a larger range of step-sizes to be used, and creates its own oscillations. What is going on?
-        </figcaption>
-    </figure> -->
     <figure style = "position:relative; width:984px; height:400px;">
         <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
@@ -165,47 +174,6 @@
 
     <script>
 
-    //THE DIAGRAM FROM MOMENTUM
-    // var iterControl = genIterDiagram(bananaf, [1,1/3], [[-2,2],[2/3 + 0.4,-2/3 + 0.4]])
-    // .alpha(0.003)
-    // .beta(0)
-    // (d3.select("#banana").style("position","relative"))
-    //
-    // var iterChange = iterControl.control
-    // var getw0 = iterControl.w0
-    //
-    // var StepRange = d3.scaleLinear().domain([0,100]).range([0,0.0062])
-    // var MomentumRange = d3.scaleLinear().domain([0,100]).range([0,0.98])
-    //
-    // var update = function (i,j) { iterChange(i, 0, getw0()) }
-    //
-    // var slidera = sliderGen([230, 40])
-    // .ticks([0,0.003,0.006])
-    // .ticktitles( function(d,i) { return ["0", "0.003", "0.006"][i]})
-    // .change( function (i) {
-    //     d3.select("#sliderAlpha").selectAll(".figtext").html("Step-size α = " + getalpha().toPrecision(2) )
-    //     iterChange(getalpha(), getbeta(), getw0() )
-    // } )
-    // .startxval(0.003)
-    // .cRadius(7)
-    // .shifty(-12)
-    // .margins(20,20)
-    //
-    // var sliderb = sliderGen([230, 40])
-    // .ticks([0,0.5,0.99])
-    // .change( function (i) {
-    //     d3.select("#sliderBeta").selectAll(".figtext").html("Momentum β = " + getbeta().toPrecision(2) )
-    //     iterChange(getalpha(), getbeta(), getw0() )
-    // } )
-    // .cRadius(7)
-    // .shifty(-12)
-    // .startxval(0.74)
-    // .margins(20,20)
-    //
-    // var getalpha = slidera( d3.select("#sliderAlpha")).xval
-    // var getbeta  = sliderb( d3.select("#sliderBeta")).xval
-    //
-    // iterChange(getalpha(), getbeta(), getw0() )
 
     //DIVERGENCES
     var curve = GaussianCurve(0, 1, d3.select("#curve"));
@@ -247,4 +215,49 @@
     net.plot();
     </script>
 
+
+
+  <dt-math block="">
+<style>
+dt-math[block] {
+  display: block;
+}
+</style>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>w</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><msup><mi>w</mi><mi>k</mi></msup><mo>−</mo><mi>α</mi><mi mathvariant="normal">∇</mi><mi>f</mi><mo>(</mo><msup><mi>w</mi><mi>k</mi></msup><mo>)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">w^{k+1} = w^k-\alpha\nabla f(w^k).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.899108em;"></span><span class="strut bottom" style="height:1.149108em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.41300000000000003em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mathrm mtight">1</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mrel">=</span><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.413em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mbin">−</span><span class="mord mathit" style="margin-right:0.0037em;">α</span><span class="mord mathrm">∇</span><span class="mord mathit" style="margin-right:0.10764em;">f</span><span class="mopen">(</span><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.413em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mclose">)</span><span class="mord mathrm">.</span></span></span></span></span></dt-math>
+
+<H2>Connection to Dropout</H2>
+<p>
+asdf
+</p>
+<p>
+<a href="http://proceedings.mlr.press/v48/gal16.html">Gal and Ghahramani, 2016. Dropout as Bayesian approximation: representing model uncertainty in deep learning</a>
+</p>
+<p>
+<a href="http://papers.nips.cc/paper/5666-variational-dropout-and-the-local-reparameterization-trick">Kingma, Salimans, and Welling, 2015. Variational dropout and the local reparameterization trick.</a>
+</p>
+
+<H2>References</H2>
+<p>
+Blundell, Charles, Cornebise, Julien, Kavukcuoglu, Koray, and Wierstra, Daan. Weight uncertainty
+in neural networks. arXiv preprint arXiv:1505.05424, 2015
+</p>
+<p>
+Kucukelbir, Alp, Ranganath, Rajesh, Gelman, Andrew, and Blei, David. Fully automatic variational
+inference of differentiable probability models. In NIPS Workshop on Probabilistic Programming,
+2014.
+</p>
+<p>
+Ranganath, Rajesh, Gerrish, Sean, and Blei, David M. Black box variational inference. arXiv
+preprint arXiv:1401.0118, 2013.
+</p>
+<p>
+<a href="http://www.csri.utoronto.ca/~radford/ftp/thesis.pdf">Neal, 1995. Bayesian learning for neural networks.</a>
+</p>
+<p>
+<a href="http://papers.nips.cc/paper/4329-practical-variational-inference-for-neural-networks">Graves, 2011. Practical variational inference for neural networks</a>
+</p>
+
+
+
 </dt-article>
+</body></html>
