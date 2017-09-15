@@ -11,10 +11,10 @@ function nn_full(div) {
     var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
 
     //scale for diagram on the right
-    var x_scale_right = d3.scaleLinear().domain([-1,3]).range([0,w_2])
+    var x_scale_right = d3.scaleLinear().domain([0,3]).range([0,w_2])
     var y_scale_right = d3.scaleLinear().domain([-2,1]).range([h,0])
 
-    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([-1,3])
+    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([0,3])
     var y_scale_right_inverse = d3.scaleLinear().domain([h,0]).range([-2,1])
 
     var line_true = d3.line()
@@ -84,7 +84,9 @@ function nn_full(div) {
     svg2.attr("width", w_2)
     .attr("height", h_2);
 
-    plot_total_loss();
+    // plot_total_loss();
+    plot_contour();
+
     //interval controller
     var currently_training = 0;
     var was_training = 0;
@@ -201,12 +203,6 @@ function nn_full(div) {
 
         for (var w_1 = -1; w_1 < 3; w_1+=0.03) {
             for (var w_2 = -1.97; w_2 < 1.03; w_2+=0.03) {
-                // for (var i = 0; i < train_points.length; i++) {
-                //     x_val = new convnetjs.Vol([train_points[i]]);
-                //     true_label = Math.sin(train_points[i]) + noise_train[i];
-                //     predicted = dummy_net.forward(x_val).w[0];
-                //     total_loss += (true_label - predicted) * (true_label - predicted);
-                // }
                 total_loss = compute_validation_loss(dummy_net, w_1, w_2);
                 svg2.append("rect")
                 .attr("x", x_scale_right(w_1))
@@ -219,12 +215,59 @@ function nn_full(div) {
         }
     }
 
+    function plot_contour() {
+        var dummy_net = make_preset_net();
+        var n = 100;
+        var m = 100;
+        var values = new Array(n * m);
+
+        for (var w_1 = 0, k = 0; w_1 < 2.99; w_1+=0.03) {
+            for (var w_2 = -2; w_2 < 0.99; w_2+=0.03, k++) {
+                values[k] = compute_training_loss(dummy_net, w_1, w_2);
+            }
+        }
+
+        console.log(values[9999]);
+
+        var color = d3.scaleLog()
+            .domain([1,40])
+            .interpolate(function() { return d3.interpolateSpectral; });
+
+        var contours = d3.contours()
+            .size([n, m])
+            .thresholds(d3.range(0, 40, 4));
+
+        svg2.selectAll("path")
+            .data(contours(values))
+            .enter().append("path")
+            .attr("d", d3.geoPath(d3.geoIdentity().scale(3)))
+            .attr("fill", function(d) { return color(d.value); });
+    }
+
     function compute_validation_loss(dummy_net, w_1, w_2) {
-        total_loss = 0
+        var total_loss = 0;
+        var predicted;
+        var true_label;
+        var x_val;
         dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
         for (var j = 0; j < validation_points.length; j++) {
             x_val = new convnetjs.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
+            predicted = dummy_net.forward(x_val).w[0];
+            total_loss += (true_label - predicted) * (true_label - predicted);
+        }
+        return total_loss;
+    }
+
+    function compute_training_loss(dummy_net, w_1, w_2) {
+        var total_loss = 0;
+        var predicted;
+        var true_label;
+        var x_val;
+        dummy_net.getLayer(7).setWeights([[w_1, w_2]]);
+        for (var i = 0; i < train_points.length; i++) {
+            x_val = new convnetjs.Vol([train_points[i]]);
+            true_label = Math.sin(train_points[i]) + noise_train[i];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
