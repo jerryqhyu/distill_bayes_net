@@ -69,8 +69,8 @@ function nn_full(div) {
     // var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
 
 
-    var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
-    l2_decay: 0, momentum: 0.9, batch_size: 50,
+    var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.01,
+    l2_decay: 0, momentum: 0.9, batch_size: 10,
     l1_decay: 0});
 
     //diagram parameters
@@ -87,8 +87,8 @@ function nn_full(div) {
     svg2.attr("width", w_2)
     .attr("height", h_2);
 
-    plot_total_loss();
-    // plot_contour();
+    // plot_total_loss();
+    plot_contour();
 
     //interval controller
     var currently_training = 0;
@@ -196,7 +196,9 @@ function nn_full(div) {
 
     function plot_total_loss() {
         var dummy_net = make_preset_net();
-        var color_scale = d3.scaleLinear().domain([0, 1, 3, 15, 30]).range(["darkgreen", "green", "yellow",  "orange", "red"]);
+        var color = d3.scaleLog()
+            .domain([1,40])
+            .interpolate(function() { return d3.interpolateSpectral; });
         var x_val;
         var total_loss;
         var true_label;
@@ -212,7 +214,7 @@ function nn_full(div) {
                 .attr("y", y_scale_right(w_2))
                 .attr("width", scaled_width)
                 .attr("height", scaled_height)
-                .attr("fill", color_scale(total_loss))
+                .attr("fill", color(total_loss))
                 .attr("opacity", 0.7);
             }
         }
@@ -224,9 +226,9 @@ function nn_full(div) {
         var m = 300;
         var values = new Array(n * m);
 
-        for (var w_1 = -15, k = 0; w_1 < 14.99; w_1+=0.1) {
-            for (var w_2 = -15; w_2 < 14.99; w_2+=0.1, k++) {
-                values[k] = compute_validation_loss(dummy_net, w_1, w_2);
+        for (var w_2 = 0, k = 0; w_2 < 300; w_2++) {
+            for (var w_1 = 0; w_1 < 300; w_1++, k++) {
+                values[k] = compute_training_loss(dummy_net, x_scale_right_inverse(w_1), -x_scale_right_inverse(w_2));
             }
         }
 
@@ -292,7 +294,7 @@ function nn_full(div) {
         if (!currently_training) {
             console.log("started training");
             net.freezeAllButFirst();
-            currently_training = setInterval(train_epoch, 10);
+            currently_training = setInterval(train_epoch, 50);
         }
     }
 
@@ -350,7 +352,9 @@ function nn_full(div) {
 
     function reset() {
         net = make_preset_net();
-        trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
+        trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.01,
+        l2_decay: 0, momentum: 0.9, batch_size: 10,
+        l1_decay: 0});
         clear();
         plot();
         pause_training();

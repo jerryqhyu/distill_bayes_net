@@ -247,6 +247,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.Vol = Vol;
 })(convnetjs);
+
 (function(global) {
   "use strict";
   var Vol = global.Vol; // convenience
@@ -355,6 +356,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   global.img_to_vol = img_to_vol;
 
 })(convnetjs);
+
 (function(global) {
   "use strict";
   var Vol = global.Vol; // convenience
@@ -363,170 +365,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   // but usually in a different connectivity pattern and weight sharing
   // schemes:
   // - FullyConn is fully connected dot products
-  // - ConvLayer does convolutions (so weight sharing spatially)
-  // putting them together in one file because they are very similar
-  var ConvLayer = function(opt) {
-    var opt = opt || {};
-
-    // required
-    this.out_depth = opt.filters;
-    this.sx = opt.sx; // filter size. Should be odd if possible, it's cleaner.
-    this.in_depth = opt.in_depth;
-    this.in_sx = opt.in_sx;
-    this.in_sy = opt.in_sy;
-
-    // optional
-    this.sy = typeof opt.sy !== 'undefined' ? opt.sy : this.sx;
-    this.stride = typeof opt.stride !== 'undefined' ? opt.stride : 1; // stride at which we apply filters to input volume
-    this.pad = typeof opt.pad !== 'undefined' ? opt.pad : 0; // amount of 0 padding to add around borders of input volume
-    this.l1_decay_mul = typeof opt.l1_decay_mul !== 'undefined' ? opt.l1_decay_mul : 0.0;
-    this.l2_decay_mul = typeof opt.l2_decay_mul !== 'undefined' ? opt.l2_decay_mul : 1.0;
-
-    // computed
-    // note we are doing floor, so if the strided convolution of the filter doesnt fit into the input
-    // volume exactly, the output volume will be trimmed and not contain the (incomplete) computed
-    // final application.
-    this.out_sx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
-    this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
-    this.layer_type = 'conv';
-
-    // initializations
-    var bias = typeof opt.bias_pref !== 'undefined' ? opt.bias_pref : 0.0;
-    this.filters = [];
-    for(var i=0;i<this.out_depth;i++) { this.filters.push(new Vol(this.sx, this.sy, this.in_depth)); }
-    this.biases = new Vol(1, 1, this.out_depth, bias);
-  }
-  ConvLayer.prototype = {
-    forward: function(V, is_training) {
-      // optimized code by @mdda that achieves 2x speedup over previous version
-
-      this.in_act = V;
-      var A = new Vol(this.out_sx |0, this.out_sy |0, this.out_depth |0, 0.0);
-
-      var V_sx = V.sx |0;
-      var V_sy = V.sy |0;
-      var xy_stride = this.stride |0;
-
-      for(var d=0;d<this.out_depth;d++) {
-        var f = this.filters[d];
-        var x = -this.pad |0;
-        var y = -this.pad |0;
-        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
-          x = -this.pad |0;
-          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
-
-            // convolve centered at this particular location
-            var a = 0.0;
-            for(var fy=0;fy<f.sy;fy++) {
-              var oy = y+fy; // coordinates in the original input array coordinates
-              for(var fx=0;fx<f.sx;fx++) {
-                var ox = x+fx;
-                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
-                  for(var fd=0;fd<f.depth;fd++) {
-                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
-                    a += f.w[((f.sx * fy)+fx)*f.depth+fd] * V.w[((V_sx * oy)+ox)*V.depth+fd];
-                  }
-                }
-              }
-            }
-            a += this.biases.w[d];
-            A.set(ax, ay, d, a);
-          }
-        }
-      }
-      this.out_act = A;
-      return this.out_act;
-    },
-    backward: function() {
-
-      var V = this.in_act;
-      V.dw = global.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
-
-      var V_sx = V.sx |0;
-      var V_sy = V.sy |0;
-      var xy_stride = this.stride |0;
-
-      for(var d=0;d<this.out_depth;d++) {
-        var f = this.filters[d];
-        var x = -this.pad |0;
-        var y = -this.pad |0;
-        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
-          x = -this.pad |0;
-          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
-
-            // convolve centered at this particular location
-            var chain_grad = this.out_act.get_grad(ax,ay,d); // gradient from above, from chain rule
-            for(var fy=0;fy<f.sy;fy++) {
-              var oy = y+fy; // coordinates in the original input array coordinates
-              for(var fx=0;fx<f.sx;fx++) {
-                var ox = x+fx;
-                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
-                  for(var fd=0;fd<f.depth;fd++) {
-                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
-                    var ix1 = ((V_sx * oy)+ox)*V.depth+fd;
-                    var ix2 = ((f.sx * fy)+fx)*f.depth+fd;
-                    f.dw[ix2] += V.w[ix1]*chain_grad;
-                    V.dw[ix1] += f.w[ix2]*chain_grad;
-                  }
-                }
-              }
-            }
-            this.biases.dw[d] += chain_grad;
-          }
-        }
-      }
-    },
-    getParamsAndGrads: function() {
-      var response = [];
-      for(var i=0;i<this.out_depth;i++) {
-        response.push({params: this.filters[i].w, grads: this.filters[i].dw, l2_decay_mul: this.l2_decay_mul, l1_decay_mul: this.l1_decay_mul});
-      }
-      response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
-      return response;
-    },
-    toJSON: function() {
-      var json = {};
-      json.sx = this.sx; // filter size in x, y dims
-      json.sy = this.sy;
-      json.stride = this.stride;
-      json.in_depth = this.in_depth;
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      json.l1_decay_mul = this.l1_decay_mul;
-      json.l2_decay_mul = this.l2_decay_mul;
-      json.pad = this.pad;
-      json.filters = [];
-      for(var i=0;i<this.filters.length;i++) {
-        json.filters.push(this.filters[i].toJSON());
-      }
-      json.biases = this.biases.toJSON();
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-      this.sx = json.sx; // filter size in x, y dims
-      this.sy = json.sy;
-      this.stride = json.stride;
-      this.in_depth = json.in_depth; // depth of input volume
-      this.filters = [];
-      this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined' ? json.l1_decay_mul : 1.0;
-      this.l2_decay_mul = typeof json.l2_decay_mul !== 'undefined' ? json.l2_decay_mul : 1.0;
-      this.pad = typeof json.pad !== 'undefined' ? json.pad : 0;
-      for(var i=0;i<json.filters.length;i++) {
-        var v = new Vol(0,0,0,0);
-        v.fromJSON(json.filters[i]);
-        this.filters.push(v);
-      }
-      this.biases = new Vol(0,0,0,0);
-      this.biases.fromJSON(json.biases);
-    }
-  }
-
   var FullyConnLayer = function(opt) {
     var opt = opt || {};
     this.frozen = false;
@@ -640,134 +478,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     }
   }
 
-  global.ConvLayer = ConvLayer;
   global.FullyConnLayer = FullyConnLayer;
-
-})(convnetjs);
-(function(global) {
-  "use strict";
-  var Vol = global.Vol; // convenience
-
-  var PoolLayer = function(opt) {
-
-    var opt = opt || {};
-
-    // required
-    this.sx = opt.sx; // filter size
-    this.in_depth = opt.in_depth;
-    this.in_sx = opt.in_sx;
-    this.in_sy = opt.in_sy;
-
-    // optional
-    this.sy = typeof opt.sy !== 'undefined' ? opt.sy : this.sx;
-    this.stride = typeof opt.stride !== 'undefined' ? opt.stride : 2;
-    this.pad = typeof opt.pad !== 'undefined' ? opt.pad : 0; // amount of 0 padding to add around borders of input volume
-
-    // computed
-    this.out_depth = this.in_depth;
-    this.out_sx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
-    this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
-    this.layer_type = 'pool';
-    // store switches for x,y coordinates for where the max comes from, for each output neuron
-    this.switchx = global.zeros(this.out_sx*this.out_sy*this.out_depth);
-    this.switchy = global.zeros(this.out_sx*this.out_sy*this.out_depth);
-  }
-
-  PoolLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-
-      var A = new Vol(this.out_sx, this.out_sy, this.out_depth, 0.0);
-
-      var n=0; // a counter for switches
-      for(var d=0;d<this.out_depth;d++) {
-        var x = -this.pad;
-        var y = -this.pad;
-        for(var ax=0; ax<this.out_sx; x+=this.stride,ax++) {
-          y = -this.pad;
-          for(var ay=0; ay<this.out_sy; y+=this.stride,ay++) {
-
-            // convolve centered at this particular location
-            var a = -99999; // hopefully small enough ;\
-            var winx=-1,winy=-1;
-            for(var fx=0;fx<this.sx;fx++) {
-              for(var fy=0;fy<this.sy;fy++) {
-                var oy = y+fy;
-                var ox = x+fx;
-                if(oy>=0 && oy<V.sy && ox>=0 && ox<V.sx) {
-                  var v = V.get(ox, oy, d);
-                  // perform max pooling and store pointers to where
-                  // the max came from. This will speed up backprop
-                  // and can help make nice visualizations in future
-                  if(v > a) { a = v; winx=ox; winy=oy;}
-                }
-              }
-            }
-            this.switchx[n] = winx;
-            this.switchy[n] = winy;
-            n++;
-            A.set(ax, ay, d, a);
-          }
-        }
-      }
-      this.out_act = A;
-      return this.out_act;
-    },
-    backward: function() {
-      // pooling layers have no parameters, so simply compute
-      // gradient wrt data here
-      var V = this.in_act;
-      V.dw = global.zeros(V.w.length); // zero out gradient wrt data
-      var A = this.out_act; // computed in forward pass
-
-      var n = 0;
-      for(var d=0;d<this.out_depth;d++) {
-        var x = -this.pad;
-        var y = -this.pad;
-        for(var ax=0; ax<this.out_sx; x+=this.stride,ax++) {
-          y = -this.pad;
-          for(var ay=0; ay<this.out_sy; y+=this.stride,ay++) {
-
-            var chain_grad = this.out_act.get_grad(ax,ay,d);
-            V.add_grad(this.switchx[n], this.switchy[n], d, chain_grad);
-            n++;
-
-          }
-        }
-      }
-    },
-    getParamsAndGrads: function() {
-      return [];
-    },
-    toJSON: function() {
-      var json = {};
-      json.sx = this.sx;
-      json.sy = this.sy;
-      json.stride = this.stride;
-      json.in_depth = this.in_depth;
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      json.pad = this.pad;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-      this.sx = json.sx;
-      this.sy = json.sy;
-      this.stride = json.stride;
-      this.in_depth = json.in_depth;
-      this.pad = typeof json.pad !== 'undefined' ? json.pad : 0; // backwards compatibility
-      this.switchx = global.zeros(this.out_sx*this.out_sy*this.out_depth); // need to re-init these appropriately
-      this.switchy = global.zeros(this.out_sx*this.out_sy*this.out_depth);
-    }
-  }
-
-  global.PoolLayer = PoolLayer;
 
 })(convnetjs);
 
@@ -822,6 +533,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.InputLayer = InputLayer;
 })(convnetjs);
+
 (function(global) {
   "use strict";
   var Vol = global.Vol; // convenience
@@ -989,75 +701,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       this.num_inputs = json.num_inputs;
     }
   }
-
-  var SVMLayer = function(opt) {
-    var opt = opt || {};
-
-    // computed
-    this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-    this.out_depth = this.num_inputs;
-    this.out_sx = 1;
-    this.out_sy = 1;
-    this.layer_type = 'svm';
-  }
-
-  SVMLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-      this.out_act = V; // nothing to do, output raw scores
-      return V;
-    },
-    backward: function(y) {
-
-      // compute and accumulate gradient wrt weights and bias of this layer
-      var x = this.in_act;
-      x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
-
-      // we're using structured loss here, which means that the score
-      // of the ground truth should be higher than the score of any other
-      // class, by a margin
-      var yscore = x.w[y]; // score of ground truth
-      var margin = 1.0;
-      var loss = 0.0;
-      for(var i=0;i<this.out_depth;i++) {
-        if(y === i) { continue; }
-        var ydiff = -yscore + x.w[i] + margin;
-        if(ydiff > 0) {
-          // violating dimension, apply loss
-          x.dw[i] += 1;
-          x.dw[y] -= 1;
-          loss += ydiff;
-        }
-      }
-
-      return loss;
-    },
-    getParamsAndGrads: function() {
-      return [];
-    },
-    toJSON: function() {
-      var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      json.num_inputs = this.num_inputs;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-      this.num_inputs = json.num_inputs;
-    }
-  }
-
-  global.RegressionLayer = RegressionLayer;
   global.SoftmaxLayer = SoftmaxLayer;
-  global.SVMLayer = SVMLayer;
-
-})(convnetjs);
+  global.RegressionLayer = RegressionLayer;
+ })(convnetjs);
 
 (function(global) {
   "use strict";
@@ -1113,176 +759,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       this.out_sx = json.out_sx;
       this.out_sy = json.out_sy;
       this.layer_type = json.layer_type;
-    }
-  }
-
-  // Implements Sigmoid nnonlinearity elementwise
-  // x -> 1/(1+e^(-x))
-  // so the output is between 0 and 1.
-  var SigmoidLayer = function(opt) {
-    var opt = opt || {};
-
-    // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
-    this.layer_type = 'sigmoid';
-  }
-  SigmoidLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-      var V2 = V.cloneAndZero();
-      var N = V.w.length;
-      var V2w = V2.w;
-      var Vw = V.w;
-      for(var i=0;i<N;i++) {
-        V2w[i] = 1.0/(1.0+Math.exp(-Vw[i]));
-      }
-      this.out_act = V2;
-      return this.out_act;
-    },
-    backward: function() {
-      var V = this.in_act; // we need to set dw of this
-      var V2 = this.out_act;
-      var N = V.w.length;
-      V.dw = global.zeros(N); // zero out gradient wrt data
-      for(var i=0;i<N;i++) {
-        var v2wi = V2.w[i];
-        V.dw[i] =  v2wi * (1.0 - v2wi) * V2.dw[i];
-      }
-    },
-    getParamsAndGrads: function() {
-      return [];
-    },
-    toJSON: function() {
-      var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-    }
-  }
-
-  // Implements Maxout nnonlinearity that computes
-  // x -> max(x)
-  // where x is a vector of size group_size. Ideally of course,
-  // the input size should be exactly divisible by group_size
-  var MaxoutLayer = function(opt) {
-    var opt = opt || {};
-
-    // required
-    this.group_size = typeof opt.group_size !== 'undefined' ? opt.group_size : 2;
-
-    // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = Math.floor(opt.in_depth / this.group_size);
-    this.layer_type = 'maxout';
-
-    this.switches = global.zeros(this.out_sx*this.out_sy*this.out_depth); // useful for backprop
-  }
-  MaxoutLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-      var N = this.out_depth;
-      var V2 = new Vol(this.out_sx, this.out_sy, this.out_depth, 0.0);
-
-      // optimization branch. If we're operating on 1D arrays we dont have
-      // to worry about keeping track of x,y,d coordinates inside
-      // input volumes. In convnets we do :(
-      if(this.out_sx === 1 && this.out_sy === 1) {
-        for(var i=0;i<N;i++) {
-          var ix = i * this.group_size; // base index offset
-          var a = V.w[ix];
-          var ai = 0;
-          for(var j=1;j<this.group_size;j++) {
-            var a2 = V.w[ix+j];
-            if(a2 > a) {
-              a = a2;
-              ai = j;
-            }
-          }
-          V2.w[i] = a;
-          this.switches[i] = ix + ai;
-        }
-      } else {
-        var n=0; // counter for switches
-        for(var x=0;x<V.sx;x++) {
-          for(var y=0;y<V.sy;y++) {
-            for(var i=0;i<N;i++) {
-              var ix = i * this.group_size;
-              var a = V.get(x, y, ix);
-              var ai = 0;
-              for(var j=1;j<this.group_size;j++) {
-                var a2 = V.get(x, y, ix+j);
-                if(a2 > a) {
-                  a = a2;
-                  ai = j;
-                }
-              }
-              V2.set(x,y,i,a);
-              this.switches[n] = ix + ai;
-              n++;
-            }
-          }
-        }
-
-      }
-      this.out_act = V2;
-      return this.out_act;
-    },
-    backward: function() {
-      var V = this.in_act; // we need to set dw of this
-      var V2 = this.out_act;
-      var N = this.out_depth;
-      V.dw = global.zeros(V.w.length); // zero out gradient wrt data
-
-      // pass the gradient through the appropriate switch
-      if(this.out_sx === 1 && this.out_sy === 1) {
-        for(var i=0;i<N;i++) {
-          var chain_grad = V2.dw[i];
-          V.dw[this.switches[i]] = chain_grad;
-        }
-      } else {
-        // bleh okay, lets do this the hard way
-        var n=0; // counter for switches
-        for(var x=0;x<V2.sx;x++) {
-          for(var y=0;y<V2.sy;y++) {
-            for(var i=0;i<N;i++) {
-              var chain_grad = V2.get_grad(x,y,i);
-              V.set_grad(x,y,this.switches[n],chain_grad);
-              n++;
-            }
-          }
-        }
-      }
-    },
-    getParamsAndGrads: function() {
-      return [];
-    },
-    toJSON: function() {
-      var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      json.group_size = this.group_size;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-      this.group_size = json.group_size;
-      this.switches = global.zeros(this.group_size);
     }
   }
 
@@ -1347,201 +823,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
 
   global.TanhLayer = TanhLayer;
-  global.MaxoutLayer = MaxoutLayer;
   global.ReluLayer = ReluLayer;
-  global.SigmoidLayer = SigmoidLayer;
-
 })(convnetjs);
 
-(function(global) {
-  "use strict";
-  var Vol = global.Vol; // convenience
-
-  // An inefficient dropout layer
-  // Note this is not most efficient implementation since the layer before
-  // computed all these activations and now we're just going to drop them :(
-  // same goes for backward pass. Also, if we wanted to be efficient at test time
-  // we could equivalently be clever and upscale during train and copy pointers during test
-  // todo: make more efficient.
-  var DropoutLayer = function(opt) {
-    var opt = opt || {};
-
-    // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
-    this.layer_type = 'dropout';
-    this.drop_prob = typeof opt.drop_prob !== 'undefined' ? opt.drop_prob : 0.5;
-    this.dropped = global.zeros(this.out_sx*this.out_sy*this.out_depth);
-  }
-  DropoutLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-      if(typeof(is_training)==='undefined') { is_training = false; } // default is prediction mode
-      var V2 = V.clone();
-      var N = V.w.length;
-      if(is_training) {
-        // do dropout
-        for(var i=0;i<N;i++) {
-          if(Math.random()<this.drop_prob) { V2.w[i]=0; this.dropped[i] = true; } // drop!
-          else {this.dropped[i] = false;}
-        }
-      } else {
-        // scale the activations during prediction
-        for(var i=0;i<N;i++) { V2.w[i]*=this.drop_prob; }
-      }
-      this.out_act = V2;
-      return this.out_act; // dummy identity function for now
-    },
-    backward: function() {
-      var V = this.in_act; // we need to set dw of this
-      var chain_grad = this.out_act;
-      var N = V.w.length;
-      V.dw = global.zeros(N); // zero out gradient wrt data
-      for(var i=0;i<N;i++) {
-        if(!(this.dropped[i])) {
-          V.dw[i] = chain_grad.dw[i]; // copy over the gradient
-        }
-      }
-    },
-    getParamsAndGrads: function() {
-      return [];
-    },
-    toJSON: function() {
-      var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.layer_type = this.layer_type;
-      json.drop_prob = this.drop_prob;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.layer_type = json.layer_type;
-      this.drop_prob = json.drop_prob;
-    }
-  }
-
-
-  global.DropoutLayer = DropoutLayer;
-})(convnetjs);
-(function(global) {
-  "use strict";
-  var Vol = global.Vol; // convenience
-
-  // a bit experimental layer for now. I think it works but I'm not 100%
-  // the gradient check is a bit funky. I'll look into this a bit later.
-  // Local Response Normalization in window, along depths of volumes
-  var LocalResponseNormalizationLayer = function(opt) {
-    var opt = opt || {};
-
-    // required
-    this.k = opt.k;
-    this.n = opt.n;
-    this.alpha = opt.alpha;
-    this.beta = opt.beta;
-
-    // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
-    this.layer_type = 'lrn';
-
-    // checks
-    if(this.n%2 === 0) { console.log('WARNING n should be odd for LRN layer'); }
-  }
-  LocalResponseNormalizationLayer.prototype = {
-    forward: function(V, is_training) {
-      this.in_act = V;
-
-      var A = V.cloneAndZero();
-      this.S_cache_ = V.cloneAndZero();
-      var n2 = Math.floor(this.n/2);
-      for(var x=0;x<V.sx;x++) {
-        for(var y=0;y<V.sy;y++) {
-          for(var i=0;i<V.depth;i++) {
-
-            var ai = V.get(x,y,i);
-
-            // normalize in a window of size n
-            var den = 0.0;
-            for(var j=Math.max(0,i-n2);j<=Math.min(i+n2,V.depth-1);j++) {
-              var aa = V.get(x,y,j);
-              den += aa*aa;
-            }
-            den *= this.alpha / this.n;
-            den += this.k;
-            this.S_cache_.set(x,y,i,den); // will be useful for backprop
-            den = Math.pow(den, this.beta);
-            A.set(x,y,i,ai/den);
-          }
-        }
-      }
-
-      this.out_act = A;
-      return this.out_act; // dummy identity function for now
-    },
-    backward: function() {
-      // evaluate gradient wrt data
-      var V = this.in_act; // we need to set dw of this
-      V.dw = global.zeros(V.w.length); // zero out gradient wrt data
-      var A = this.out_act; // computed in forward pass
-
-      var n2 = Math.floor(this.n/2);
-      for(var x=0;x<V.sx;x++) {
-        for(var y=0;y<V.sy;y++) {
-          for(var i=0;i<V.depth;i++) {
-
-            var chain_grad = this.out_act.get_grad(x,y,i);
-            var S = this.S_cache_.get(x,y,i);
-            var SB = Math.pow(S, this.beta);
-            var SB2 = SB*SB;
-
-            // normalize in a window of size n
-            for(var j=Math.max(0,i-n2);j<=Math.min(i+n2,V.depth-1);j++) {
-              var aj = V.get(x,y,j);
-              var g = -aj*this.beta*Math.pow(S,this.beta-1)*this.alpha/this.n*2*aj;
-              if(j===i) g+= SB;
-              g /= SB2;
-              g *= chain_grad;
-              V.add_grad(x,y,j,g);
-            }
-
-          }
-        }
-      }
-    },
-    getParamsAndGrads: function() { return []; },
-    toJSON: function() {
-      var json = {};
-      json.k = this.k;
-      json.n = this.n;
-      json.alpha = this.alpha; // normalize by size
-      json.beta = this.beta;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.out_depth = this.out_depth;
-      json.layer_type = this.layer_type;
-      return json;
-    },
-    fromJSON: function(json) {
-      this.k = json.k;
-      this.n = json.n;
-      this.alpha = json.alpha; // normalize by size
-      this.beta = json.beta;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.out_depth = json.out_depth;
-      this.layer_type = json.layer_type;
-    }
-  }
-
-
-  global.LocalResponseNormalizationLayer = LocalResponseNormalizationLayer;
-})(convnetjs);
 (function(global) {
   "use strict";
   var Vol = global.Vol; // convenience
@@ -1594,19 +878,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
           if(typeof def.activation !== 'undefined') {
             if(def.activation==='relu') { new_defs.push({type:'relu'}); }
-            else if (def.activation==='sigmoid') { new_defs.push({type:'sigmoid'}); }
             else if (def.activation==='tanh') { new_defs.push({type:'tanh'}); }
-            else if (def.activation==='maxout') {
-              // create maxout activation, and pass along group size, if provided
-              var gs = def.group_size !== 'undefined' ? def.group_size : 2;
-              new_defs.push({type:'maxout', group_size:gs});
-            }
             else { console.log('ERROR unsupported activation ' + def.activation); }
           }
-          if(typeof def.drop_prob !== 'undefined' && def.type !== 'dropout') {
-            new_defs.push({type:'dropout', drop_prob: def.drop_prob});
-          }
-
         }
         return new_defs;
       }
@@ -1625,18 +899,11 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
         switch(def.type) {
           case 'fc': this.layers.push(new global.FullyConnLayer(def)); break;
-          case 'lrn': this.layers.push(new global.LocalResponseNormalizationLayer(def)); break;
-          case 'dropout': this.layers.push(new global.DropoutLayer(def)); break;
           case 'input': this.layers.push(new global.InputLayer(def)); break;
           case 'softmax': this.layers.push(new global.SoftmaxLayer(def)); break;
           case 'regression': this.layers.push(new global.RegressionLayer(def)); break;
-          case 'conv': this.layers.push(new global.ConvLayer(def)); break;
-          case 'pool': this.layers.push(new global.PoolLayer(def)); break;
           case 'relu': this.layers.push(new global.ReluLayer(def)); break;
-          case 'sigmoid': this.layers.push(new global.SigmoidLayer(def)); break;
           case 'tanh': this.layers.push(new global.TanhLayer(def)); break;
-          case 'maxout': this.layers.push(new global.MaxoutLayer(def)); break;
-          case 'svm': this.layers.push(new global.SVMLayer(def)); break;
           default: console.log('ERROR: UNRECOGNIZED LAYER TYPE: ' + def.type);
         }
       }
@@ -1719,17 +986,10 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
         var L;
         if(t==='input') { L = new global.InputLayer(); }
         if(t==='relu') { L = new global.ReluLayer(); }
-        if(t==='sigmoid') { L = new global.SigmoidLayer(); }
         if(t==='tanh') { L = new global.TanhLayer(); }
-        if(t==='dropout') { L = new global.DropoutLayer(); }
-        if(t==='conv') { L = new global.ConvLayer(); }
-        if(t==='pool') { L = new global.PoolLayer(); }
-        if(t==='lrn') { L = new global.LocalResponseNormalizationLayer(); }
         if(t==='softmax') { L = new global.SoftmaxLayer(); }
         if(t==='regression') { L = new global.RegressionLayer(); }
         if(t==='fc') { L = new global.FullyConnLayer(); }
-        if(t==='maxout') { L = new global.MaxoutLayer(); }
-        if(t==='svm') { L = new global.SVMLayer(); }
         L.fromJSON(Lj);
         this.layers.push(L);
       }
@@ -1738,6 +998,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.Net = Net;
 })(convnetjs);
+
 (function(global) {
   "use strict";
   var Vol = global.Vol; // convenience
