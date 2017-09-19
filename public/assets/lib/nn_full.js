@@ -11,11 +11,11 @@ function nn_full(div) {
     var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
 
     //scale for diagram on the right
-    var x_scale_right = d3.scaleLinear().domain([-15,15]).range([0,w_2])
-    var y_scale_right = d3.scaleLinear().domain([-15,15]).range([h,0])
+    var x_scale_right = d3.scaleLinear().domain([-3,3]).range([0,w_2])
+    var y_scale_right = d3.scaleLinear().domain([-3,3]).range([h,0])
 
-    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([-15,15])
-    var y_scale_right_inverse = d3.scaleLinear().domain([h,0]).range([-15,15])
+    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([-3,3])
+    var y_scale_right_inverse = d3.scaleLinear().domain([h,0]).range([-3,3])
 
     var line_true = d3.line()
     .x(function(d) {
@@ -33,44 +33,51 @@ function nn_full(div) {
     })
 
     //hard coded points for consistentcy
-    var train_points = [-2.9, -2.7, -2.5, -2.3, -2.1, -1.9, -1.7, -1.5, -1.3, -1.1, -0.9, -0.7, -0.5, -0.3, -0.1, 0.1,
-        0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7, 2.9];
-    var validation_points = [-1.01021662, -1.00600723,  0.25150535, -0.64289366, -2.83217944,
-       -1.27447894,  0.72586946,  1.96606265, -2.32743642, -0.43405676,
-        1.30609116,  1.31220319,  2.52755886,  0.49622151,  2.37028589,
-       -2.05782618,  1.05461402,  1.33289417, -1.96113098, -0.38732774];
-    var noise_train = [ 0.10408689,  0.10999347, -0.21092732,  0.21040211, -0.05441124,
-        0.32326489, -0.25552701, -0.47457946,  0.02745911,  0.10275629,
-        0.22240206,  0.52373514,  0.18365871,  0.07530947, -0.29227835,
-        0.18867107,  0.52420313,  0.04456809, -0.24384817,  0.40080137,
-        0.26032293,  0.05870727, -0.02125257, -0.12151286, -0.02832058,
-        0.03619698, -0.00548018, -0.18057678,  0.23171462,  0.31800257];
-    var noise_validation = [ 0.00282537,  0.14827248,  0.10214164,  0.10019915, -0.28734113,
-        0.15081431,  0.06890339,  0.10747714, -0.27386861, -0.43052074,
-        0.01162471, -0.08062783,  0.10436563,  0.14189259,  0.3117031 ,
-        0.23507118, -0.1050833 ,  0.38510908, -0.02797407,  0.01287228];
+    var train_points = [ 0.98348382,  0.33239784, -1.9390813 , -1.77390395,  1.31901198,
+       -0.55732958, -1.33424016, -2.49962207];
+    var validation_points = [0.0074539 , -2.25649362,  1.2912101 ,         -1.15521679,  0.15278725,
+        2.0997623 ,  1.47247248, -1.05303993,  0.4568989 , -0.61385536,
+       -2.18751186,  1.26085173, -2.8500024 ,  2.59464658,  2.64281159,
+       -2.93701525,  0.7578316 ,  2.49371189,  2.43455803, -1.30204828,
+       -0.72566079, -2.53146956,  2.37625046, -1.46966588, -1.83330212,
+        2.57031247, -1.91009532, -2.41233259, -0.44398402,  1.06769911,
+        2.32972244, -1.84966642,  2.53616255,  0.42077324,  0.4261107 ,
+        1.42198161,  2.72728906, -1.71100897, -1.59204741,  1.2299973 ,
+        0.37747723,  0.32106662,  0.07131672,  0.03220256, -1.37330352,
+        1.47470907,  2.19194335, -0.77412576, -1.29907828, -2.64114398];
+
+    var noise_train = [ 0.17785805, -0.08573558,  0.25208923,  0.10656975,  0.1274808 ,
+       -0.12225689, -0.50733901,  0.46974662];
+    var noise_validation = [-0.09674867,  0.02199221,  0.14537768, -0.11992788,  0.09587188,
+        0.04348861,  0.26443214, -0.04382649, -0.02890301, -0.00131674,
+        0.09219836,  0.05413551,  0.10605215,  0.03032372,  0.04228423,
+        0.07250382,  0.01140705, -0.01311484,  0.04177916, -0.10178443,
+       -0.21569761,  0.01565909, -0.27418905, -0.03551064,  0.02892201,
+        0.05344915, -0.05026234,  0.18413039, -0.11663553,  0.0162466 ,
+       -0.16556253, -0.04830382,  0.24141434,  0.09317031,  0.00835115,
+        0.11408831,  0.10949991, -0.03641678, -0.14478094,  0.0234874 ,
+       -0.07348802,  0.14804239, -0.23464277,  0.01217727,  0.00439172,
+       -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     //hard coded optimum value
-    // var opt_layer1_w = [[0.4192284525818726], [-4.632616835554741], [3.9243368339649196], [3.007595350590139]];
-    var opt_layer1_b = [-0.0350533404415349, 0.542922420140448];
+    var opt_layer1_w = [[-1.0276857057669717], [-1.7757753110479435]];
+    var opt_layer1_b = [-1.0317105484166582, 0.09081335728546522];
 
-    var opt_layer3_w = [[-1.0018053680294456, -2.295396901088253], [-1.5631953551581375, 2.391159214960729], [-0.40540518142453374, -1.0788245753629917], [0.6380026706882319, -1.3946651470927713]];
-    var opt_layer3_b = [-0.018294727343049096, 0.23863612030824458, 0.2981111474441632, 0.3541530615418698];
+    var opt_layer3_w = [[1.2047772931715652, -1.3292389012713663], [-0.8752885769889244, -0.3830013401185536], [-1.2476346720191573, 0.012281561628161724], [-0.48731459666000143, -0.05925733427442881]];
+    var opt_layer3_b = [0.049221981161746975, 0.09792876163247693, -0.05580702822640939, 0.0036955128227096567];
 
-    var opt_layer5_w = [[0.8953418011623168, -0.6906680853347018, 0.6171814153637224, -0.6190977650394254], [0.8764060717623865, 1.5671409007616648, 0.22610728448708098, -0.564445498488806], [0.032733751406064424, -0.885075385439156, 0.1927937809145724, 0.4619033485384189], [-0.7025384830426472, 2.40549668956026, 0.1680916892367126, -1.0623739071124452]];
-    var opt_layer5_b = [-0.5062945247638968, -0.482385594631888, -0.39063428688002855, -0.10984041210290063];
+    var opt_layer5_w = [[-1.5367545945148897, -0.1830772240247671, 0.6853785345021879, 0.4033122857048783], [0.4878422620322261, 0.36812150154407264, 0.15516684172708473, 0.18484860754255478], [0.8096580125676833, 0.5863946870203293, -0.7670870269665644, -0.3087198804516357], [-0.014253148845799209, 0.6209013272682813, 0.9782959272390246, 0.5111253617093041]];
+    var opt_layer5_b = [0.06231072382489856, 0.1929808569792583, 0.027909301916879438, -0.16462008757398824];
 
-    var opt_layer7_w = [[0.5025540033238227, -1.1542474391888609, 0.2654992345939462, 1.189160940884627]];
-    var opt_layer7_b = [-0.05582215949788676];
+    var opt_layer7_w = [[-1.251840378581919, 0.3987561941194795, 0.4857798343153475, 0.9750512501490752]];
+    var opt_layer7_b = [0.5047341018322941];
 
     //define a neural network 3*3
     var net = make_preset_net();
     var epoch = 0;
-    // var trainer = new convnetjs.Trainer(net, {method: 'adadelta', batch_size: 10});
 
-
-    var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.01,
-    l2_decay: 0, momentum: 0.9, batch_size: 10,
+    var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.001,
+    l2_decay: 0, momentum: 0.9, batch_size: 8,
     l1_decay: 0});
 
     //diagram parameters
@@ -80,8 +87,6 @@ function nn_full(div) {
     .style("height", h + "px")
     var svg = div.append("svg");
     var svg2 = div.append("svg");
-    // var svg = div.selectAll("svg").data([0]);
-    // var svg2 = div.selectAll("svg").data([1]);
     svg.attr("width", w)
     .attr("height", h);
     svg2.attr("width", w_2)
@@ -194,53 +199,37 @@ function nn_full(div) {
         }
     }
 
-    function plot_total_loss() {
-        var dummy_net = make_preset_net();
-        var color = d3.scaleLog()
-            .domain([1,40])
-            .interpolate(function() { return d3.interpolateSpectral; });
-        var x_val;
-        var total_loss;
-        var true_label;
-        var predicted;
-        var scaled_width = Math.abs(x_scale_right(0.1) - x_scale_right(0)) + 0.1;
-        var scaled_height = Math.abs(y_scale_right(0.1) - y_scale_right(0)) + 0.1;
-
-        for (var w_1 = -15; w_1 < 14.99; w_1+=0.1) {
-            for (var w_2 = -14.99; w_2 < 14.99; w_2+=0.1) {
-                total_loss = compute_validation_loss(dummy_net, w_1, w_2);
-                svg2.append("rect")
-                .attr("x", x_scale_right(w_1))
-                .attr("y", y_scale_right(w_2))
-                .attr("width", scaled_width)
-                .attr("height", scaled_height)
-                .attr("fill", color(total_loss))
-                .attr("opacity", 0.7);
-            }
-        }
-    }
-
     function plot_contour() {
         var dummy_net = make_preset_net();
         var n = 300;
         var m = 300;
         var values = new Array(n * m);
 
+        var max = 0;
+        var min = 10;
         for (var w_2 = 0, k = 0; w_2 < 300; w_2++) {
             for (var w_1 = 0; w_1 < 300; w_1++, k++) {
-                values[k] = compute_training_loss(dummy_net, x_scale_right_inverse(w_1), -x_scale_right_inverse(w_2));
+                values[k] = compute_validation_loss(dummy_net, x_scale_right_inverse(w_1), -x_scale_right_inverse(w_2));
+                if (values[k] > max) {
+                    max = values[k];
+                }
+                if (values[k] < min) {
+                    min = values[k];
+                }
             }
         }
+        console.log(max);
+        console.log(min);
 
         console.log(k);
 
         var color = d3.scaleLog()
-            .domain([1,40])
+            .domain([0.05,500])
             .interpolate(function() { return d3.interpolateSpectral; });
 
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0, 40, 4));
+            .thresholds(d3.range(0.05, 500, 5));
 
         svg2.selectAll("path")
             .data(contours(values))
@@ -276,7 +265,7 @@ function nn_full(div) {
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss;
+        return total_loss * validation_points.length / train_points.length;
     }
 
     function clear() {
@@ -293,7 +282,7 @@ function nn_full(div) {
     function train() {
         if (!currently_training) {
             console.log("started training");
-            net.freezeAllButFirst();
+            net.freezeAllButX(1);
             currently_training = setInterval(train_epoch, 50);
         }
     }
@@ -352,8 +341,8 @@ function nn_full(div) {
 
     function reset() {
         net = make_preset_net();
-        trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.01,
-        l2_decay: 0, momentum: 0.9, batch_size: 10,
+        trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.001,
+        l2_decay: 0, momentum: 0.9, batch_size: 8,
         l1_decay: 0});
         clear();
         plot();
