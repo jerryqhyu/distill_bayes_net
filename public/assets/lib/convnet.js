@@ -524,9 +524,10 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       for(var i=0;i<this.out_depth ;i++) { w_hat.push(new Vol(1, 1, this.num_inputs)); }
       var epsilon_hat = [];
       for(var i=0;i<this.out_depth ;i++) { epsilon_hat.push(new Vol(1, 1, this.num_inputs)); }
+
       //sample a set of weights
       for (var i = 0; i < w_hat.length; i++) {
-          for (var j = 0; j < this.w_hat[i].w.length; i++) {
+          for (var j = 0; j < w_hat[i].w.length; j++) {
               epsilon_hat[i].w[j] = global.randn(0, 1);
               w_hat[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
           }
@@ -535,7 +536,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       //copy to class var when training to backprop
       if (is_training) {
           for (var i = 0; i < w_hat.length; i++) {
-              for (var j = 0; j < this.w_hat[i].w.length; i++) {
+              for (var j = 0; j < w_hat[i].w.length; j++) {
                   this.sampled_epsilon[i].w[j] = epsilon_hat[i].w[j];
                   this.sampled_w[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
               }
@@ -570,8 +571,8 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[i].dw[k];
-              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k]) - this.sampled_w[i].dw[k] * this.sampled_epsilon[i].w[k];
+              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[j].dw[k];
+              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k]) - this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
           }
       }
     },
@@ -584,7 +585,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
         response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
       }
       for(var j=0;j<this.out_depth;j++) {
-        response.push({params: this.std[i].w, grads: this.std[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+        response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
       }
       return response;
     },

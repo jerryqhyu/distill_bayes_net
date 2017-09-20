@@ -1,4 +1,4 @@
-function nn_full(div) {
+function var_full(div) {
 
     //svg properties
     var w = 684
@@ -92,8 +92,7 @@ function nn_full(div) {
     svg2.attr("width", w_2)
     .attr("height", h_2);
 
-    // plot_total_loss();
-    plot_contour();
+    // plot_contour();
 
     //interval controller
     var currently_training = 0;
@@ -102,20 +101,20 @@ function nn_full(div) {
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
-        layer_defs.push({type:'fc', num_neurons:2, activation:'tanh'});
-        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
-        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'variational', num_neurons:2, activation:'tanh'});
+        layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'regression', num_neurons:1});
         var new_net = new convnetjs.Net();
         new_net.makeLayers(layer_defs);
         // new_net.getLayer(1).setWeights(opt_layer1_w);
-        new_net.getLayer(3).setWeights(opt_layer3_w);
-        new_net.getLayer(5).setWeights(opt_layer5_w);
-        new_net.getLayer(7).setWeights(opt_layer7_w);
-        new_net.getLayer(1).setBiases(opt_layer1_b);
-        new_net.getLayer(3).setBiases(opt_layer3_b);
-        new_net.getLayer(5).setBiases(opt_layer5_b);
-        new_net.getLayer(7).setBiases(opt_layer7_b);
+        // new_net.getLayer(3).setWeights(opt_layer3_w);
+        // new_net.getLayer(5).setWeights(opt_layer5_w);
+        // new_net.getLayer(7).setWeights(opt_layer7_w);
+        // new_net.getLayer(1).setBiases(opt_layer1_b);
+        // new_net.getLayer(3).setBiases(opt_layer3_b);
+        // new_net.getLayer(5).setBiases(opt_layer5_b);
+        // new_net.getLayer(7).setBiases(opt_layer7_b);
         return new_net;
     }
 
@@ -133,7 +132,7 @@ function nn_full(div) {
     function train() {
         if (!currently_training) {
             console.log("started training");
-            net.freezeAllButX(1);
+            // net.freezeAllButX(1);
             currently_training = setInterval(train_epoch, 50);
         }
     }
@@ -172,7 +171,7 @@ function nn_full(div) {
 
     function plot() {
         plot_line();
-        plot_weight();
+        // plot_weight();
     }
 
     function plot_line() {
