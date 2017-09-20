@@ -144,6 +144,7 @@ asdfasdfad
         </g>
     </svg>
 
+    <!-- KL divergence figure -->
     <figure style = "position:relative; width:984px; height:400px;">
         <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
@@ -156,6 +157,8 @@ asdfasdfad
             If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the areas. Do these measures agree?
         </figcaption>
     </figure>
+
+    <!-- Regular MLP figure -->
     <figure style = "position:relative; width:984px; height:400px;">
         <div id="nn_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
         <button type="button" onclick="net.train()">Train</button>
@@ -165,10 +168,21 @@ asdfasdfad
         </figcaption>
     </figure>
 
+    <!-- Variational Inference Layer -->
+    <figure style = "position:relative; width:984px; height:400px;">
+        <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <button type="button" onclick="net.train()">Train</button>
+        <button type="button" onclick="net.reset()">Reset</button>
+        <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            Now we fit a distribution of weights to the underlying latent distribution.
+        </figcaption>
+    </figure>
+
 
     <script src="assets/lib/gaussian_curve.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/nn_full.js"></script>
+    <script src="assets/lib/var_full.js"></script>
     <script src="assets/lib/convnet.js"></script>
     <script src="assets/iterates.js"></script>
 
@@ -211,11 +225,13 @@ asdfasdfad
 
 
     //training NN on sine
-    var net = nn_full(d3.select("#nn_full"));
-    net.plot();
+    var net_nn = nn_full(d3.select("#nn_full"));
+    net_nn.plot();
+
+    // training var on sine
+    var net_var = var_full(d3.select("#var_full"));
+    net_var.plot();
     </script>
-
-
 
   <dt-math block="">
 <style>

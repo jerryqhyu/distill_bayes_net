@@ -509,6 +509,8 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     for(var i=0;i<this.out_depth ;i++) { this.mean.push(new Vol(1, 1, this.num_inputs)); }
     this.std = [];
     for(var i=0;i<this.out_depth ;i++) { this.std.push(new Vol(1, 1, this.num_inputs)); }
+    this.sampled_epsilon = [];
+    for(var i=0;i<this.out_depth ;i++) { this.sampled_epsilon.push(new Vol(1, 1, this.num_inputs)); }
     this.sampled_w = [];
     for(var i=0;i<this.out_depth ;i++) { this.sampled_w.push(new Vol(1, 1, this.num_inputs)); }
   }
@@ -520,15 +522,24 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
       var w_hat = [];
       for(var i=0;i<this.out_depth ;i++) { w_hat.push(new Vol(1, 1, this.num_inputs)); }
+      var epsilon_hat = [];
+      for(var i=0;i<this.out_depth ;i++) { epsilon_hat.push(new Vol(1, 1, this.num_inputs)); }
       //sample a set of weights
       for (var i = 0; i < w_hat.length; i++) {
           for (var j = 0; j < this.w_hat[i].w.length; i++) {
-              w_hat[i].w[j] = global.randn(this.mean[i].w[j], this.std[i].w[j]);
+              epsilon_hat[i].w[j] = global.randn(0, 1);
+              w_hat[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
           }
       }
 
+      //copy to class var when training to backprop
       if (is_training) {
-          this.sampled_w = w_hat;
+          for (var i = 0; i < w_hat.length; i++) {
+              for (var j = 0; j < this.w_hat[i].w.length; i++) {
+                  this.sampled_epsilon[i].w[j] = epsilon_hat[i].w[j];
+                  this.sampled_w[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+              }
+          }
       }
 
       var Vw = V.w;
@@ -549,13 +560,19 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
       // compute gradient wrt weights and data
       for(var i=0;i<this.out_depth;i++) {
-        var tfi = this.filters[i];
+        var tfi = this.sampled_w[i];
         var chain_grad = this.out_act.dw[i];
         for(var d=0;d<this.num_inputs;d++) {
           V.dw[d] += tfi.w[d]*chain_grad; // grad wrt input data
           tfi.dw[d] += V.w[d]*chain_grad; // grad wrt params
         }
-        this.biases.dw[i] += chain_grad;
+      }
+
+      for (var j = 0; j < this.sampled_w.length; j++) {
+          for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
+              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[i].dw[k];
+              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k]) - this.sampled_w[i].dw[k] * this.sampled_epsilon[i].w[k];
+          }
       }
     },
     getParamsAndGrads: function() {
@@ -564,9 +581,11 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
         }
       var response = [];
       for(var i=0;i<this.out_depth;i++) {
-        response.push({params: this.filters[i].w, grads: this.filters[i].dw, l1_decay_mul: this.l1_decay_mul, l2_decay_mul: this.l2_decay_mul});
+        response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
       }
-      response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+      for(var j=0;j<this.out_depth;j++) {
+        response.push({params: this.std[i].w, grads: this.std[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+      }
       return response;
     },
     freeze: function() {
@@ -1045,6 +1064,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
           case 'input': this.layers.push(new global.InputLayer(def)); break;
           case 'softmax': this.layers.push(new global.SoftmaxLayer(def)); break;
           case 'regression': this.layers.push(new global.RegressionLayer(def)); break;
+          case 'variational': this.layers.push(new global.VariationalLayer(def)); break;
           case 'relu': this.layers.push(new global.ReluLayer(def)); break;
           case 'tanh': this.layers.push(new global.TanhLayer(def)); break;
           default: console.log('ERROR: UNRECOGNIZED LAYER TYPE: ' + def.type);
