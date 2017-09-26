@@ -1,13 +1,25 @@
 function nn_full(div, train_loss_div, valid_loss_div) {
 
-    console.log(div);
-    console.log(train_loss_div);
-    console.log(valid_loss_div);
     //svg properties
     var w = 984
     var h = 300
     var w_2 = 300
     var h_2 = 300
+    var step_size = 0.1;
+    var div = div;
+    var train_loss_div = train_loss_div;
+    var valid_loss_div = valid_loss_div;
+    var svg = div.append("svg");
+    var svg2 = train_loss_div.append("svg");
+    var svg3 = valid_loss_div.append("svg");
+    svg.attr("width", w)
+    .attr("height", h);
+    svg2.attr("width", w_2)
+    .attr("height", h_2);
+    svg3.attr("width", w_2)
+    .attr("height", h_2);
+
+    var obtaining_param = 0;
 
     //scale for diagram on the left
     var x_scale_left = d3.scaleLinear().domain([-5,5]).range([0,w])
@@ -36,8 +48,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     })
 
     //hard coded points for consistentcy
-    var train_points = [ 0.98348382,  0.33239784, -1.9390813 , -1.77390395,  1.31901198,
-       -0.55732958, -1.33424016, -2.49962207];
+    var train_points = [ 0.98348382,  0.33239784, 1.31901198,
+      -1.33424016, -2.49962207, 2.671385];
     var validation_points = [0.0074539 , -2.25649362,  1.2912101 ,         -1.15521679,  0.15278725,
         2.0997623 ,  1.47247248, -1.05303993,  0.4568989 , -0.61385536,
        -2.18751186,  1.26085173, -2.8500024 ,  2.59464658,  2.64281159,
@@ -49,8 +61,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         0.37747723,  0.32106662,  0.07131672,  0.03220256, -1.37330352,
         1.47470907,  2.19194335, -0.77412576, -1.29907828, -2.64114398];
 
-    var noise_train = [ 0.17785805, -0.08573558,  0.25208923,  0.10656975,  0.1274808 ,
-       -0.12225689, -0.50733901,  0.46974662];
+    var noise_train = [-0.24911933, -0.18541917,  0.37738159,  0.16834003,  0.39383113,
+        0.37258389];
     var noise_validation = [-0.09674867,  0.02199221,  0.14537768, -0.11992788,  0.09587188,
         0.04348861,  0.26443214, -0.04382649, -0.02890301, -0.00131674,
         0.09219836,  0.05413551,  0.10605215,  0.03032372,  0.04228423,
@@ -63,48 +75,30 @@ function nn_full(div, train_loss_div, valid_loss_div) {
        -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     //hard coded optimum value
-    var opt_layer1_w = [[0.8524931676803672], [0.37878940815645035]];
-    var opt_layer1_b = [-0.08786740404510873, 0.17208749353986894];
+    var opt_layer1_w = [[1], [1]];
+    var opt_layer1_b = [-1.471708721550612, 1.4638299054171822];
 
-    var opt_layer3_w = [[-1.0053746342368266, 1.3716641971996841], [0.725454398738081, 0.11001476495392559], [0.9493341651386455, -1.4436250832667143], [0.6746807773885164, 0.3803935179028687]];
-    var opt_layer3_b = [0.07262369904499333, 0.5025725957380391, -0.08779557601574167, 0.3504199978289432];
+    var opt_layer3_w = [[-3.4756037730352953, -3.1951265117983656], [-0.6023875694498428, 0.742082606972636], [3.2691245346279794, 2.639303322222997], [0.6001228460411082, 1.5988685131936045]];
+    var opt_layer3_b = [-0.4959376942683454, -0.38383011398703676, 0.1385379213238358, 0.14474274177948032];
 
-    var opt_layer5_w = [[0.4465023951736657, 0.10890244966240833, -0.719668136190443, -0.21057427044236937], [-0.5366144703746402, 1.269734218795756, -0.43556236881710747, 0.10019019956635422], [0.22377006309560446, 0.32071923722344675, -0.030569400531562364, 0.6451103928472554], [1.1655228762790601, -0.0661879448473107, -0.9944730241548263, -0.0397354223834769]];
-    var opt_layer5_b = [-0.09495064351949174, 0.29136405141267585, 0.17762234535276802, 0.04773460143215476];
+    var opt_layer5_w = [[-0.7608457857739974, -3.807077771966103, 0.15964555671290204, 0.4316940153554302], [-0.46029527392239034, 0.499362627227224, 0.26215741516903984, 0.6087584334472715], [-0.12003663770954856, -2.070047029632726, -0.8253090796194713, -0.5211260899153192], [1.1497913505525421, 3.1232664390054965, 0.31466460121428946, -1.1103448335850838]];
+    var opt_layer5_b = [-0.09954752198229085, -0.20782723076897178, 1.0460388498407667, -0.6316497703555812];
 
-    var opt_layer7_w = [[-0.9331088158673359, 0.7297973496603036, 0.5756426109456603, -1.337514664450425]];
-    var opt_layer7_b = [0.28712112407991974];
+    var opt_layer7_w = [[0.16424348634195116, -0.6067898480353261, -1.0202767210893393, -0.7873295687436086]];
+    var opt_layer7_b = [0.1996533593619645];
 
-    //define a neural network 3*3
+    //define a neural network
     var net = make_preset_net();
     var epoch_count = 0;
     var learning_rate = 0.01;
     var l1_decay = 0;
     var l2_decay = 0;
-    var momentum = 0.95;
+    var momentum = 0.99;
     var batch_size = 8;
 
     var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
-
-    //diagram parameters
-    var step_size = 0.1;
-    var div = div;
-    var train_loss_div = train_loss_div;
-    var valid_loss_div = valid_loss_div;
-    div.style("width", w + "px")
-        .style("height", h + "px");
-
-    var svg = div.append("svg");
-    var svg2 = train_loss_div.append("svg");
-    var svg3 = valid_loss_div.append("svg");
-    svg.attr("width", w)
-    .attr("height", h);
-    svg2.attr("width", w_2)
-    .attr("height", h_2);
-    svg3.attr("width", w_2)
-    .attr("height", h_2);
 
     // train is always drawn, valid is never drawn, wtf
     plot_train_contour(svg2);
@@ -123,14 +117,16 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         layer_defs.push({type:'regression', num_neurons:1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
+        if (!obtaining_param) {
+            new_net.getLayer(3).setWeights(opt_layer3_w);
+            new_net.getLayer(5).setWeights(opt_layer5_w);
+            new_net.getLayer(7).setWeights(opt_layer7_w);
+            new_net.getLayer(1).setBiases(opt_layer1_b);
+            new_net.getLayer(3).setBiases(opt_layer3_b);
+            new_net.getLayer(5).setBiases(opt_layer5_b);
+            new_net.getLayer(7).setBiases(opt_layer7_b);
+        }
         // new_net.getLayer(1).setWeights(opt_layer1_w);
-        new_net.getLayer(3).setWeights(opt_layer3_w);
-        new_net.getLayer(5).setWeights(opt_layer5_w);
-        new_net.getLayer(7).setWeights(opt_layer7_w);
-        new_net.getLayer(1).setBiases(opt_layer1_b);
-        new_net.getLayer(3).setBiases(opt_layer3_b);
-        new_net.getLayer(5).setBiases(opt_layer5_b);
-        new_net.getLayer(7).setBiases(opt_layer7_b);
         return new_net;
     }
 
@@ -148,39 +144,44 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     function train() {
         if (!currently_training) {
             console.log("started training");
-            net.freezeAllButX(1);
+            if (obtaining_param) {
+                net.getLayer(1).freeze_weights();
+                // net.getLayer(1).freeze_biases();
+            } else {
+                net.freezeAllButX(1);
+            }
             currently_training = setInterval(train_epoch, 50);
         }
     }
 
     function train_epoch() {
         var x;
-        // for (var j = 0; j < validation_points.length; j++) {
-        //     x = new net_lib.Vol([validation_points[j]]);
-        //     trainer.train(x, [Math.sin(validation_points[j])+noise_validation[j]]);
-        // }
-        // for (var j = 0; j < train_points.length; j++) {
-        //     x = new net_lib.Vol([train_points[j]]);
-        //     trainer.train(x, [Math.sin(train_points[j])+noise_train[j]]);
-        // }
         for (var j = 0; j < train_points.length; j++) {
             x = new net_lib.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise_train[j]]);
         }
-        if (epoch_count === 750) {
-            for (var i = 0; i < net.layers.length; i++) {
-                layer = net.getLayer(i);
-                if (layer.filters) {
-                    console.log("This is layer" + i);
-                    console.log("Biases");
-                    console.log(layer.biases.w);
-                    for (var j = 0; j < layer.filters.length; j++) {
-                        console.log(layer.filters[j].w);
+        if (obtaining_param) {
+            for (var j = 0; j < validation_points.length; j++) {
+                x = new net_lib.Vol([validation_points[j]]);
+                trainer.train(x, [Math.sin(validation_points[j])+noise_validation[j]]);
+            }
+            if (epoch_count % 100 == 0) {
+                console.log(epoch_count);
+            }
+            if (epoch_count === 500) {
+                for (var i = 0; i < net.layers.length; i++) {
+                    layer = net.getLayer(i);
+                    if (layer.filters) {
+                        console.log("This is layer" + i);
+                        console.log("Biases");
+                        console.log(layer.biases.w);
+                        for (var j = 0; j < layer.filters.length; j++) {
+                            console.log(layer.filters[j].w);
+                        }
                     }
                 }
             }
         }
-
         clear();
         plot();
         epoch_count++;
@@ -289,15 +290,15 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
     function plot_train_contour(svg) {
         var dummy_net = make_preset_net();
-        var n = 150;
-        var m = 150;
+        var n = 75;
+        var m = 75;
         var values = new Array(n * m);
 
         var max = 0;
         var min = 10;
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                values[k] = compute_training_loss(dummy_net, x_scale_right_inverse(w_1*2), -x_scale_right_inverse(w_2*2));
+                values[k] = compute_training_loss(dummy_net, x_scale_right_inverse(w_1*4), -x_scale_right_inverse(w_2*4));
                 if (values[k] > max) {
                     max = values[k];
                 }
@@ -318,21 +319,21 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         svg.selectAll("path")
             .data(contours(values))
             .enter().append("path")
-            .attr("d", d3.geoPath(d3.geoIdentity().scale(2)))
+            .attr("d", d3.geoPath(d3.geoIdentity().scale(4)))
             .attr("fill", function(d) { return color(d.value); });
     }
 
     function plot_validation_contour(svg_for_valid) {
         var dummy_net = make_preset_net();
-        var n = 150;
-        var m = 150;
+        var n = 75;
+        var m = 75;
         var values = new Array(n * m);
 
         var max = 0;
         var min = 10;
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                values[k] = compute_validation_loss(dummy_net, x_scale_right_inverse(w_1*2), -x_scale_right_inverse(w_2*2));
+                values[k] = compute_validation_loss(dummy_net, x_scale_right_inverse(w_1*4), -x_scale_right_inverse(w_2*4));
                 if (values[k] > max) {
                     max = values[k];
                 }
@@ -353,7 +354,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         svg_for_valid.selectAll("path")
             .data(contours(values))
             .enter().append("path")
-            .attr("d", d3.geoPath(d3.geoIdentity().scale(2)))
+            .attr("d", d3.geoPath(d3.geoIdentity().scale(4)))
             .attr("fill", function(d) { return color(d.value); });
     }
 
@@ -369,7 +370,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss;
+        return total_loss / 1.5;
     }
 
     function compute_training_loss(dummy_net, w_1, w_2) {
@@ -384,7 +385,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss * validation_points.length / train_points.length;
+        return total_loss * validation_points.length / train_points.length / 1.5;
     }
 
     function start_drag(d) {
