@@ -1,4 +1,4 @@
-var convnetjs = convnetjs || { REVISION: 'ALPHA' };
+var net_lib = net_lib || { REVISION: 'ALPHA' };
 (function(global) {
   "use strict";
 
@@ -135,7 +135,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   global.getopt = getopt;
   global.assert = assert;
 
-})(convnetjs);
+})(net_lib);
 
 //Vol
 (function(global) {
@@ -248,7 +248,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
 
   global.Vol = Vol;
-})(convnetjs);
+})(net_lib);
 
 //image manipulation
 (function(global) {
@@ -358,7 +358,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   global.augment = augment;
   global.img_to_vol = img_to_vol;
 
-})(convnetjs);
+})(net_lib);
 
 //FullyConn
 (function(global) {
@@ -371,7 +371,8 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   // - FullyConn is fully connected dot products
   var FullyConnLayer = function(opt) {
     var opt = opt || {};
-    this.frozen = false;
+    this.weights_frozen = false;
+    this.biases_frozen = false;
     // required
     // ok fine we will allow 'filters' as the word as well
     this.out_depth = typeof opt.num_neurons !== 'undefined' ? opt.num_neurons : opt.filters;
@@ -426,18 +427,22 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       }
     },
     getParamsAndGrads: function() {
-        if (this.frozen) {
-            return [];
-        }
       var response = [];
+      if (!this.weights_frozen) {
       for(var i=0;i<this.out_depth;i++) {
-        response.push({params: this.filters[i].w, grads: this.filters[i].dw, l1_decay_mul: this.l1_decay_mul, l2_decay_mul: this.l2_decay_mul});
+              response.push({params: this.filters[i].w, grads: this.filters[i].dw, l1_decay_mul: this.l1_decay_mul, l2_decay_mul: this.l2_decay_mul});
+          }
       }
-      response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+      if (!this.biases_frozen) {
+          response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+      }
       return response;
     },
-    freeze: function() {
-        this.frozen = true;
+    freeze_weights: function() {
+        this.weights_frozen = true;
+    },
+    freeze_biases: function() {
+        this.biases_frozen = true;
     },
     setWeights: function(w_list) {
         for (var i = 0; i < this.filters.length; i++) {
@@ -484,7 +489,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.FullyConnLayer = FullyConnLayer;
 
-})(convnetjs);
+})(net_lib);
 
 //Variational
 (function(global) {
@@ -493,7 +498,8 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   var VariationalLayer = function(opt) {
     var opt = opt || {};
-    this.frozen = false;
+    this.weights_frozen = false;
+    this.biases_frozen = false;
     // required
     // ok fine we will allow 'filters' as the word as well
     this.out_depth = typeof opt.num_neurons !== 'undefined' ? opt.num_neurons : opt.filters;
@@ -502,7 +508,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
     this.out_sx = 1;
     this.out_sy = 1;
-    this.layer_type = 'fc';
+    this.layer_type = 'variational';
 
     // initializations
     this.mean = [];
@@ -520,28 +526,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       this.in_act = V;
       var A = new Vol(1, 1, this.out_depth, 0.0);
 
-      var w_hat = [];
-      for(var i=0;i<this.out_depth ;i++) { w_hat.push(new Vol(1, 1, this.num_inputs)); }
-      var epsilon_hat = [];
-      for(var i=0;i<this.out_depth ;i++) { epsilon_hat.push(new Vol(1, 1, this.num_inputs)); }
-
-      //sample a set of weights
-      for (var i = 0; i < w_hat.length; i++) {
-          for (var j = 0; j < w_hat[i].w.length; j++) {
-              epsilon_hat[i].w[j] = global.randn(0, 1);
-              w_hat[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
-          }
-      }
-
-      //copy to class var when training to backprop
-      if (is_training) {
-          for (var i = 0; i < w_hat.length; i++) {
-              for (var j = 0; j < w_hat[i].w.length; j++) {
-                  this.sampled_epsilon[i].w[j] = epsilon_hat[i].w[j];
-                  this.sampled_w[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
-              }
-          }
-      }
+      this.sample(is_training);
 
       var Vw = V.w;
       for(var i=0;i<this.out_depth;i++) {
@@ -571,26 +556,56 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[j].dw[k];
-              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k]) - this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
+              this.mean[j].dw[k] = 0.01 * (this.mean[j].w[k] - this.sampled_w[j].dw[k]);
+              this.std[j].dw[k] = 0.01*((this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
           }
       }
     },
     getParamsAndGrads: function() {
-        if (this.frozen) {
-            return [];
-        }
       var response = [];
+      if (!this.weights_frozen) {
+
       for(var i=0;i<this.out_depth;i++) {
-        response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
-      }
-      for(var j=0;j<this.out_depth;j++) {
-        response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
-      }
+              response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+
+        }
+    }
+        if (!this.biases_frozen) {
+            for(var j=0;j<this.out_depth;j++) {
+
+              response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+            }
+        }
       return response;
     },
-    freeze: function() {
-        this.frozen = true;
+    freeze_weights: function() {
+        this.weights_frozen = true;
+    },
+    freeze_biases: function() {
+        this.biases_frozen = true;
+    },
+    sample: function(is_training) {
+        var w_hat = [];
+        for(var i=0;i<this.out_depth ;i++) { w_hat.push(new Vol(1, 1, this.num_inputs)); }
+        var epsilon_hat = [];
+        for(var i=0;i<this.out_depth ;i++) { epsilon_hat.push(new Vol(1, 1, this.num_inputs)); }
+
+        //sample a set of weights
+        for (var i = 0; i < w_hat.length; i++) {
+            for (var j = 0; j < w_hat[i].w.length; j++) {
+                epsilon_hat[i].w[j] = global.randn(0, 1);
+                w_hat[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+            }
+        }
+        //copy to class var when training to backprop
+        if (is_training) {
+            for (var i = 0; i < w_hat.length; i++) {
+                for (var j = 0; j < w_hat[i].w.length; j++) {
+                    this.sampled_epsilon[i].w[j] = epsilon_hat[i].w[j];
+                    this.sampled_w[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+                }
+            }
+        }
     },
     setMeans: function(mean_list) {
         for (var i = 0; i < this.filters_mean.length; i++) {
@@ -639,7 +654,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.VariationalLayer = VariationalLayer;
 
-})(convnetjs);
+})(net_lib);
 
 //Input
 (function(global) {
@@ -648,7 +663,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   var getopt = global.getopt;
 
   var InputLayer = function(opt) {
-    var frozen = false;
     var opt = opt || {};
 
     // required: depth
@@ -671,10 +685,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     getParamsAndGrads: function() {
       return [];
     },
-    //useless function here
-    freeze: function() {
-        this.frozen = true;
-    },
     toJSON: function() {
       var json = {};
       json.out_depth = this.out_depth;
@@ -692,7 +702,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
 
   global.InputLayer = InputLayer;
-})(convnetjs);
+})(net_lib);
 
 //Softmax, Regression
 (function(global) {
@@ -792,7 +802,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   // and y is the user-provided array of "correct" values.
   var RegressionLayer = function(opt) {
     var opt = opt || {};
-    var frozen = false;
     // computed
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
     this.out_depth = this.num_inputs;
@@ -839,9 +848,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       }
       return loss;
     },
-    freeze: function() {
-        this.frozen = true;
-    },
     getParamsAndGrads: function() {
       return [];
     },
@@ -864,7 +870,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
   global.SoftmaxLayer = SoftmaxLayer;
   global.RegressionLayer = RegressionLayer;
- })(convnetjs);
+ })(net_lib);
 
 //Relu, Tanh
 (function(global) {
@@ -934,7 +940,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   // so the output is between -1 and 1.
   var TanhLayer = function(opt) {
     var opt = opt || {};
-    var frozen = false;
     // computed
     this.out_sx = opt.in_sx;
     this.out_sy = opt.in_sy;
@@ -962,9 +967,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
         V.dw[i] = (1.0 - v2wi * v2wi) * V2.dw[i];
       }
     },
-    freeze: function() {
-        this.frozen = true; //useless
-    },
     getParamsAndGrads: function() {
       return [];
     },
@@ -986,7 +988,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.TanhLayer = TanhLayer;
   global.ReluLayer = ReluLayer;
-})(convnetjs);
+})(net_lib);
 
 //Net
 (function(global) {
@@ -1091,7 +1093,6 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var loss = this.layers[N-1].backward(y);
       return loss;
     },
-
     // backprop: compute gradients wrt all parameters
     backward: function(y) {
       var N = this.layers.length;
@@ -1112,6 +1113,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       }
       return response;
     },
+    sampleNets(num_nets) {
+        var nets = [];
+        var new_net;
+        for (var i = 0; i < num_nets; i++) {
+            new_net = new Net();
+            new_net.fromJSON(this.toJSON());
+            nets.push(new_net);
+        }
+        return nets;
+    },
     getPrediction: function() {
       // this is a convenience function for returning the argmax
       // prediction, assuming the last layer of the net is a softmax
@@ -1127,9 +1138,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       return maxi; // return index of the class with highest class probability
     },
     freezeAllButX: function(x) {
+        //only allow weights to change
+        this.layers[x].freeze_biases();
+        var layer;
         for (var i = 0; i < this.layers.length; i++) {
             if (i != x) {
-                this.layers[i].freeze();
+                layer = this.layers[i];
+                if (layer.layer_type === 'fc' || layer.layer_type === 'variational') {
+                    layer.freeze_weights();
+                    layer.freeze_biases();
+                }
             }
         }
     },
@@ -1163,7 +1181,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
 
   global.Net = Net;
-})(convnetjs);
+})(net_lib);
 
 //Trainer
 (function(global) {
@@ -1302,7 +1320,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
   global.Trainer = Trainer;
   global.SGDTrainer = Trainer; // backwards compatibility
-})(convnetjs);
+})(net_lib);
 
 //MagicNet??
 (function(global) {
@@ -1320,7 +1338,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   var arrUnique = global.arrUnique;
 
   /*
-  A MagicNet takes data: a list of convnetjs.Vol(), and labels
+  A MagicNet takes data: a list of net_lib.Vol(), and labels
   which for now are assumed to be class indeces 0..K. MagicNet then:
   - creates data folds for cross-validation
   - samples candidate networks
@@ -1625,7 +1643,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   };
 
   global.MagicNet = MagicNet;
-})(convnetjs);
+})(net_lib);
 
 (function(lib) {
   "use strict";
@@ -1634,4 +1652,4 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   } else {
     module.exports = lib; // in nodejs
   }
-})(convnetjs);
+})(net_lib);

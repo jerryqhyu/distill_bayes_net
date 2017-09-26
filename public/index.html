@@ -169,6 +169,16 @@ asdfasdfad
         </figcaption>
     </figure>
 
+    <figure style = "position:relative; width:984px; height:400px;">
+        <section class="container">
+            <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
+            <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+        </section>
+        <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            The loss surface for the NN. The training loss is plotted on the left, the validation loss is plotted on the right.
+        </figcaption>
+    </figure>
+
     <!-- Variational Inference Layer -->
     <figure style = "position:relative; width:984px; height:400px;">
         <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
@@ -184,7 +194,7 @@ asdfasdfad
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/nn_full.js"></script>
     <script src="assets/lib/var_full.js"></script>
-    <script src="assets/lib/convnet.js"></script>
+    <script src="assets/lib/net_lib.js"></script>
     <script src="assets/iterates.js"></script>
 
     <script>
@@ -226,7 +236,7 @@ asdfasdfad
 
 
     //training NN on sine
-    var net_nn = nn_full(d3.select("#nn_full"));
+    var net_nn = nn_full(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
     net_nn.plot();
 
     // training var on sine

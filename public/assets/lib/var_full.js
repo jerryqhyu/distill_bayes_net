@@ -76,7 +76,7 @@ function var_full(div) {
     var net = make_preset_net();
     var epoch = 0;
 
-    var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.001,
+    var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: 0.001,
     l2_decay: 0, momentum: 0.9, batch_size: 8,
     l1_decay: 0});
 
@@ -105,7 +105,7 @@ function var_full(div) {
         layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'regression', num_neurons:1});
-        var new_net = new convnetjs.Net();
+        var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         // new_net.getLayer(1).setWeights(opt_layer1_w);
         // new_net.getLayer(3).setWeights(opt_layer3_w);
@@ -120,7 +120,7 @@ function var_full(div) {
 
     function reset() {
         net = make_preset_net();
-        trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.001,
+        trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: 0.001,
         l2_decay: 0, momentum: 0.9, batch_size: 8,
         l1_decay: 0});
         clear();
@@ -140,7 +140,7 @@ function var_full(div) {
     function train_epoch() {
         var x;
         for (var j = 0; j < train_points.length; j++) {
-            x = new convnetjs.Vol([train_points[j]]);
+            x = new net_lib.Vol([train_points[j]]);
             trainer.train(x, [Math.sin(train_points[j])+noise_train[j]]);
         }
         if (epoch === 5000) {
@@ -216,11 +216,13 @@ function var_full(div) {
         var data = {};
         var real = [];
         var pred = [];
+        // var sampled_nets = net.sampleNets(10);
+        // console.log(sampled_nets);
         var predicted_value;
         var x_val;
         for (var i = -20; i < 20; i+=step_size) {
             real.push({x:i,y:Math.sin(i)});
-            x_val = new convnetjs.Vol([i]);
+            x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             pred.push({x:i,y:predicted_value.w[0]});
         }
@@ -298,7 +300,7 @@ function var_full(div) {
         var x_val;
         dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var j = 0; j < validation_points.length; j++) {
-            x_val = new convnetjs.Vol([validation_points[j]]);
+            x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
@@ -313,7 +315,7 @@ function var_full(div) {
         var x_val;
         dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var i = 0; i < train_points.length; i++) {
-            x_val = new convnetjs.Vol([train_points[i]]);
+            x_val = new net_lib.Vol([train_points[i]]);
             true_label = Math.sin(train_points[i]) + noise_train[i];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
