@@ -3,49 +3,45 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     //svg properties
     var w = 984
     var h = 300
-    var w_2 = 300
-    var h_2 = 300
+    var w_loss = 300
+    var h_loss = 300
+
     var step_size = 0.1;
     var div = div;
     var train_loss_div = train_loss_div;
     var valid_loss_div = valid_loss_div;
+
     var svg = div.append("svg");
     var svg2 = train_loss_div.append("svg");
     var svg3 = valid_loss_div.append("svg");
     svg.attr("width", w)
     .attr("height", h);
-    svg2.attr("width", w_2)
-    .attr("height", h_2);
-    svg3.attr("width", w_2)
-    .attr("height", h_2);
+    svg2.attr("width", w_loss)
+    .attr("height", h_loss);
+    svg3.attr("width", w_loss)
+    .attr("height", h_loss);
 
     var obtaining_param = 0;
 
+    var curve_domain_x = [-5,5];
+    var curve_domain_y = [-2,2];
+    var loss_domain_x = [-4,4];
+    var loss_domain_y = [-4,4];
+
+    var curve_plotter = Plotter(svg, curve_domain_x, curve_domain_y, w, h);
+    var train_loss_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
+    var valid_loss_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
+
     //scale for diagram on the left
-    var x_scale_left = d3.scaleLinear().domain([-5,5]).range([0,w])
-    var y_scale_left = d3.scaleLinear().domain([-2,2]).range([h,0])
+    var x_scale_sine = d3.scaleLinear().domain([-5,5]).range([0,w])
+    var y_scale_sine = d3.scaleLinear().domain([-2,2]).range([h,0])
 
     //scale for diagram on the right
-    var x_scale_right = d3.scaleLinear().domain([-4,4]).range([0,w_2])
-    var y_scale_right = d3.scaleLinear().domain([-4,4]).range([h,0])
+    var x_scale_loss = d3.scaleLinear().domain([-4,4]).range([0,w_loss])
+    var y_scale_loss = d3.scaleLinear().domain([-4,4]).range([h,0])
 
-    var x_scale_right_inverse = d3.scaleLinear().domain([0, w_2]).range([-4,4])
-    var y_scale_right_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
-
-    var line_true = d3.line()
-    .x(function(d) {
-        return x_scale_left(d.x);
-    })
-    .y(function(d) {
-        return y_scale_left(d.y);
-    })
-    var line_predicted = d3.line()
-    .x(function(d) {
-        return x_scale_left(d.x);
-    })
-    .y(function(d) {
-        return y_scale_left(d.y);
-    })
+    var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
+    var y_scale_loss_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
 
     //hard coded points for consistentcy
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
@@ -75,7 +71,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
        -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     //hard coded optimum value
-    var opt_layer1_w = [[1], [1]];
+    var opt_layer1_w = [[2], [0]];
     var opt_layer1_b = [-1.471708721550612, 1.4638299054171822];
 
     var opt_layer3_w = [[-3.4756037730352953, -3.1951265117983656], [-0.6023875694498428, 0.742082606972636], [3.2691245346279794, 2.639303322222997], [0.6001228460411082, 1.5988685131936045]];
@@ -90,7 +86,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     //define a neural network
     var net = make_preset_net();
     var epoch_count = 0;
-    var learning_rate = 0.01;
+    var learning_rate = 0.005;
     var l1_decay = 0;
     var l2_decay = 0;
     var momentum = 0.99;
@@ -200,50 +196,41 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_line() {
-        data = get_points();
+        data = get_curve();
+        real = data.real;
+        pred = data.pred;
         //sine curve
-        svg.append('path')
-        .attr('d', line_true(data.real))
-        .attr('stroke', "black")
-        .attr('stroke-width', 2)
-        .attr('fill', "none");
+        curve_plotter.plot_line(real, "black", 2);
+        curve_plotter.plot_line(pred, "orange", 2, 0.75);
 
-        //NN prediction
-        svg.append('path')
-        .attr('d', line_predicted(data.pred))
-        .attr('stroke', "darkorange")
-        .attr('stroke-width', 2)
-        .attr('fill', "none")
-        .attr('opacity', 0.9);
-
+        training_points_data = [];
         //training data points
-        for (var j = 0; j < train_points.length; j++) {
-            svg.append("circle")
-            .attr("cx", x_scale_left(train_points[j]))
-            .attr("cy", y_scale_left(Math.sin(train_points[j])+noise_train[j]))
-            .attr("r", 3)
-            .attr("fill", "red")
-            .attr("opacity", 0.7);
+        for (var i = 0; i < train_points.length; i++) {
+            training_points_data.push({
+                x: train_points[i],
+                y: Math.sin(train_points[i])+noise_train[i]
+            });
         }
+        curve_plotter.plot_points(training_points_data, "red", 3, 1);
 
-        //validation data points
-        for (var k = 0; k < validation_points.length; k++) {
-            svg.append("circle")
-            .attr("cx", x_scale_left(validation_points[k]))
-            .attr("cy", y_scale_left(Math.sin(validation_points[k])+noise_validation[k]))
-            .attr("r", 3)
-            .attr("fill", "teal")
-            .attr("opacity", 0.5);
+        validation_points_data = [];
+        //training data points
+        for (var i = 0; i < validation_points.length; i++) {
+            validation_points_data.push({
+                x: validation_points[i],
+                y: Math.sin(validation_points[i])+noise_validation[i]
+            });
         }
+        curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
     }
 
-    function get_points() {
+    function get_curve() {
         var data = {};
         var real = [];
         var pred = [];
         var predicted_value;
         var x_val;
-        for (var i = -20; i < 20; i+=step_size) {
+        for (var i = -6; i < 6; i+=step_size) {
             real.push({x:i,y:Math.sin(i)});
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
@@ -257,8 +244,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     function plot_weight() {
         weights = get_first_two_weights();
         svg2.append("circle")
-        .attr("cx", x_scale_right(weights[0]))
-        .attr("cy", y_scale_right(weights[1]))
+        .attr("cx", x_scale_loss(weights[0]))
+        .attr("cy", y_scale_loss(weights[1]))
         .attr("r", 5)
         .attr("fill", "black")
         .attr("opacity", 1)
@@ -267,8 +254,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             .on("drag", dragged)
             .on("end", end_drag));
         svg3.append("circle")
-        .attr("cx", x_scale_right(weights[0]))
-        .attr("cy", y_scale_right(weights[1]))
+        .attr("cx", x_scale_loss(weights[0]))
+        .attr("cy", y_scale_loss(weights[1]))
         .attr("r", 5)
         .attr("fill", "black")
         .attr("opacity", 1)
@@ -296,9 +283,9 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
         var max = 0;
         var min = 10;
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
+        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                values[k] = compute_training_loss(dummy_net, x_scale_right_inverse(w_1*4), -x_scale_right_inverse(w_2*4));
+                values[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
                 if (values[k] > max) {
                     max = values[k];
                 }
@@ -331,9 +318,9 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
         var max = 0;
         var min = 10;
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
+        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                values[k] = compute_validation_loss(dummy_net, x_scale_right_inverse(w_1*4), -x_scale_right_inverse(w_2*4));
+                values[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
                 if (values[k] > max) {
                     max = values[k];
                 }
@@ -358,34 +345,34 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             .attr("fill", function(d) { return color(d.value); });
     }
 
-    function compute_validation_loss(dummy_net, w_1, w_2) {
+    function compute_validation_loss(dummy_net, w_1, w_loss) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
         for (var j = 0; j < validation_points.length; j++) {
             x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss / 1.5;
+        return total_loss / 1.125;
     }
 
-    function compute_training_loss(dummy_net, w_1, w_2) {
+    function compute_training_loss(dummy_net, w_1, w_loss) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
         for (var i = 0; i < train_points.length; i++) {
             x_val = new net_lib.Vol([train_points[i]]);
             true_label = Math.sin(train_points[i]) + noise_train[i];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss * validation_points.length / train_points.length / 1.5;
+        return total_loss * validation_points.length / train_points.length / 1.125;
     }
 
     function start_drag(d) {
@@ -402,7 +389,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         var new_x = d3.event.x;
         var new_y = d3.event.y;
         d3.select(this).attr("cx", new_x).attr("cy", new_y);
-        net.getLayer(1).setWeights([[x_scale_right_inverse(new_x)], [y_scale_right_inverse(new_y)]]);
+        net.getLayer(1).setWeights([[x_scale_loss_inverse(new_x)], [y_scale_loss_inverse(new_y)]]);
         clear();
         plot();
         console.log(d3.event.x);
