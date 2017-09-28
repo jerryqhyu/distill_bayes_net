@@ -32,14 +32,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     var train_loss_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
     var valid_loss_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
 
-    //scale for diagram on the left
-    var x_scale_sine = d3.scaleLinear().domain([-5,5]).range([0,w])
-    var y_scale_sine = d3.scaleLinear().domain([-2,2]).range([h,0])
-
-    //scale for diagram on the right
-    var x_scale_loss = d3.scaleLinear().domain([-4,4]).range([0,w_loss])
-    var y_scale_loss = d3.scaleLinear().domain([-4,4]).range([h,0])
-
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
     var y_scale_loss_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
 
@@ -96,7 +88,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
 
-    // train is always drawn, valid is never drawn, wtf
     plot_train_contour(svg2);
     plot_validation_contour(svg3);
 
@@ -142,7 +133,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             console.log("started training");
             if (obtaining_param) {
                 net.getLayer(1).freeze_weights();
-                // net.getLayer(1).freeze_biases();
             } else {
                 net.freezeAllButX(1);
             }
