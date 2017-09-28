@@ -240,8 +240,8 @@ function var_full(div) {
         .attr("fill", "black")
         .attr("opacity", 1)
         .call(d3.drag()
-            .on("start", start_drag)
-            .on("drag", dragged)
+            .on("start", on_drag)
+            .on("drag", dragging)
             .on("end", end_drag));
     }
 
@@ -323,7 +323,7 @@ function var_full(div) {
         return total_loss * validation_points.length / train_points.length;
     }
 
-    function start_drag(d) {
+    function on_drag(d) {
         d3.select(this).raise().classed("active", true);
         if (currently_training) {
             was_training = 1;
@@ -333,7 +333,7 @@ function var_full(div) {
         pause_training();
     }
 
-    function dragged(d) {
+    function dragging(d) {
         var new_x = d3.event.x;
         var new_y = d3.event.y;
         d3.select(this).attr("cx", new_x).attr("cy", new_y);

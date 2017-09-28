@@ -24,7 +24,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         return y_scale(d.y);
     })
 
-    function plot_line(data, color, width, opacity) {
+    function plot_line(data, color="black", width=2, opacity=1) {
         if (typeof(opacity) === 'undefined') {
             opacity = 1;
         }
@@ -36,7 +36,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         .attr("opacity", opacity);
     }
 
-    function plot_points(data, color, size, opacity, on_drag, dragging, end_drag) {
+    function plot_points(data, color="black", size=3, opacity=1, on_drag, dragging, end_drag) {
         if (typeof(opacity) === 'undefined') {
             opacity = 1;
         }
@@ -58,7 +58,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         //contour is a marching square, we have to scale the squares to svg size
         size_multiplier = width/n;
         svg.selectAll("path")
-            .data(contours(data))
+            .data(contour_scale(data))
             .enter().append("path")
             .attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier)))
             .attr("fill", function(d) {
