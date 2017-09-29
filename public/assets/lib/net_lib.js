@@ -5,13 +5,16 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
   // Random number utilities
   var return_v = false;
   var v_val = 0.0;
-  var gaussRandom = function() {
+  var gaussRandom = function(random_func) {
+    if (typeof random_func === 'undefined') {
+      random_func = Math.random;
+    }
     if(return_v) {
       return_v = false;
       return v_val;
     }
-    var u = 2*Math.random()-1;
-    var v = 2*Math.random()-1;
+    var u = 2*random_func()-1;
+    var v = 2*random_func()-1;
     var r = u*u + v*v;
     if(r == 0 || r > 1) return gaussRandom();
     var c = Math.sqrt(-2*Math.log(r)/r);
@@ -21,7 +24,10 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
   }
   var randf = function(a, b) { return Math.random()*(b-a)+a; }
   var randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); }
-  var randn = function(mu, std){ return mu+gaussRandom()*std; }
+
+  var randn = function(mu, std, random_func){
+      return mu+gaussRandom(random_func)*std;
+  }
 
   // Array utilities
   var zeros = function(n) {
@@ -526,19 +532,33 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       this.in_act = V;
       var A = new Vol(1, 1, this.out_depth, 0.0);
 
-      this.sample(is_training);
-
-      var Vw = V.w;
-      for(var i=0;i<this.out_depth;i++) {
-        var a = 0.0;
-        var wi = this.sampled_w[i].w;
-        for(var d=0;d<this.num_inputs;d++) {
-          a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
-        }
-        A.w[i] = a;
+      //if training, use sampled vals, else just use mean to evaluate
+      if (is_training) {
+          this.sample();
+          var Vw = V.w;
+          for(var i=0;i<this.out_depth;i++) {
+            var a = 0.0;
+            var wi = this.sampled_w[i].w;
+            for(var d=0;d<this.num_inputs;d++) {
+              a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
+            }
+            A.w[i] = a;
+          }
+          this.out_act = A;
+          return this.out_act;
+      } else {
+          var Vw = V.w;
+          for(var i=0;i<this.out_depth;i++) {
+            var a = 0.0;
+            var wi = this.mean[i].w;
+            for(var d=0;d<this.num_inputs;d++) {
+              a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
+            }
+            A.w[i] = a;
+          }
+          this.out_act = A;
+          return this.out_act;
       }
-      this.out_act = A;
-      return this.out_act;
     },
     backward: function() {
       var V = this.in_act;
@@ -560,6 +580,25 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
               this.std[j].dw[k] = 0.01*((this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
           }
       }
+    },
+    sample: function() {
+        //sample a set of weights
+        for (var i = 0; i < this.sampled_w.length; i++) {
+            for (var j = 0; j < this.sampled_w[i].w.length; j++) {
+                this.sampled_epsilon[i].w[j] = global.randn(0, 1);
+                this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+            }
+        }
+    },
+    mutate: function(random_func) {
+        //change the mean of the layer to a sampled set of weight
+        for (var i = 0; i < this.mean.length; i++) {
+            for (var j = 0; j < this.mean[i].w.length; j++) {
+                console.log(this.sampled_epsilon);
+                this.sampled_epsilon[i].w[j] = global.randn(0, 1, random_func);
+                this.mean[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+            }
+        }
     },
     getParamsAndGrads: function() {
       var response = [];
@@ -584,37 +623,14 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     freeze_biases: function() {
         this.biases_frozen = true;
     },
-    sample: function(is_training) {
-        var w_hat = [];
-        for(var i=0;i<this.out_depth ;i++) { w_hat.push(new Vol(1, 1, this.num_inputs)); }
-        var epsilon_hat = [];
-        for(var i=0;i<this.out_depth ;i++) { epsilon_hat.push(new Vol(1, 1, this.num_inputs)); }
-
-        //sample a set of weights
-        for (var i = 0; i < w_hat.length; i++) {
-            for (var j = 0; j < w_hat[i].w.length; j++) {
-                epsilon_hat[i].w[j] = global.randn(0, 1);
-                w_hat[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
-            }
-        }
-        //copy to class var when training to backprop
-        if (is_training) {
-            for (var i = 0; i < w_hat.length; i++) {
-                for (var j = 0; j < w_hat[i].w.length; j++) {
-                    this.sampled_epsilon[i].w[j] = epsilon_hat[i].w[j];
-                    this.sampled_w[i].w[j] = epsilon_hat[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
-                }
-            }
-        }
-    },
     setMeans: function(mean_list) {
-        for (var i = 0; i < this.filters_mean.length; i++) {
-            this.filters_mean[i].w = mean_list[i];
+        for (var i = 0; i < this.mean.length; i++) {
+            this.mean[i].w = mean_list[i];
         }
     },
     setStds: function(std_list) {
-        for (var i = 0; i < this.filters_std.length; i++) {
-            this.filters_std[i].w = std_list[i];
+        for (var i = 0; i < this.std.length; i++) {
+            this.std[i].w = std_list[i];
         }
     },
     toJSON: function() {
@@ -626,11 +642,22 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       json.num_inputs = this.num_inputs;
       json.l1_decay_mul = this.l1_decay_mul;
       json.l2_decay_mul = this.l2_decay_mul;
-      json.filters = [];
-      for(var i=0;i<this.filters.length;i++) {
-        json.filters.push(this.filters[i].toJSON());
+      json.mean = [];
+      for(var i=0;i<this.mean.length;i++) {
+        json.mean.push(this.mean[i].toJSON());
       }
-      json.biases = this.biases.toJSON();
+      json.std = [];
+      for(var i=0;i<this.std.length;i++) {
+        json.std.push(this.std[i].toJSON());
+      }
+      json.sampled_w = [];
+      for(var i=0;i<this.sampled_w.length;i++) {
+        json.sampled_w.push(this.sampled_w[i].toJSON());
+      }
+      json.sampled_epsilon = [];
+      for(var i=0;i<this.sampled_epsilon.length;i++) {
+        json.sampled_epsilon.push(this.sampled_epsilon[i].toJSON());
+      }
       return json;
     },
     fromJSON: function(json) {
@@ -641,14 +668,30 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       this.num_inputs = json.num_inputs;
       this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined' ? json.l1_decay_mul : 1.0;
       this.l2_decay_mul = typeof json.l2_decay_mul !== 'undefined' ? json.l2_decay_mul : 1.0;
-      this.filters = [];
-      for(var i=0;i<json.filters.length;i++) {
+      this.mean = [];
+      for(var i=0;i<json.mean.length;i++) {
         var v = new Vol(0,0,0,0);
-        v.fromJSON(json.filters[i]);
-        this.filters.push(v);
+        v.fromJSON(json.mean[i]);
+        this.mean.push(v);
       }
-      this.biases = new Vol(0,0,0,0);
-      this.biases.fromJSON(json.biases);
+      this.std = [];
+      for(var i=0;i<json.std.length;i++) {
+        var v = new Vol(0,0,0,0);
+        v.fromJSON(json.std[i]);
+        this.std.push(v);
+      }
+      this.sampled_w = [];
+      for(var i=0;i<json.sampled_w.length;i++) {
+        var v = new Vol(0,0,0,0);
+        v.fromJSON(json.sampled_w[i]);
+        this.sampled_w.push(v);
+      }
+      this.sampled_epsilon = [];
+      for(var i=0;i<json.sampled_epsilon.length;i++) {
+        var v = new Vol(0,0,0,0);
+        v.fromJSON(json.sampled_epsilon[i]);
+        this.sampled_epsilon.push(v);
+      }
     }
   }
 
@@ -1113,15 +1156,22 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       }
       return response;
     },
-    sampleNets(num_nets) {
-        var nets = [];
-        var new_net;
-        for (var i = 0; i < num_nets; i++) {
-            new_net = new Net();
-            new_net.fromJSON(this.toJSON());
-            nets.push(new_net);
+    sampleNet(seed) {
+        var random_func = Math.seedrandom(seed);
+        console.log(random_func);
+        console.log(random_func());
+        var new_net = new Net();
+        new_net.fromJSON(this.toJSON());
+        for(var i = 0; i < new_net.layers.length;i++) {
+          if (new_net.layers[i].layer_type === 'variational') {
+              console.log("this before mutation: "+this.layers[1].mean[0].w);
+              console.log("new before mutation: "+new_net.layers[1].mean[0].w);
+              new_net.layers[i].mutate(random_func);
+              console.log("this after mutation: "+this.layers[1].mean[0].w);
+              console.log("new after mutation: "+new_net.layers[1].mean[0].w);
+          }
         }
-        return nets;
+        return new_net;
     },
     getPrediction: function() {
       // this is a convenience function for returning the argmax
@@ -1174,9 +1224,11 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         if(t==='softmax') { L = new global.SoftmaxLayer(); }
         if(t==='regression') { L = new global.RegressionLayer(); }
         if(t==='fc') { L = new global.FullyConnLayer(); }
+        if(t==='variational') { L = new global.VariationalLayer(); }
         L.fromJSON(Lj);
         this.layers.push(L);
       }
+      console.log(this.layers[1]);
     }
   }
 

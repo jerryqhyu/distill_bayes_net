@@ -33,9 +33,10 @@ function var_full(div, train_loss_div, valid_loss_div) {
     var valid_loss_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
-    var y_scale_loss_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
+    var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4])
 
     //hard coded points for consistentcy
+    seeds = ["wow", "undertale", "bayesian", "toronto", "iphonex"];
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
       -1.33424016, -2.49962207, 2.671385];
     var validation_points = [0.0074539 , -2.25649362,  1.2912101 ,         -1.15521679,  0.15278725,
@@ -88,8 +89,8 @@ function var_full(div, train_loss_div, valid_loss_div) {
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
 
-    plot_train_contour(svg2);
-    plot_validation_contour(svg3);
+    // plot_train_contour(svg2);
+    // plot_validation_contour(svg3);
 
     //interval controller
     var currently_training = 0;
@@ -106,12 +107,12 @@ function var_full(div, train_loss_div, valid_loss_div) {
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
             //set the params for later layers
-            new_net.getLayer(3).setMeans(opt_layer3_w);
-            new_net.getLayer(5).setMeans(opt_layer5_w);
-            new_net.getLayer(7).setMeans(opt_layer7_w);
-            new_net.getLayer(3).setStds(opt_layer3_s);
-            new_net.getLayer(5).setStds(opt_layer5_s);
-            new_net.getLayer(7).setStds(opt_layer7_s);
+            // new_net.getLayer(3).setMeans(opt_layer3_w);
+            // new_net.getLayer(5).setMeans(opt_layer5_w);
+            // new_net.getLayer(7).setWeights(opt_layer7_w);
+            // new_net.getLayer(3).setStds(opt_layer3_s);
+            // new_net.getLayer(5).setStds(opt_layer5_s);
+            // new_net.getLayer(7).setBiases(opt_layer7_s);
         }
         return new_net;
     }
@@ -181,13 +182,30 @@ function var_full(div, train_loss_div, valid_loss_div) {
 
     function plot() {
         plot_line();
-        plot_sampled_curves();
-        plot_variational_distribution();
+        // plot_variational_distribution();
     }
 
     function plot_line() {
-        data = get_curve();
-        //points for the curve
+        var predicted_value;
+        var x_val;
+        var pred = [];
+        for (var i = 0; i < seeds.length; i++) {
+            pred.push([]);
+            sampled_net = net.sampleNet(seeds[i]);
+            for (var j = -6; j < 6; j+=step_size) {
+                x_val = new net_lib.Vol([j]);
+                predicted_value = sampled_net.forward(x_val);
+                pred[i].push({x:j,y:predicted_value.w[0]});
+            }
+            curve_plotter.plot_line(pred[i], "orange", 1, 0.5);
+        }
+        mean = [];
+        for (var i = -6; i < 6; i+=step_size) {
+            x_val = new net_lib.Vol([i]);
+            predicted_value = net.forward(x_val);
+            mean.push({x:i,y:predicted_value.w[0]});
+        }
+        curve_plotter.plot_line(mean, "red", 2);
 
         //individual training and validation points
         training_points_data = [];
@@ -227,27 +245,14 @@ function var_full(div, train_loss_div, valid_loss_div) {
         return data;
     }
 
-    function plot_sampled_curves() {
-        for (var i = 0; i < 10; i++) {
-            single_sample = net.sample();
-            single_net_prediction = [];
-            for (var j = -6; j < 6; j+=step_size) {
-                x_val = new net_lib.Vol([j]);
-                predicted_value = single_sample.forward(x_val);
-                single_net_prediction.push({x:i,y:predicted_value.w[0]});
-            }
-            curve_plotter.plot_line(single_net_prediction, "black", 2, 0.5);
-        }
-    }
-
     function plot_variational_distribution() {
         var variational_pdf = net.getLayer(1).get_distribution();
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
-        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = variational_pdf(x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+                data[k] = variational_pdf(x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
             }
         }
         var color = d3.scaleLog()
@@ -285,9 +290,9 @@ function var_full(div, train_loss_div, valid_loss_div) {
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
-        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+                data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
             }
         }
         var color = d3.scaleLog()
@@ -311,9 +316,9 @@ function var_full(div, train_loss_div, valid_loss_div) {
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
-        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+                data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
             }
         }
         var color = d3.scaleLog()
@@ -332,12 +337,12 @@ function var_full(div, train_loss_div, valid_loss_div) {
         );
     }
 
-    function compute_validation_loss(dummy_net, w_1, w_loss) {
+    function compute_validation_loss(dummy_net, w_1, w_2) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setMeans([[w_1], [w_loss]]);
+        dummy_net.getLayer(1).setMeans([[w_1], [w_2]]);
         for (var j = 0; j < validation_points.length; j++) {
             x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
@@ -347,12 +352,12 @@ function var_full(div, train_loss_div, valid_loss_div) {
         return total_loss / 1.125;
     }
 
-    function compute_training_loss(dummy_net, w_1, w_loss) {
+    function compute_training_loss(dummy_net, w_1, w_lw_2oss) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setMeans([[w_1], [w_loss]]);
+        dummy_net.getLayer(1).setMeans([[w_1], [w_2]]);
         for (var i = 0; i < train_points.length; i++) {
             x_val = new net_lib.Vol([train_points[i]]);
             true_label = Math.sin(train_points[i]) + noise_train[i];
