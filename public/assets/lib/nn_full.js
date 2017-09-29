@@ -209,7 +209,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             });
         }
 
-        curve_plotter.plot_line(real, "black", 2);
+        // curve_plotter.plot_line(real, "black", 2, 0.1);
         curve_plotter.plot_line(pred, "orange", 2, 0.75);
         curve_plotter.plot_points(training_points_data, "red", 3, 1);
         curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
@@ -277,7 +277,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             }
         }
         var color = d3.scaleLog()
-            .domain([0.05,500])
+            .domain([0.05,1000])
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([n, m])

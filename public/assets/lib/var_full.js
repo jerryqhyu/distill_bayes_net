@@ -37,6 +37,7 @@ function var_full(div, train_loss_div, valid_loss_div) {
 
     //hard coded points for consistentcy
     seeds = ["wow", "undertale", "bayesian", "toronto", "iphonex"];
+    // seeds = ["wow", "wow", "wow", "wow", "wow"];
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
       -1.33424016, -2.49962207, 2.671385];
     var validation_points = [0.0074539 , -2.25649362,  1.2912101 ,         -1.15521679,  0.15278725,
@@ -131,11 +132,11 @@ function var_full(div, train_loss_div, valid_loss_div) {
     function train() {
         if (!currently_training) {
             console.log("started training");
-            if (obtaining_param) {
-                net.getLayer(1).freeze_weights();
-            } else {
-                net.freezeAllButX(1);
-            }
+            // if (obtaining_param) {
+            //     net.getLayer(1).freeze_weights();
+            // } else {
+            //     net.freezeAllButX(1);
+            // }
             currently_training = setInterval(train_epoch, 50);
         }
     }
@@ -192,6 +193,7 @@ function var_full(div, train_loss_div, valid_loss_div) {
         for (var i = 0; i < seeds.length; i++) {
             pred.push([]);
             sampled_net = net.sampleNet(seeds[i]);
+            console.log(net.layers[1].mean[0].w);
             for (var j = -6; j < 6; j+=step_size) {
                 x_val = new net_lib.Vol([j]);
                 predicted_value = sampled_net.forward(x_val);
