@@ -1,4 +1,4 @@
-function nn_full(div, train_loss_div, valid_loss_div) {
+function nn_full(div, train_posterior_div, valid_posterior_div) {
 
     //svg properties
     var w = 984
@@ -8,8 +8,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
     var step_size = 0.1;
     var div = div;
-    var train_loss_div = train_loss_div;
-    var valid_loss_div = valid_loss_div;
+    var train_posterior_div = train_posterior_div;
+    var valid_posterior_div = valid_posterior_div;
 
     var svg = div.append("svg");
     var svg2 = train_loss_div.append("svg");
@@ -21,16 +21,14 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     svg3.attr("width", w_loss)
     .attr("height", h_loss);
 
-    var obtaining_param = 0;
-
     var curve_domain_x = [-5,5];
     var curve_domain_y = [-2,2];
     var loss_domain_x = [-4,4];
     var loss_domain_y = [-4,4];
 
     var curve_plotter = Plotter(svg, curve_domain_x, curve_domain_y, w, h);
-    var train_loss_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
-    var valid_loss_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
+    var train_posterior_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
+    var valid_posterior_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
     var y_scale_loss_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
@@ -77,23 +75,11 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
     //define a neural network
     var net = make_preset_net();
-    var epoch_count = 0;
-    var learning_rate = 0.005;
-    var l1_decay = 0;
-    var l2_decay = 0;
-    var momentum = 0.99;
-    var batch_size = 8;
 
-    var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
-    l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
-    l1_decay: l1_decay});
+    plot_train_posterior(svg2);
+    plot_valid_posterior(svg3);
 
-    plot_train_contour(svg2);
-    plot_validation_contour(svg3);
-
-    //interval controller
-    var currently_training = 0;
-    var was_training = 0;
+    sampled_weights = [];
 
     function make_preset_net() {
         var layer_defs = [];
@@ -118,66 +104,15 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     }
 
     function reset() {
-        net = make_preset_net();
-        trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
-        l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
-        l1_decay: l1_decay});
+        //TODO: remove all sampled weights here
         clear();
         plot();
-        pause_training();
-        epoch_count = 0;
     }
 
-    function train() {
-        if (!currently_training) {
-            console.log("started training");
-            if (obtaining_param) {
-                net.getLayer(1).freeze_weights();
-            } else {
-                net.freezeAllButX(1);
-            }
-            currently_training = setInterval(train_epoch, 50);
-        }
-    }
-
-    function train_epoch() {
-        var x;
-        for (var j = 0; j < train_points.length; j++) {
-            x = new net_lib.Vol([train_points[j]]);
-            trainer.train(x, [Math.sin(train_points[j])+noise_train[j]]);
-        }
-        if (obtaining_param) {
-            for (var j = 0; j < validation_points.length; j++) {
-                x = new net_lib.Vol([validation_points[j]]);
-                trainer.train(x, [Math.sin(validation_points[j])+noise_validation[j]]);
-            }
-            if (epoch_count % 100 == 0) {
-                console.log(epoch_count);
-            }
-            if (epoch_count === 500) {
-                for (var i = 0; i < net.layers.length; i++) {
-                    layer = net.getLayer(i);
-                    if (layer.filters) {
-                        console.log("This is layer" + i);
-                        console.log("Biases");
-                        console.log(layer.biases.w);
-                        for (var j = 0; j < layer.filters.length; j++) {
-                            console.log(layer.filters[j].w);
-                        }
-                    }
-                }
-            }
-        }
+    function sample() {
+        //TODO: sample some point from the exact posterior
         clear();
         plot();
-        epoch_count++;
-    }
-
-    function pause_training() {
-        if (currently_training) {
-            clearInterval(currently_training);
-            currently_training = 0;
-        }
     }
 
     function plot() {
@@ -212,7 +147,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         // curve_plotter.plot_line(real, "black", 2, 0.1);
         curve_plotter.plot_line(pred, "orange", 2, 0.75);
         curve_plotter.plot_points(training_points_data, "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "darkblue", 3, 1);
+        curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
     }
 
     function get_curve() {
@@ -233,31 +168,12 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_weight() {
-        weights = get_first_two_weights();
-        data = [{x:weights[0],
-                y:weights[1]}];
         train_loss_plotter.plot_points(
-            data=data,
+            data=sampled_weights,
             color="black",
             size=5,
             opacity=1,
-            on_drag=on_drag,
-            dragging=dragging,
-            end_drag=end_drag
             );
-        valid_loss_plotter.plot_points(
-            data=data,
-            color="black",
-            size=5,
-            opacity=1,
-            on_drag=on_drag,
-            dragging=dragging,
-            end_drag=end_drag
-            );
-    }
-
-    function get_first_two_weights() {
-        return [net.getLayer(1).filters[0].w, net.getLayer(1).filters[1].w];
     }
 
     function clear() {
@@ -266,14 +182,14 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         svg3.selectAll("circle").remove();
     }
 
-    function plot_train_contour(svg) {
+    function plot_train_posterior(svg) {
         var dummy_net = make_preset_net();
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
+        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+                data[k] = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
             }
         }
         var color = d3.scaleLog()
@@ -292,14 +208,14 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         );
     }
 
-    function plot_validation_contour(svg_for_valid) {
+    function plot_valid_posterior(svg_for_valid) {
         var dummy_net = make_preset_net();
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
+        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+                data[k] = get_valid_posterior(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
             }
         }
         var color = d3.scaleLog()
@@ -318,12 +234,12 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         );
     }
 
-    function compute_validation_loss(dummy_net, w_1, w_2) {
+    function get_valid_posterior(dummy_net, w_1, w_loss) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
         for (var j = 0; j < validation_points.length; j++) {
             x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
@@ -333,12 +249,12 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         return total_loss / 1.125;
     }
 
-    function compute_training_loss(dummy_net, w_1, w_2) {
+    function get_train_posterior(dummy_net, w_1, w_loss) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
         for (var i = 0; i < train_points.length; i++) {
             x_val = new net_lib.Vol([train_points[i]]);
             true_label = Math.sin(train_points[i]) + noise_train[i];
@@ -346,33 +262,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
         return total_loss * validation_points.length / train_points.length / 1.125;
-    }
-
-    function on_drag(d) {
-        d3.select(this).raise().classed("active", true);
-        if (currently_training) {
-            was_training = 1;
-        } else {
-            was_training = 0;
-        }
-        pause_training();
-    }
-
-    function dragging(d) {
-        var new_x = d3.event.x;
-        var new_y = d3.event.y;
-        d3.select(this).attr("cx", new_x).attr("cy", new_y);
-        net.getLayer(1).setWeights([[x_scale_loss_inverse(new_x)], [y_scale_loss_inverse(new_y)]]);
-        clear();
-        plot();
-        console.log(d3.event.x);
-    }
-
-    function end_drag(d) {
-        d3.select(this).raise().classed("active", false);
-        if (was_training) {
-            train();
-        }
     }
 
     return {
