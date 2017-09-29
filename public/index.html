@@ -11,40 +11,27 @@
 <link rel="stylesheet" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
-
 <title>Bayesian Neural Networks</title>
 
 <body><html>
-
-
-
 
 <dt-article class="centered">
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
 
-
-<H1>Bayesian Neural Networks</H1>
-
-<p>
-asdfasdfad
-</p>
-
-
-
     <script>
     var renderQueue = [];
     function renderMath(elem) {
-        // renderMathInElement(
-        //     elem,
-        //     {
-        //         delimiters: [
-        //             {left: "$$", right: "$$", display: true},
-        //             {left: "$", right: "$", display: false},
-        //         ]
-        //     }
-        // );
+        renderMathInElement(
+             elem,
+            {
+                 delimiters: [
+                     {left: "$$", right: "$$", display: true},
+                     {left: "$", right: "$", display: false},
+                 ]
+             }
+         );
     }
 
     var deleteQueue = [];
@@ -145,19 +132,16 @@ asdfasdfad
         </g>
     </svg>
 
-    <!-- KL divergence figure -->
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
-        </div>
-        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
-        </div>
-        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the areas. Do these measures agree?
-        </figcaption>
-    </figure>
+
+
+
+<H1>Bayesian Neural Networks</H1>
+
+<p>
+How do we prevent neural networks from overfitting?
+</p>
+
+
 
     <!-- Regular MLP figure -->
     <figure style = "position:relative; width:984px; height:400px;">
@@ -176,6 +160,77 @@ asdfasdfad
         </section>
         <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
             The loss surface for the NN. The training loss is plotted on the left, the validation loss is plotted on the right.
+        </figcaption>
+    </figure>
+
+<p>
+In this example, we've fixed all the weights in the neural network except for two weights in the last layer.
+</p>    
+
+
+<H2>Exact Inference</H2>
+<p>
+There are many possible strategies to try to avoid overfitting, generally called regularization methods.
+Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.
+</p>
+<p>
+Why do we have to choose one particular set of weights?
+There are usually many different sets of weights that are compatible with the data.
+Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting them in proportion to how well they fit the data.
+</p>
+
+    <!-- Exact Inference figures -->
+    <figure style = "position:relative; width:984px; height:400px;">
+        <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <button type="button" onclick="net_var.train()">Train</button>
+        <button type="button" onclick="net_var.reset()">Reset</button>
+        <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            Now we integrate out the of weights in proportion to the posterior.
+        </figcaption>
+    </figure>
+
+    <figure style = "position:relative; width:984px; height:400px;">
+        <section class="container">
+            <div id="var_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
+            <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+        </section>
+        <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            Left: The posterior on the weights of the neural net, conditioned on the training data.  Right: the predictive accuracy on the test data.
+        </figcaption>
+    </figure>
+
+<p>
+We can see that the posterior puts a lot of mass 
+</p>
+
+<H3>What about the prior?</H3>
+<p>
+One difficulty with Bayesian methods is that we're sometimes forced to choose a prior.
+Sometimes, this is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
+</p>
+<p>
+The important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one.
+</p>
+
+<H2>Variational Inference</H2>
+<p>
+Why doesn't everyone use exact Bayesian inference all the time then?
+The answer is that it requires considering all possible sets of weights.
+Computing the data likelihood and the predictive likelihood for all weights is just too slow.
+</p>
+
+
+    <!-- KL divergence figure -->
+    <figure style = "position:relative; width:984px; height:400px;">
+        <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
+        </div>
+        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
+        </div>
+        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the areas. Do these measures agree?
         </figcaption>
     </figure>
 
@@ -263,10 +318,21 @@ dt-math[block] {
 </style>
 <span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>w</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><msup><mi>w</mi><mi>k</mi></msup><mo>−</mo><mi>α</mi><mi mathvariant="normal">∇</mi><mi>f</mi><mo>(</mo><msup><mi>w</mi><mi>k</mi></msup><mo>)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">w^{k+1} = w^k-\alpha\nabla f(w^k).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.899108em;"></span><span class="strut bottom" style="height:1.149108em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.41300000000000003em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mathrm mtight">1</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mrel">=</span><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.413em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mbin">−</span><span class="mord mathit" style="margin-right:0.0037em;">α</span><span class="mord mathrm">∇</span><span class="mord mathit" style="margin-right:0.10764em;">f</span><span class="mopen">(</span><span class="mord"><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="msupsub"><span class="vlist"><span style="top:-0.413em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped mtight"><span class="mord mathit mtight" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span><span class="mclose">)</span><span class="mord mathrm">.</span></span></span></span></span></dt-math>
 
-<H2>Connection to Dropout</H2>
+<H3>Connection to Dropout</H3>
+<p>
+Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. 
+</p>
+
+<H3>Connection to Ensembles</H3>
 <p>
 asdf
 </p>
+
+<H3>Connection to Gradient Noise</H3>
+<p>
+asdf
+</p>
+
 <p>
 <a href="http://proceedings.mlr.press/v48/gal16.html">Gal and Ghahramani, 2016. Dropout as Bayesian approximation: representing model uncertainty in deep learning</a>
 </p>
@@ -294,6 +360,10 @@ preprint arXiv:1401.0118, 2013.
 <p>
 <a href="http://papers.nips.cc/paper/4329-practical-variational-inference-for-neural-networks">Graves, 2011. Practical variational inference for neural networks</a>
 </p>
+<p>
+<a href="http://cs.stanford.edu/people/karpathy/convnetjs/">ConvNetJS by Andrej Karpathy</a>
+</p>
+
 
 
 
