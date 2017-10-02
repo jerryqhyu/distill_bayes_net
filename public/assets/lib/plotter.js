@@ -36,7 +36,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         .attr("opacity", opacity);
     }
 
-    function plot_points(data, color="black", size=3, opacity=1, on_drag, dragging, end_drag) {
+    function plot_points(data, stroke="black", color="black", size=3, opacity=1, on_drag, dragging, end_drag) {
         if (typeof(opacity) === 'undefined') {
             opacity = 1;
         }
@@ -45,6 +45,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
             .attr("cx", x_scale(data[i].x))
             .attr("cy", y_scale(data[i].y))
             .attr("r", size)
+            .attr("stroke", stroke)
             .attr("fill", color)
             .attr("opacity", opacity)
             .call(d3.drag()

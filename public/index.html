@@ -191,16 +191,16 @@ Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting
         <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
         <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
         </figcaption>
-        <button type="button" onclick="net_var.train()">Sample</button>
-        <button type="button" onclick="net_var.reset()">Clear</button>
+        <button type="button" onclick="bayes.sample_train()">Sample</button>
+        <button type="button" onclick="bayes.reset()">Clear</button>
     </figure>
 
     <figure style = "position:relative; width:600px; height:700px;">
         <div id="exact_valid_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
         <figcaption id="exact_valid_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
         </figcaption>
-        <button type="button" onclick="net_var.train()">Sample</button>
-        <button type="button" onclick="net_var.reset()">Clear</button>
+        <button type="button" onclick="bayes.sample_valid()">Sample</button>
+        <button type="button" onclick="bayes.reset()">Clear</button>
     </figure>
 
 <p>

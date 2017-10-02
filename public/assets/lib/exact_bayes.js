@@ -66,6 +66,8 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
 
     var train_posterior_data = new Array(n * m);
     var valid_posterior_data = new Array(n * m);
+    var train_sampling_interval = new Array(n * m);
+    var valid_sampling_interval = new Array(n * m);
 
     //hard coded optimum value
     var opt_layer1_w = [[2], [0]];
@@ -83,13 +85,13 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
     //define a neural network
     var net = make_preset_net();
 
+    var train_sampled_nets = [];
+    var train_sampled_weights = [];
+    var valid_sampled_nets = [];
+    var valid_sampled_weights = [];
+
     setup();
     initial_plot();
-
-    train_sampled_nets = [];
-    train_sampled_weights = [];
-    valid_sampled_nets = [];
-    valid_sampled_weights = [];
 
     function make_preset_net() {
         var layer_defs = [];
@@ -112,11 +114,35 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
 
     function setup() {
         var dummy_net = make_preset_net();
-        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+        var point_prob_train = 0;
+        var point_prob_valid = 0;
+
+        var train_log_sum_exp = 0;
+        var valid_log_sum_exp = 0;
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                train_posterior_data[k] = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_loss*8));
-                valid_posterior_data[k] = get_valid_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_loss*8));
+                point_prob_train = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_2*8));
+                train_posterior_data[k] = point_prob_train;
+                train_log_sum_exp += Math.exp(-point_prob_train);
+
+                point_prob_valid = get_valid_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_2*8));
+                valid_posterior_data[k] = point_prob_valid;
+                valid_log_sum_exp += Math.exp(-point_prob_valid);
             }
+        }
+        train_log_sum_exp = Math.log(train_log_sum_exp);
+        valid_log_sum_exp = Math.log(valid_log_sum_exp);
+
+        console.log(train_posterior_data);
+        console.log(train_log_sum_exp);
+        console.log(valid_log_sum_exp);
+
+
+        train_sampling_interval[0] = 0;
+        valid_sampling_interval[0] = 0;
+        for (var i = 1; i < train_sampling_interval.length; i++) {
+            train_sampling_interval[i] = train_sampling_interval[i-1] + Math.exp(-train_posterior_data[i] - train_log_sum_exp);
+            valid_sampling_interval[i] = valid_sampling_interval[i-1] + Math.exp(-valid_posterior_data[i] - valid_log_sum_exp);
         }
     }
 
@@ -130,8 +156,41 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
         plot();
     }
 
-    function sample() {
+    function sample_train() {
         //TODO: sample some point from the exact posterior
+        var uniform = Math.random();
+        var i;
+        for (i = 0; uniform > train_sampling_interval[i]; i++) {}
+        var n_sampled = i % m;
+        var m_sampled = (i-n_sampled)/n;
+        train_sampled_weights.push({
+            x: x_scale_loss_inverse(n_sampled*8),
+            y: -x_scale_loss_inverse(m_sampled*8)
+        });
+        var sampled_net = make_preset_net();
+        sampled_net.getLayer(1).setWeights([[x_scale_loss_inverse(n_sampled*8)], [-x_scale_loss_inverse(m_sampled*8)]]);
+        train_sampled_nets.push(sampled_net);
+        clear();
+        plot();
+        console.log(train_sampled_nets.length);
+        console.log(train_sampled_weights.length);
+
+    }
+
+    function sample_valid() {
+        //TODO: sample some point from the exact posterior
+        var uniform = Math.random();
+        var i;
+        for (i = 0; uniform > valid_sampling_interval[i]; i++) {}
+        var n_sampled = i % m;
+        var m_sampled = (i-n_sampled)/n;
+        valid_sampled_weights.push({
+            x: x_scale_loss_inverse(n_sampled*8),
+            y: -x_scale_loss_inverse(m_sampled*8)
+        });
+        var sampled_net = make_preset_net();
+        sampled_net.getLayer(1).setWeights([[x_scale_loss_inverse(n_sampled*8)], [-x_scale_loss_inverse(m_sampled*8)]]);
+        valid_sampled_nets.push(sampled_net);
         clear();
         plot();
     }
@@ -143,11 +202,17 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
 
     function plot_line() {
         data = get_curve();
-        curve_plotter.plot_line(data.train, "darkorange", 2, 1);
-        curve_plotter.plot_line(data.valid, "darkteal", 2, 1);
+        for (var i = 0; i < data.train.length; i++) {
+            curve_plotter.plot_line(data.train[i], "darkorange", 2, 0.2);
+        }
+        for (var i = 0; i < data.valid.length; i++) {
+            curve_plotter.plot_line(data.valid[i], "darkblue", 2, 0.2);
+        }
     }
 
     function get_curve() {
+        //train and valid is each a list of list
+        //due to how d3 plots paths
         var data = {
             train:[],
             valid:[]
@@ -155,21 +220,26 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
         var predicted_value;
         var x_val;
         var net;
+        var points;
         for (var i = 0; i < train_sampled_nets.length; i++) {
             net = train_sampled_nets[i];
+            points = [];
             for (var j = -6; j < 6; j+=step_size) {
                 x_val = new net_lib.Vol([j]);
                 predicted_value = net.forward(x_val);
-                data.train.push({x:j,y:predicted_value.w[0]});
+                points.push({x:j,y:predicted_value.w[0]});
             }
+            data.train.push(points);
         }
         for (var i = 0; i < valid_sampled_nets.length; i++) {
             net = valid_sampled_nets[i];
+            points = [];
             for (var j = -6; j < 6; j+=step_size) {
                 x_val = new net_lib.Vol([j]);
                 predicted_value = net.forward(x_val);
-                data.valid.push({x:j,y:predicted_value.w[0]});
+                points.push({x:j,y:predicted_value.w[0]});
             }
+            data.valid.push(points);
         }
         return data;
     }
@@ -177,13 +247,15 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
     function plot_weight() {
         train_posterior_plotter.plot_points(
             data=train_sampled_weights,
+            stroke="black",
             color="darkorange",
             size=5,
             opacity=1,
         );
         valid_posterior_plotter.plot_points(
             data=valid_sampled_weights,
-            color="darkteal",
+            stroke="black",
+            color="darkblue",
             size=5,
             opacity=1,
         );
@@ -229,10 +301,15 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0.1, 500, .5));
+            .thresholds(d3.range(0.01, 500, .5));
+
+        var new_data = new Array(n*m);
+        for (var i = 0; i < train_posterior_data.length; i++) {
+            new_data[i] = train_posterior_data[i] * validation_points.length / train_points.length;
+        }
 
         train_posterior_plotter.plot_contour(
-            data=train_posterior_data,
+            data=new_data,
             n=n,
             m=m,
             color_scale=color,
@@ -257,38 +334,40 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
         );
     }
 
-    function get_valid_posterior(dummy_net, w_1, w_loss) {
+    function get_valid_posterior(dummy_net, w_1, w_2) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var j = 0; j < validation_points.length; j++) {
             x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss / 1.125;
+        return total_loss;
     }
 
-    function get_train_posterior(dummy_net, w_1, w_loss) {
+    function get_train_posterior(dummy_net, w_1, w_2) {
         var total_loss = 0;
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_loss]]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var i = 0; i < train_points.length; i++) {
             x_val = new net_lib.Vol([train_points[i]]);
             true_label = Math.sin(train_points[i]) + noise_train[i];
             predicted = dummy_net.forward(x_val).w[0];
             total_loss += (true_label - predicted) * (true_label - predicted);
         }
-        return total_loss * validation_points.length / train_points.length / 1.125;
+        return total_loss;
     }
 
     return {
         plot: plot,
+        sample_train: sample_train,
+        sample_valid: sample_valid,
         reset: reset
     };
 }
