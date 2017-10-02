@@ -193,7 +193,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
         for (var i = 0; i < seeds.length; i++) {
             pred.push([]);
             sampled_net = net.sampleNet(seeds[i]);
-            console.log(net.layers[1].mean[0].w);
             for (var j = -6; j < 6; j+=step_size) {
                 x_val = new net_lib.Vol([j]);
                 predicted_value = sampled_net.forward(x_val);
@@ -225,7 +224,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
             });
         }
 
-        curve_plotter.plot_line(real, "black", 2);
         curve_plotter.plot_points(training_points_data, "red", 3, 1);
         curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
     }

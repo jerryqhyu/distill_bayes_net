@@ -6,6 +6,10 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     var w_loss = 300
     var h_loss = 300
 
+    //for contour plot
+    var n = 75;
+    var m = 75;
+
     var step_size = 0.1;
     var div = div;
     var train_loss_div = train_loss_div;
@@ -75,6 +79,9 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     var opt_layer7_w = [[0.16424348634195116, -0.6067898480353261, -1.0202767210893393, -0.7873295687436086]];
     var opt_layer7_b = [0.1996533593619645];
 
+    var train_contour_data = new Array(n * m);
+    var valid_contour_data = new Array(n * m);
+
     //define a neural network
     var net = make_preset_net();
     var epoch_count = 0;
@@ -88,12 +95,22 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
 
-    plot_train_contour(svg2);
-    plot_validation_contour(svg3);
+    setup();
+    initial_plot();
 
     //interval controller
     var currently_training = 0;
     var was_training = 0;
+
+    function setup() {
+        var dummy_net = make_preset_net();
+        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+            for (var w_1 = 0; w_1 < n; w_1++, k++) {
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+            }
+        }
+    }
 
     function make_preset_net() {
         var layer_defs = [];
@@ -186,50 +203,15 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_line() {
-        data = get_curve();
-        //points for the curve
-        real = data.real;
-        pred = data.pred;
-
-        //individual training and validation points
-        training_points_data = [];
-        //training data points
-        for (var i = 0; i < train_points.length; i++) {
-            training_points_data.push({
-                x: train_points[i],
-                y: Math.sin(train_points[i])+noise_train[i]
-            });
-        }
-        validation_points_data = [];
-        //training data points
-        for (var i = 0; i < validation_points.length; i++) {
-            validation_points_data.push({
-                x: validation_points[i],
-                y: Math.sin(validation_points[i])+noise_validation[i]
-            });
-        }
-
-        // curve_plotter.plot_line(real, "black", 2, 0.1);
-        curve_plotter.plot_line(pred, "orange", 2, 0.75);
-        curve_plotter.plot_points(training_points_data, "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "darkblue", 3, 1);
-    }
-
-    function get_curve() {
-        var data = {};
-        var real = [];
         var pred = [];
         var predicted_value;
         var x_val;
         for (var i = -6; i < 6; i+=step_size) {
-            real.push({x:i,y:Math.sin(i)});
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             pred.push({x:i,y:predicted_value.w[0]});
         }
-        data.real = real;
-        data.pred = pred;
-        return data;
+        curve_plotter.plot_line(pred, "darkorange", 2, 1);
     }
 
     function plot_weight() {
@@ -261,21 +243,40 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     }
 
     function clear() {
-        svg.selectAll("*").remove();
+        svg.selectAll("path").remove();
         svg2.selectAll("circle").remove();
         svg3.selectAll("circle").remove();
     }
 
-    function plot_train_contour(svg) {
-        var dummy_net = make_preset_net();
-        var n = 75;
-        var m = 75;
-        var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
-            for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
-            }
+    function initial_plot() {
+        plot_train_and_valid_points();
+        plot_train_contour();
+        plot_valid_contour();
+    }
+
+    function plot_train_and_valid_points() {
+        //individual training and validation points
+        training_points_data = [];
+        //training data points
+        for (var i = 0; i < train_points.length; i++) {
+            training_points_data.push({
+                x: train_points[i],
+                y: Math.sin(train_points[i])+noise_train[i]
+            });
         }
+        validation_points_data = [];
+        //training data points
+        for (var i = 0; i < validation_points.length; i++) {
+            validation_points_data.push({
+                x: validation_points[i],
+                y: Math.sin(validation_points[i])+noise_validation[i]
+            });
+        }
+        curve_plotter.plot_points(training_points_data, "red", 3, 1);
+        curve_plotter.plot_points(validation_points_data, "green", 3, 0.5);
+    }
+
+    function plot_train_contour() {
         var color = d3.scaleLog()
             .domain([1,100])
             .interpolate(function() { return d3.interpolateSpectral; });
@@ -284,7 +285,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             .thresholds(d3.range(0.1, 500, .5));
 
         train_loss_plotter.plot_contour(
-            data=data,
+            data=train_contour_data,
             n=n,
             m=m,
             color_scale=color,
@@ -292,16 +293,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         );
     }
 
-    function plot_validation_contour(svg_for_valid) {
-        var dummy_net = make_preset_net();
-        var n = 75;
-        var m = 75;
-        var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
-            for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
-            }
-        }
+    function plot_valid_contour() {
         var color = d3.scaleLog()
             .domain([1,100])
             .interpolate(function() { return d3.interpolateSpectral; });
@@ -310,7 +302,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             .thresholds(d3.range(0.01, 500, .5));
 
         valid_loss_plotter.plot_contour(
-            data=data,
+            data=valid_contour_data,
             n=n,
             m=m,
             color_scale=color,
@@ -365,7 +357,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         net.getLayer(1).setWeights([[x_scale_loss_inverse(new_x)], [y_scale_loss_inverse(new_y)]]);
         clear();
         plot();
-        console.log(d3.event.x);
     }
 
     function end_drag(d) {

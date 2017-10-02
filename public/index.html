@@ -155,8 +155,8 @@ How do we prevent neural networks from overfitting?
 
     <figure style = "position:relative; width:984px; height:400px;">
         <section class="container">
-            <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
-            <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+            <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
+            <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
         </section>
         <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
             The loss surface for the NN. The training loss is plotted on the left, the validation loss is plotted on the right.
@@ -165,7 +165,7 @@ How do we prevent neural networks from overfitting?
 
 <p>
 In this example, we've fixed all the weights in the neural network except for two weights in the last layer.
-</p>    
+</p>
 
 
 <H2>Exact Inference</H2>
@@ -181,26 +181,30 @@ Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting
 
     <!-- Exact Inference figures -->
     <figure style = "position:relative; width:984px; height:400px;">
-        <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <button type="button" onclick="net_var.train()">Train</button>
-        <button type="button" onclick="net_var.reset()">Reset</button>
-        <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+        <div id="exact_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 320px;">
             Now we integrate out the of weights in proportion to the posterior.
         </figcaption>
     </figure>
 
-    <figure style = "position:relative; width:984px; height:400px;">
-        <section class="container">
-            <div id="var_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
-            <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
-        </section>
-        <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-            Left: The posterior on the weights of the neural net, conditioned on the training data.  Right: the predictive accuracy on the test data.
+    <figure style = "position:relative; width:600px; height:700px;">
+        <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
+        <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
         </figcaption>
+        <button type="button" onclick="net_var.train()">Sample</button>
+        <button type="button" onclick="net_var.reset()">Clear</button>
+    </figure>
+
+    <figure style = "position:relative; width:600px; height:700px;">
+        <div id="exact_valid_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
+        <figcaption id="exact_valid_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+        </figcaption>
+        <button type="button" onclick="net_var.train()">Sample</button>
+        <button type="button" onclick="net_var.reset()">Clear</button>
     </figure>
 
 <p>
-We can see that the posterior puts a lot of mass 
+We can see that the posterior puts a lot of mass
 </p>
 
 <H3>What about the prior?</H3>
@@ -259,6 +263,7 @@ Computing the data likelihood and the predictive likelihood for all weights is j
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/nn_full.js"></script>
     <script src="assets/lib/var_full.js"></script>
+    <script src="assets/lib/exact_bayes.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
@@ -306,6 +311,10 @@ Computing the data likelihood and the predictive likelihood for all weights is j
     net_nn.plot();
 
     // training var on sine
+    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#exact_valid_contour"));
+    bayes.plot();
+
+    // training var on sine
     var net_var = var_full(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"));
     net_var.plot();
     </script>
@@ -320,7 +329,7 @@ dt-math[block] {
 
 <H3>Connection to Dropout</H3>
 <p>
-Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. 
+Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
 </p>
 
 <H3>Connection to Ensembles</H3>
