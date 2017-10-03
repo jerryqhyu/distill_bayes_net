@@ -37,7 +37,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     var valid_loss_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
-    var y_scale_loss_inverse = d3.scaleLinear().domain([h,0]).range([-4,4])
+    var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4])
 
     //hard coded points for consistentcy
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
@@ -95,19 +95,21 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
 
-    setup();
-    initial_plot();
-
     //interval controller
     var currently_training = 0;
     var was_training = 0;
 
+    setup();
+    initial_plot();
+
+
+
     function setup() {
         var dummy_net = make_preset_net();
-        for (var w_loss = 0, k = 0; w_loss < m; w_loss++) {
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
-                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_loss*4));
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
             }
         }
     }
@@ -147,13 +149,12 @@ function nn_full(div, train_loss_div, valid_loss_div) {
 
     function train() {
         if (!currently_training) {
-            console.log("started training");
+            currently_training = setInterval(train_epoch, 50);
             if (obtaining_param) {
                 net.getLayer(1).freeze_weights();
             } else {
                 net.freezeAllButX(1);
             }
-            currently_training = setInterval(train_epoch, 50);
         }
     }
 
@@ -220,6 +221,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
                 y:weights[1]}];
         train_loss_plotter.plot_points(
             data=data,
+            stroke="black",
             color="black",
             size=5,
             opacity=1,
@@ -229,6 +231,7 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             );
         valid_loss_plotter.plot_points(
             data=data,
+            stroke="black",
             color="black",
             size=5,
             opacity=1,

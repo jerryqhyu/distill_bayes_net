@@ -65,9 +65,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
        -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     //hard coded optimum value
-    var opt_layer1_w = [[2], [0]];
-    var opt_layer1_s = [-1.471708721550612, 1.4638299054171822];
-
     var opt_layer3_w = [[-3.4756037730352953, -3.1951265117983656], [-0.6023875694498428, 0.742082606972636], [3.2691245346279794, 2.639303322222997], [0.6001228460411082, 1.5988685131936045]];
     var opt_layer3_s = [-0.4959376942683454, -0.38383011398703676, 0.1385379213238358, 0.14474274177948032];
 
@@ -83,7 +80,7 @@ function var_full(div, train_loss_div, valid_loss_div) {
     var learning_rate = 0.005;
     var l1_decay = 0;
     var l2_decay = 0;
-    var momentum = 0.99;
+    var momentum = 0;
     var batch_size = 8;
 
     var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
@@ -101,19 +98,19 @@ function var_full(div, train_loss_div, valid_loss_div) {
         var layer_defs = [];
         layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:1});
         layer_defs.push({type:'variational', num_neurons:2, activation:'tanh'});
-        layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
-        layer_defs.push({type:'variational', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
+        layer_defs.push({type:'fc', num_neurons:4, activation:'tanh'});
         layer_defs.push({type:'regression', num_neurons:1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
             //set the params for later layers
-            // new_net.getLayer(3).setMeans(opt_layer3_w);
-            // new_net.getLayer(5).setMeans(opt_layer5_w);
-            // new_net.getLayer(7).setWeights(opt_layer7_w);
-            // new_net.getLayer(3).setStds(opt_layer3_s);
-            // new_net.getLayer(5).setStds(opt_layer5_s);
-            // new_net.getLayer(7).setBiases(opt_layer7_s);
+            new_net.getLayer(3).setWeights(opt_layer3_w);
+            new_net.getLayer(5).setWeights(opt_layer5_w);
+            new_net.getLayer(7).setWeights(opt_layer7_w);
+            new_net.getLayer(3).setBiases(opt_layer3_s);
+            new_net.getLayer(5).setBiases(opt_layer5_s);
+            new_net.getLayer(7).setBiases(opt_layer7_s);
         }
         return new_net;
     }
@@ -132,11 +129,11 @@ function var_full(div, train_loss_div, valid_loss_div) {
     function train() {
         if (!currently_training) {
             console.log("started training");
-            // if (obtaining_param) {
-            //     net.getLayer(1).freeze_weights();
-            // } else {
-            //     net.freezeAllButX(1);
-            // }
+            if (obtaining_param) {
+                net.getLayer(1).freeze_weights();
+            } else {
+                net.freezeAllButX(1);
+            }
             currently_training = setInterval(train_epoch, 50);
         }
     }
