@@ -21,6 +21,10 @@ function var_full(div, train_loss_div, valid_loss_div) {
     svg3.attr("width", w_loss)
     .attr("height", h_loss);
 
+    //for contour plot
+    var n = 75;
+    var m = 75;
+
     var obtaining_param = 0;
 
     var curve_domain_x = [-5,5];
@@ -65,14 +69,19 @@ function var_full(div, train_loss_div, valid_loss_div) {
        -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     //hard coded optimum value
+    var opt_layer1_b = [-1.471708721550612, 1.4638299054171822];
+
     var opt_layer3_w = [[-3.4756037730352953, -3.1951265117983656], [-0.6023875694498428, 0.742082606972636], [3.2691245346279794, 2.639303322222997], [0.6001228460411082, 1.5988685131936045]];
-    var opt_layer3_s = [-0.4959376942683454, -0.38383011398703676, 0.1385379213238358, 0.14474274177948032];
+    var opt_layer3_b = [-0.4959376942683454, -0.38383011398703676, 0.1385379213238358, 0.14474274177948032];
 
     var opt_layer5_w = [[-0.7608457857739974, -3.807077771966103, 0.15964555671290204, 0.4316940153554302], [-0.46029527392239034, 0.499362627227224, 0.26215741516903984, 0.6087584334472715], [-0.12003663770954856, -2.070047029632726, -0.8253090796194713, -0.5211260899153192], [1.1497913505525421, 3.1232664390054965, 0.31466460121428946, -1.1103448335850838]];
-    var opt_layer5_s = [-0.09954752198229085, -0.20782723076897178, 1.0460388498407667, -0.6316497703555812];
+    var opt_layer5_b = [-0.09954752198229085, -0.20782723076897178, 1.0460388498407667, -0.6316497703555812];
 
     var opt_layer7_w = [[0.16424348634195116, -0.6067898480353261, -1.0202767210893393, -0.7873295687436086]];
-    var opt_layer7_s = [0.1996533593619645];
+    var opt_layer7_b = [0.1996533593619645];
+
+    var train_contour_data = new Array(n * m);
+    var valid_contour_data = new Array(n * m);
 
     //define a neural network
     var net = make_preset_net();
@@ -87,12 +96,22 @@ function var_full(div, train_loss_div, valid_loss_div) {
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
     l1_decay: l1_decay});
 
-    // plot_train_contour(svg2);
-    // plot_validation_contour(svg3);
-
     //interval controller
     var currently_training = 0;
     var was_training = 0;
+
+    setup();
+    initial_plot();
+
+    function setup() {
+        var dummy_net = make_preset_net();
+        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
+            for (var w_1 = 0; w_1 < n; w_1++, k++) {
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+            }
+        }
+    }
 
     function make_preset_net() {
         var layer_defs = [];
@@ -108,9 +127,10 @@ function var_full(div, train_loss_div, valid_loss_div) {
             new_net.getLayer(3).setWeights(opt_layer3_w);
             new_net.getLayer(5).setWeights(opt_layer5_w);
             new_net.getLayer(7).setWeights(opt_layer7_w);
-            new_net.getLayer(3).setBiases(opt_layer3_s);
-            new_net.getLayer(5).setBiases(opt_layer5_s);
-            new_net.getLayer(7).setBiases(opt_layer7_s);
+            new_net.getLayer(1).setBiases(opt_layer1_b);
+            new_net.getLayer(3).setBiases(opt_layer3_b);
+            new_net.getLayer(5).setBiases(opt_layer5_b);
+            new_net.getLayer(7).setBiases(opt_layer7_b);
         }
         return new_net;
     }
@@ -180,7 +200,7 @@ function var_full(div, train_loss_div, valid_loss_div) {
 
     function plot() {
         plot_line();
-        // plot_variational_distribution();
+        plot_variational_distribution();
     }
 
     function plot_line() {
@@ -243,21 +263,24 @@ function var_full(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_variational_distribution() {
-        var variational_pdf = net.getLayer(1).get_distribution();
+        var mean = [net.getLayer(1).mean[0].w[0], net.getLayer(1).mean[1].w[0]];
+        var std = [net.getLayer(1).std[0].w[0], net.getLayer(1).std[1].w[0]];
+
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = variational_pdf(x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
+                data[k] = (1/(std[0]*Math.sqrt(Math.PI*2)))*Math.exp(-(Math.pow(x_scale_loss_inverse(w_1*4)-mean[0],2)/ (2*(std[0]*std[0])))) * (1/(std[1]*Math.sqrt(Math.PI*2)))*Math.exp(-(Math.pow(-x_scale_loss_inverse(w_2*4)-mean[1],2)/ (2*(std[1]*std[1]))))
             }
         }
-        var color = d3.scaleLog()
-            .domain([0.05,500])
-            .interpolate(function() { return d3.interpolateSpectral; });
+
+        var color = d3.scaleLinear()
+            .domain([0,1])
+            .interpolate(function() { return d3.interpolateGreys; });
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0.05, 500, 5));
+            .thresholds(d3.range(0, 1, 0.01));
 
         train_loss_plotter.plot_contour(
             data=data,
@@ -274,33 +297,76 @@ function var_full(div, train_loss_div, valid_loss_div) {
             color_scale=color,
             contour_scale=contours
         );
+
+        // console.log(mean);
+
+        //for testing
+        train_loss_plotter.plot_points(
+            data=[{x:mean[0],y:mean[1]}],
+            stroke="black",
+            color="black",
+            size=5,
+            opacity=1,
+            );
+        valid_loss_plotter.plot_points(
+            data=[{x:mean[0],y:mean[1]}],
+            stroke="black",
+            color="black",
+            size=5,
+            opacity=1,
+            );
+    }
+
+    function get_distribution(mean, std) {
+        return function(x) {
+
+        };
     }
 
     function clear() {
-        svg.selectAll("*").remove();
+        svg.selectAll("path").remove();
         svg2.selectAll("circle").remove();
         svg3.selectAll("circle").remove();
     }
 
-    function plot_train_contour(svg) {
-        var dummy_net = make_preset_net();
-        var n = 75;
-        var m = 75;
-        var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
-            for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
-            }
+    function initial_plot() {
+        plot_train_and_valid_points();
+        plot_train_contour();
+        plot_valid_contour();
+    }
+
+    function plot_train_and_valid_points() {
+        //individual training and validation points
+        training_points_data = [];
+        //training data points
+        for (var i = 0; i < train_points.length; i++) {
+            training_points_data.push({
+                x: train_points[i],
+                y: Math.sin(train_points[i])+noise_train[i]
+            });
         }
+        validation_points_data = [];
+        //training data points
+        for (var i = 0; i < validation_points.length; i++) {
+            validation_points_data.push({
+                x: validation_points[i],
+                y: Math.sin(validation_points[i])+noise_validation[i]
+            });
+        }
+        curve_plotter.plot_points(training_points_data, "red", "red", 3, 1);
+        curve_plotter.plot_points(validation_points_data, "green", "green", 3, 0.5);
+    }
+
+    function plot_train_contour() {
         var color = d3.scaleLog()
-            .domain([0.05,500])
+            .domain([1,100])
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0.05, 500, 5));
+            .thresholds(d3.range(0.1, 500, .5));
 
         train_loss_plotter.plot_contour(
-            data=data,
+            data=train_contour_data,
             n=n,
             m=m,
             color_scale=color,
@@ -308,25 +374,16 @@ function var_full(div, train_loss_div, valid_loss_div) {
         );
     }
 
-    function plot_validation_contour(svg_for_valid) {
-        var dummy_net = make_preset_net();
-        var n = 75;
-        var m = 75;
-        var data = new Array(n * m);
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
-            for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
-            }
-        }
+    function plot_valid_contour() {
         var color = d3.scaleLog()
-            .domain([0.05,500])
+            .domain([1,100])
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0.05, 500, 5));
+            .thresholds(d3.range(0.01, 500, .5));
 
         valid_loss_plotter.plot_contour(
-            data=data,
+            data=valid_contour_data,
             n=n,
             m=m,
             color_scale=color,
@@ -349,7 +406,7 @@ function var_full(div, train_loss_div, valid_loss_div) {
         return total_loss / 1.125;
     }
 
-    function compute_training_loss(dummy_net, w_1, w_lw_2oss) {
+    function compute_training_loss(dummy_net, w_1, w_2) {
         var total_loss = 0;
         var predicted;
         var true_label;

@@ -133,11 +133,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
         train_log_sum_exp = Math.log(train_log_sum_exp);
         valid_log_sum_exp = Math.log(valid_log_sum_exp);
 
-        console.log(train_posterior_data);
-        console.log(train_log_sum_exp);
-        console.log(valid_log_sum_exp);
-
-
         train_sampling_interval[0] = 0;
         valid_sampling_interval[0] = 0;
         for (var i = 1; i < train_sampling_interval.length; i++) {
@@ -172,9 +167,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
         train_sampled_nets.push(sampled_net);
         clear();
         plot();
-        console.log(train_sampled_nets.length);
-        console.log(train_sampled_weights.length);
-
     }
 
     function sample_valid() {
@@ -203,10 +195,10 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
     function plot_line() {
         data = get_curve();
         for (var i = 0; i < data.train.length; i++) {
-            curve_plotter.plot_line(data.train[i], "darkorange", 2, 0.2);
+            curve_plotter.plot_line(data.train[i], "darkorange", 1, 0.2);
         }
         for (var i = 0; i < data.valid.length; i++) {
-            curve_plotter.plot_line(data.valid[i], "darkblue", 2, 0.2);
+            curve_plotter.plot_line(data.valid[i], "darkblue", 1, 0.2);
         }
     }
 
@@ -291,8 +283,8 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div) {
                 y: Math.sin(validation_points[i])+noise_validation[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
+        curve_plotter.plot_points(training_points_data, "red", "red", 4, 1);
+        curve_plotter.plot_points(validation_points_data, "green", "green", 4, 0.3);
     }
 
     function plot_train_posterior() {

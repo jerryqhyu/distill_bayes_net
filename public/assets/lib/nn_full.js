@@ -102,8 +102,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
     setup();
     initial_plot();
 
-
-
     function setup() {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
@@ -275,8 +273,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
                 y: Math.sin(validation_points[i])+noise_validation[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "green", 3, 0.5);
+        curve_plotter.plot_points(training_points_data, "red", "red", 3, 1);
+        curve_plotter.plot_points(validation_points_data, "green", "green", 3, 0.5);
     }
 
     function plot_train_contour() {

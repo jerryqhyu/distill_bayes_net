@@ -583,8 +583,8 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       this.biases.dw[i] += chain_grad;
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mean[j].dw[k] = 0.01 * (this.mean[j].w[k] - this.sampled_w[j].dw[k]);
-              this.std[j].dw[k] = 0.01*((this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[j].dw[k];
+              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
           }
       }
     },
@@ -641,6 +641,9 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         for (var i = 0; i < this.mean.length; i++) {
             this.mean[i].w = mean_list[i];
         }
+    },
+    setBiases:  function(b_list) {
+        this.biases.w = b_list;
     },
     setStds: function(std_list) {
         for (var i = 0; i < this.std.length; i++) {
