@@ -220,8 +220,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         train_loss_plotter.plot_points(
             data=data,
             stroke="black",
-            color="black",
-            size=5,
+            color="darkslategray",
+            size=4,
             opacity=1,
             on_drag=on_drag,
             dragging=dragging,
@@ -230,8 +230,8 @@ function nn_full(div, train_loss_div, valid_loss_div) {
         valid_loss_plotter.plot_points(
             data=data,
             stroke="black",
-            color="black",
-            size=5,
+            color="darkslategray",
+            size=4,
             opacity=1,
             on_drag=on_drag,
             dragging=dragging,

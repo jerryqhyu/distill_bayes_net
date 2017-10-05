@@ -86,11 +86,11 @@ function var_full(div, train_loss_div, valid_loss_div) {
     //define a neural network
     var net = make_preset_net();
     var epoch_count = 0;
-    var learning_rate = 0.005;
+    var learning_rate = 0.01;
     var l1_decay = 0;
     var l2_decay = 0;
     var momentum = 0;
-    var batch_size = 8;
+    var batch_size = 16;
 
     var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
@@ -111,6 +111,11 @@ function var_full(div, train_loss_div, valid_loss_div) {
                 valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1*4), -x_scale_loss_inverse(w_2*4));
             }
         }
+        train_loss_plotter.add_group("contours");
+        valid_loss_plotter.add_group("contours");
+        train_loss_plotter.add_group("var_dists");
+        valid_loss_plotter.add_group("var_dists");
+
     }
 
     function make_preset_net() {
@@ -266,6 +271,9 @@ function var_full(div, train_loss_div, valid_loss_div) {
         var mean = [net.getLayer(1).mean[0].w[0], net.getLayer(1).mean[1].w[0]];
         var std = [net.getLayer(1).std[0].w[0], net.getLayer(1).std[1].w[0]];
 
+        // mean = [0,0];
+        // std = [1,1];
+
         var n = 75;
         var m = 75;
         var data = new Array(n * m);
@@ -275,19 +283,25 @@ function var_full(div, train_loss_div, valid_loss_div) {
             }
         }
 
+        console.log(data);
+
         var color = d3.scaleLinear()
             .domain([0,1])
             .interpolate(function() { return d3.interpolateGreys; });
+
         var contours = d3.contours()
             .size([n, m])
-            .thresholds(d3.range(0, 1, 0.01));
+            .thresholds(d3.range(1e-20, 0.3, 0.01));
 
         train_loss_plotter.plot_contour(
             data=data,
             n=n,
             m=m,
             color_scale=color,
-            contour_scale=contours
+            contour_scale=contours,
+            id="#var_dists",
+            opacity=0.1,
+            stroke="black"
         );
 
         valid_loss_plotter.plot_contour(
@@ -295,7 +309,10 @@ function var_full(div, train_loss_div, valid_loss_div) {
             n=n,
             m=m,
             color_scale=color,
-            contour_scale=contours
+            contour_scale=contours,
+            id="#var_dists",
+            opacity=0.1,
+            stroke="black"
         );
 
         // console.log(mean);
@@ -317,22 +334,19 @@ function var_full(div, train_loss_div, valid_loss_div) {
             );
     }
 
-    function get_distribution(mean, std) {
-        return function(x) {
-
-        };
-    }
-
     function clear() {
         svg.selectAll("path").remove();
         svg2.selectAll("circle").remove();
         svg3.selectAll("circle").remove();
+        svg2.select("#var_dists").selectAll("*").remove();
+        svg3.select("#var_dists").selectAll("*").remove();
     }
 
     function initial_plot() {
         plot_train_and_valid_points();
         plot_train_contour();
         plot_valid_contour();
+        plot();
     }
 
     function plot_train_and_valid_points() {
@@ -370,7 +384,8 @@ function var_full(div, train_loss_div, valid_loss_div) {
             n=n,
             m=m,
             color_scale=color,
-            contour_scale=contours
+            contour_scale=contours,
+            id="#contours"
         );
     }
 
@@ -387,7 +402,8 @@ function var_full(div, train_loss_div, valid_loss_div) {
             n=n,
             m=m,
             color_scale=color,
-            contour_scale=contours
+            contour_scale=contours,
+            id="#contours"
         );
     }
 

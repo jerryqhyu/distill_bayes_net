@@ -55,21 +55,44 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         }
     }
 
-    function plot_contour(data, n, m, color_scale, contour_scale) {
+    function plot_contour(data, n, m, color_scale, contour_scale, id, opacity, stroke) {
         //contour is a marching square, we have to scale the squares to svg size
-        size_multiplier = width/n;
-        svg.selectAll("path")
-            .data(contour_scale(data))
-            .enter().append("path")
-            .attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier)))
-            .attr("fill", function(d) {
-                return color_scale(d.value);
-            });
+        if (id) {
+            size_multiplier = width/n;
+            svg.select(id).selectAll("path")
+                .data(contour_scale(data))
+                .enter().append("path")
+                .attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier)))
+                .attr("id", id)
+                .attr("fill", function(d) {
+                    return color_scale(d.value);
+                })
+                .attr("opacity", opacity)
+                .attr("stroke", stroke);
+
+        } else {
+            size_multiplier = width/n;
+            svg.selectAll("path")
+                .data(contour_scale(data))
+                .enter().append("path")
+                .attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier)))
+                .attr("id", id)
+                .attr("fill", function(d) {
+                    return color_scale(d.value);
+                })
+                .attr("opacity", opacity);
+        }
+
+    }
+
+    function add_group(name) {
+        svg.append("g").attr("id", name);
     }
 
     return {
         plot_line: plot_line,
         plot_points: plot_points,
-        plot_contour: plot_contour
+        plot_contour: plot_contour,
+        add_group: add_group
     };
 }

@@ -527,9 +527,6 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     for(var i=0;i<this.out_depth ;i++) { this.sampled_w.push(new Vol(1, 1, this.num_inputs)); }
 
     this.biases = new Vol(1, 1, this.out_depth, 0.0);
-    this.biases_std = new Vol(1, 1, this.out_depth, 1.0);
-    this.sampled_biases = new Vol(1, 1, this.out_depth, 0.0);
-    this.sampled_epsilon_biases = new Vol(1, 1, this.out_depth, 0.0);
   }
 
   VariationalLayer.prototype = {
@@ -547,7 +544,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
             for(var d=0;d<this.num_inputs;d++) {
               a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
             }
-            a += this.sampled_biases.w[i];
+            a += this.biases.w[i];
             A.w[i] = a;
           }
           this.out_act = A;
@@ -580,10 +577,10 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
           tfi.dw[d] += V.w[d]*chain_grad; // grad wrt params
         }
       }
-      this.biases.dw[i] += chain_grad;
+
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mean[j].dw[k] = this.mean[j].w[k] - this.sampled_w[j].dw[k];
+              this.mean[j].dw[k] = -this.mean[j].w[k] + this.sampled_w[j].dw[k];
               this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
           }
       }
@@ -596,10 +593,6 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
                 this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
             }
         }
-        for (var j = 0; j < this.sampled_biases.w.length; j++) {
-            this.sampled_epsilon_biases.w[i] = global.randn(0, 1);
-            this.sampled_biases.w[i] = this.sampled_epsilon_biases.w[i] * this.biases_std.w[i] + this.biases.w[i];
-        }
     },
     mutate: function(random_func) {
         //sample a set of weights
@@ -609,27 +602,17 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
                 this.mean[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
             }
         }
-        for (var j = 0; j < this.sampled_biases.w.length; j++) {
-            this.sampled_epsilon_biases.w[i] = global.randn(0, 1, random_func);
-            this.biases.w[i] = this.sampled_epsilon_biases.w[i] * this.biases_std.w[i] + this.biases.w[i];
-        }
     },
     getParamsAndGrads: function() {
-      var response = [];
-      if (!this.weights_frozen) {
-
-      for(var i=0;i<this.out_depth;i++) {
-              response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+        var response = [];
+        for(var i=0;i<this.out_depth;i++) {
+            response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
 
         }
-    }
-        if (!this.biases_frozen) {
-            for(var j=0;j<this.out_depth;j++) {
-
-              response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
-            }
+        for(var j=0;j<this.out_depth;j++) {
+            response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
         }
-      return response;
+        return response;
     },
     freeze_weights: function() {
         this.weights_frozen = true;
@@ -676,9 +659,6 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         json.sampled_epsilon.push(this.sampled_epsilon[i].toJSON());
       }
       json.biases = this.biases.toJSON();
-      json.biases_std = this.biases.toJSON();
-      json.sampled_biases = this.biases.toJSON();
-      json.sampled_epsilon_biases = this.biases.toJSON();
       return json;
     },
     fromJSON: function(json) {
@@ -715,12 +695,6 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       }
       this.biases = new Vol(0,0,0,0);
       this.biases.fromJSON(json.biases);
-      this.biases_std = new Vol(0,0,0,0);
-      this.biases_std.fromJSON(json.biases_std);
-      this.sampled_biases = new Vol(0,0,0,0);
-      this.sampled_biases.fromJSON(json.sampled_biases);
-      this.sampled_epsilon_biases = new Vol(0,0,0,0);
-      this.sampled_epsilon_biases.fromJSON(json.sampled_epsilon_biases);
     }
   }
 
