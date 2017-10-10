@@ -268,8 +268,8 @@ function var_full(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_variational_distribution() {
-        var mean = [net.getLayer(1).mean[0].w[0], net.getLayer(1).mean[1].w[0]];
-        var std = [net.getLayer(1).std[0].w[0], net.getLayer(1).std[1].w[0]];
+        var mean = [net.getLayer(1).mu[0].w[0], net.getLayer(1).mu[1].w[0]];
+        var std = [net.getLayer(1).log_sigma[0].w[0], net.getLayer(1).log_sigma[1].w[0]];
 
         // mean = [0,0];
         // std = [1,1];
@@ -282,8 +282,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
                 data[k] = (1/(std[0]*Math.sqrt(Math.PI*2)))*Math.exp(-(Math.pow(x_scale_loss_inverse(w_1*4)-mean[0],2)/ (2*(std[0]*std[0])))) * (1/(std[1]*Math.sqrt(Math.PI*2)))*Math.exp(-(Math.pow(-x_scale_loss_inverse(w_2*4)-mean[1],2)/ (2*(std[1]*std[1]))))
             }
         }
-
-        console.log(data);
 
         var color = d3.scaleLinear()
             .domain([0,1])

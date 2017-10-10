@@ -25,8 +25,8 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
   var randf = function(a, b) { return Math.random()*(b-a)+a; }
   var randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); }
 
-  var randn = function(mu, std, random_func){
-      return mu+gaussRandom(random_func)*std;
+  var randn = function(mu, log_sigma, random_func){
+      return mu+gaussRandom(random_func)*Math.exp(log_sigma);
   }
 
   // Array utilities
@@ -517,10 +517,10 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     this.layer_type = 'variational';
 
     // initializations
-    this.mean = [];
-    for(var i=0;i<this.out_depth ;i++) { this.mean.push(new Vol(1, 1, this.num_inputs)); }
-    this.std = [];
-    for(var i=0;i<this.out_depth ;i++) { this.std.push(new Vol(1, 1, this.num_inputs)); }
+    this.mu = [];
+    for(var i=0;i<this.out_depth ;i++) { this.mu.push(new Vol(1, 1, this.num_inputs)); }
+    this.log_sigma = [];
+    for(var i=0;i<this.out_depth ;i++) { this.log_sigma.push(new Vol(1, 1, this.num_inputs)); }
     this.sampled_epsilon = [];
     for(var i=0;i<this.out_depth ;i++) { this.sampled_epsilon.push(new Vol(1, 1, this.num_inputs)); }
     this.sampled_w = [];
@@ -553,7 +553,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
           var Vw = V.w;
           for(var i=0;i<this.out_depth;i++) {
             var a = 0.0;
-            var wi = this.mean[i].w;
+            var wi = this.mu[i].w;
             for(var d=0;d<this.num_inputs;d++) {
               a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
             }
@@ -580,8 +580,8 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
 
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mean[j].dw[k] = -this.mean[j].w[k] + this.sampled_w[j].dw[k];
-              this.std[j].dw[k] = (this.std[j].w[k] + 1/this.std[j].w[k])- this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
+              this.mu[j].dw[k] = this.sampled_w[j].dw[k] - 0.1 * this.mu[j].w[k];
+              this.log_sigma[j].dw[k] = this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k] - 0.1 * (this.log_sigma[j].w[k] + 1/this.log_sigma[j].w[k]);
           }
       }
     },
@@ -590,7 +590,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         for (var i = 0; i < this.sampled_w.length; i++) {
             for (var j = 0; j < this.sampled_w[i].w.length; j++) {
                 this.sampled_epsilon[i].w[j] = global.randn(0, 1);
-                this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+                this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.log_sigma[i].w[j] + this.mu[i].w[j];
             }
         }
     },
@@ -599,18 +599,18 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         for (var i = 0; i < this.sampled_w.length; i++) {
             for (var j = 0; j < this.sampled_w[i].w.length; j++) {
                 this.sampled_epsilon[i].w[j] = global.randn(0, 1, random_func);
-                this.mean[i].w[j] = this.sampled_epsilon[i].w[j] * this.std[i].w[j] + this.mean[i].w[j];
+                this.mu[i].w[j] = this.sampled_epsilon[i].w[j] * this.log_sigma[i].w[j] + this.mu[i].w[j];
             }
         }
     },
     getParamsAndGrads: function() {
         var response = [];
         for(var i=0;i<this.out_depth;i++) {
-            response.push({params: this.mean[i].w, grads: this.mean[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+            response.push({params: this.mu[i].w, grads: this.mu[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
 
         }
         for(var j=0;j<this.out_depth;j++) {
-            response.push({params: this.std[j].w, grads: this.std[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+            response.push({params: this.log_sigma[j].w, grads: this.log_sigma[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
         }
         return response;
     },
@@ -621,8 +621,8 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         this.biases_frozen = true;
     },
     setMeans: function(mean_list) {
-        for (var i = 0; i < this.mean.length; i++) {
-            this.mean[i].w = mean_list[i];
+        for (var i = 0; i < this.mu.length; i++) {
+            this.mu[i].w = mean_list[i];
         }
     },
     setBiases:  function(b_list) {
@@ -630,7 +630,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     },
     setStds: function(std_list) {
         for (var i = 0; i < this.std.length; i++) {
-            this.std[i].w = std_list[i];
+            this.log_sigma[i].w = std_list[i];
         }
     },
     toJSON: function() {
@@ -642,13 +642,13 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       json.num_inputs = this.num_inputs;
       json.l1_decay_mul = this.l1_decay_mul;
       json.l2_decay_mul = this.l2_decay_mul;
-      json.mean = [];
-      for(var i=0;i<this.mean.length;i++) {
-        json.mean.push(this.mean[i].toJSON());
+      json.mu = [];
+      for(var i=0;i<this.mu.length;i++) {
+        json.mu.push(this.mu[i].toJSON());
       }
-      json.std = [];
-      for(var i=0;i<this.std.length;i++) {
-        json.std.push(this.std[i].toJSON());
+      json.log_sigma = [];
+      for(var i=0;i<this.log_sigma.length;i++) {
+        json.log_sigma.push(this.log_sigma[i].toJSON());
       }
       json.sampled_w = [];
       for(var i=0;i<this.sampled_w.length;i++) {
@@ -669,17 +669,17 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       this.num_inputs = json.num_inputs;
       this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined' ? json.l1_decay_mul : 1.0;
       this.l2_decay_mul = typeof json.l2_decay_mul !== 'undefined' ? json.l2_decay_mul : 1.0;
-      this.mean = [];
-      for(var i=0;i<json.mean.length;i++) {
+      this.mu = [];
+      for(var i=0;i<json.mu.length;i++) {
         var v = new Vol(0,0,0,0);
-        v.fromJSON(json.mean[i]);
-        this.mean.push(v);
+        v.fromJSON(json.mu[i]);
+        this.mu.push(v);
       }
-      this.std = [];
-      for(var i=0;i<json.std.length;i++) {
+      this.log_sigma = [];
+      for(var i=0;i<json.log_sigma.length;i++) {
         var v = new Vol(0,0,0,0);
-        v.fromJSON(json.std[i]);
-        this.std.push(v);
+        v.fromJSON(json.log_sigma[i]);
+        this.log_sigma.push(v);
       }
       this.sampled_w = [];
       for(var i=0;i<json.sampled_w.length;i++) {
