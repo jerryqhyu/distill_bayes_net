@@ -195,6 +195,10 @@ Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting
         <button type="button" onclick="bayes.reset()">Clear</button>
     </figure>
 
+    <figure style = "position:relative; width:984px; height:400px;">
+        <div id="progress" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+    </figure>
+
     <figure style = "position:relative; width:600px; height:700px;">
         <div id="exact_valid_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
         <figcaption id="exact_valid_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
@@ -311,7 +315,7 @@ Computing the data likelihood and the predictive likelihood for all weights is j
     net_nn.plot();
 
     // training var on sine
-    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#exact_valid_contour"));
+    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#exact_valid_contour"), d3.select("#progress"));
     bayes.plot();
 
     // training var on sine
