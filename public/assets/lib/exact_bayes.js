@@ -34,15 +34,15 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
     var loss_domain_x = [-4,4];
     var loss_domain_y = [-4,4];
     var progress_domain_x = [0,1];
-    var progress_domain_y = [20,40];
+    var progress_domain_y = [0,20];
 
     var curve_plotter = Plotter(svg, curve_domain_x, curve_domain_y, w, h);
     var train_posterior_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
     var valid_posterior_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
     var progress_plotter = Plotter(svg4, progress_domain_x, progress_domain_y, w, h);
 
-    var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4])
-    var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4])
+    var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4]);
+    var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4]);
 
     //hard coded points for consistentcy
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
@@ -94,14 +94,15 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
 
     var train_sampled_nets = [];
     var train_sample_predictions = [];
-    var avg_pred_by_train = [];
     var train_sampled_weights = [];
+
+    var avg_pred_by_train = [];
+    var avg_curve_by_train = [];
+    var loss_for_train_samples = [];
 
     var valid_sampled_nets = [];
     var valid_sample_predictions = [];
     var valid_sampled_weights = [];
-
-    var loss_for_train_samples = [];
 
     setup();
     initial_plot();
@@ -143,6 +144,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
                 valid_log_sum_exp += Math.exp(-point_prob_valid);
             }
         }
+
         train_log_sum_exp = Math.log(train_log_sum_exp);
         valid_log_sum_exp = Math.log(valid_log_sum_exp);
 
@@ -160,6 +162,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         train_sampled_weights = [];
         valid_sampled_weights = [];
         train_sample_predictions = [];
+        avg_curve_by_train = [];
         avg_pred_by_train = [];
         valid_sample_predictions = [];
         loss_for_train_samples = [];
@@ -180,15 +183,18 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         sampled_net.getLayer(1).setWeights([[x_scale_loss_inverse(n_sampled*8)], [-x_scale_loss_inverse(m_sampled*8)]]);
         train_sampled_nets.push(sampled_net);
 
-        point_predictions = predicted_points(sampled_net)
-        train_sample_predictions.push(point_predictions);
+        point_predictions = predicted_points(sampled_net);
+        train_sample_predictions.push(point_predictions.curve);
 
         if (avg_pred_by_train.length == 0) {
-            console.log("triggered");
-            avg_pred_by_train = point_predictions;
+            avg_pred_by_train = point_predictions.valid;
+            avg_curve_by_train = point_predictions.curve;
         } else {
             for (var i = 0; i < avg_pred_by_train.length; i++) {
-                avg_pred_by_train[i].y = avg_pred_by_train[i].y * (train_sampled_nets.length-1)/train_sampled_nets.length + point_predictions[i].y/train_sampled_nets.length;
+                avg_pred_by_train[i].y = avg_pred_by_train[i].y * (train_sampled_nets.length-1)/train_sampled_nets.length + point_predictions.valid[i].y/train_sampled_nets.length;
+            }
+            for (var i = 0; i < avg_curve_by_train.length; i++) {
+                avg_curve_by_train[i].y = avg_curve_by_train[i].y * (train_sampled_nets.length-1)/train_sampled_nets.length + point_predictions.curve[i].y/train_sampled_nets.length;
             }
         }
 
@@ -196,9 +202,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         var total_loss = 0;
         var predicted;
         var true_label;
-        var x_val;
         for (var j = 0; j < validation_points.length; j++) {
-            x_val = new net_lib.Vol([validation_points[j]]);
             true_label = Math.sin(validation_points[j]) + noise_validation[j];
             total_loss += (true_label - avg_pred_by_train[j].y) * (true_label - avg_pred_by_train[j].y);
         }
@@ -220,18 +224,27 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         var sampled_net = make_preset_net();
         sampled_net.getLayer(1).setWeights([[x_scale_loss_inverse(n_sampled*8)], [-x_scale_loss_inverse(m_sampled*8)]]);
         valid_sampled_nets.push(sampled_net);
-        valid_sample_predictions.push(predicted_points(sampled_net));
+        valid_sample_predictions.push(predicted_points(sampled_net).curve);
         clear();
         plot();
     }
 
     function predicted_points(net) {
-        points = [];
-        for (var j = -6; j < 6; j+=step_size) {
-            x_val = new net_lib.Vol([j]);
+        points = {};
+        curve = [];
+        valid = [];
+        for (var i = -6; i < 6; i+=step_size) {
+            x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
-            points.push({x:j,y:predicted_value.w[0]});
+            curve.push({x:i,y:predicted_value.w[0]});
         }
+        for (var j = 0; j < validation_points.length; j++) {
+            x_val = new net_lib.Vol([validation_points[j]]);
+            predicted_value = net.forward(x_val);
+            valid.push({x:validation_points[j],y:predicted_value.w[0]});
+        }
+        points.curve = curve;
+        points.valid = valid;
         return points;
     }
 
@@ -252,10 +265,9 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         for (var i = 0; i < loss_for_train_samples.length; i++) {
             avg_loss_data.push({x:(i+1)/(loss_for_train_samples.length+1), y:loss_for_train_samples[i]});
         }
-        console.log(avg_loss_data);
         progress_plotter.plot_line(avg_loss_data, "black", 3, 1);
         // Also plot the average over sampled nets from training posterior
-        curve_plotter.plot_line(avg_pred_by_train, "red", 3, 1);
+        curve_plotter.plot_line(avg_curve_by_train, "red", 3, 1);
     }
 
     function plot_weight() {

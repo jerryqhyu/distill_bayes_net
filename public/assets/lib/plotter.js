@@ -24,7 +24,7 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         return y_scale(d.y);
     })
 
-    function plot_line(data, color="black", width=2, opacity=1) {
+    function plot_line(data, color, width=2, opacity=1) {
         if (typeof(opacity) === 'undefined') {
             opacity = 1;
         }
@@ -82,7 +82,6 @@ function Plotter(svg, domain_x, domain_y, width, height) {
                 })
                 .attr("opacity", opacity);
         }
-
     }
 
     function add_group(name) {
