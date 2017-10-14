@@ -24,6 +24,8 @@
 
 <p>
 How do we prevent neural networks from overfitting?
+
+We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
 </p>
 
 
@@ -34,7 +36,8 @@ How do we prevent neural networks from overfitting?
         <button type="button" onclick="net_nn.train()">Train</button>
         <button type="button" onclick="net_nn.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            How a 3 layer neural network fit the sine curve when it observes full data.
+            A three-layer neural network fitting a small training set (red dots).
+            The green dots show the test set.
         </figcaption>
     </figure>
 
@@ -44,12 +47,13 @@ How do we prevent neural networks from overfitting?
             <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
         </section>
         <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-            The loss surface for the NN. The training loss is plotted on the left, the validation loss is plotted on the right.
+            The loss surface of the neural network.
+            The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
         </figcaption>
     </figure>
 
 <p>
-In this example, we've fixed all the weights in the neural network except for two weights in the last layer.
+In this example, we've pre-trained all the weights in the neural network except for two weights in the last layer.
 </p>
 
 
@@ -63,9 +67,9 @@ Instead of choosing the weights that best fit to the training data, these method
 katex.render("p(w|x)\\ vs.\\ q(w|x)", exacttex);
 </script>
 <p>
-Why do we have to choose one particular set of weights?
+But why do we have to choose one particular set of weights?
 There are usually many different sets of weights that are compatible with the data.
-Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting them in proportion to how well they fit the data.
+Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how well they fit the data.
 </p>
 
     <!-- Exact Inference figures -->
@@ -96,9 +100,6 @@ Bayesian methods can be seen as keeping around <i>all</i> weights, and weighting
         <button type="button" onclick="bayes.reset()">Clear</button>
     </figure>
 
-<p>
-We can see that the posterior puts a lot of mass
-</p>
 
 <H3>What about the prior?</H3>
 <p>
@@ -108,12 +109,20 @@ Sometimes, this is sold as a benefit, since it lets us incorporate knowledge abo
 <p>
 The important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one.
 </p>
+<p>
+To show that Bayesian methods aren't necessarily about priors, in this example we won't use a prior at all.
+</p>
+<p>
+Why doesn't everyone use exact Bayesian inference all the time?
+There are a few problems.
+First, computing the training likelihood for many possible weights is slow.
+Second, we have to store how well each set of weights fits the training data.
+</p>
 
 <H2>Variational Inference</H2>
 <p>
-Why doesn't everyone use exact Bayesian inference all the time then?
-The answer is that it requires considering all possible sets of weights.
-Computing the data likelihood and the predictive likelihood for all weights is just too slow.
+Variational inference means, loosely, fitting a nice, tractable distribution (such as Gaussian) to be as close as possible to the complicated, intractable posterior.
+Once we find a nice tractable distribution that approximates the intractable one, we can use the tractable distribution to make predictions or measure uncertainty.
 </p>
 
 
