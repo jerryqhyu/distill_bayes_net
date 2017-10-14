@@ -169,8 +169,6 @@ function nn_full(div, train_loss_div, valid_loss_div) {
             }
             if (epoch_count % 100 == 0) {
                 console.log(epoch_count);
-            }
-            if (epoch_count === 500) {
                 for (var i = 0; i < net.layers.length; i++) {
                     layer = net.getLayer(i);
                     if (layer.filters) {
@@ -183,6 +181,21 @@ function nn_full(div, train_loss_div, valid_loss_div) {
                     }
                 }
             }
+        }
+        if (epoch_count == 100) {
+            console.log(epoch_count);
+            console.log("loss is");
+            var total_loss = 0;
+            var predicted;
+            var true_label;
+            var x_val;
+            for (var j = 0; j < validation_points.length; j++) {
+                x_val = new net_lib.Vol([validation_points[j]]);
+                true_label = Math.sin(validation_points[j]) + noise_validation[j];
+                predicted = net.forward(x_val).w[0];
+                total_loss += (true_label - predicted) * (true_label - predicted);
+            }
+            console.log(total_loss);
         }
         clear();
         plot();

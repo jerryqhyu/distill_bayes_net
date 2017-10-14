@@ -1,10 +1,11 @@
-function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div) {
+function exact_bayes(div, train_posterior_div, progress_div) {
 
     //svg properties
-    var w = 984
-    var h = 300
-    var w_loss = 600
-    var h_loss = 600
+    var w = 984;
+    var h = 300;
+    var h_progress = 150;
+    var w_loss = 600;
+    var h_loss = 600;
 
     //for contour diagram effective size
     var n = 75;
@@ -13,21 +14,17 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
     var step_size = 0.1;
     var div = div;
     var train_posterior_div = train_posterior_div;
-    var valid_posterior_div = valid_posterior_div;
     var progress_div = progress_div;
 
     var svg = div.append("svg");
     var svg2 = train_posterior_div.append("svg");
-    var svg3 = valid_posterior_div.append("svg");
-    var svg4 = progress_div.append("svg");
+    var svg3 = progress_div.append("svg");
     svg.attr("width", w)
     .attr("height", h);
     svg2.attr("width", w_loss)
     .attr("height", h_loss);
-    svg3.attr("width", w_loss)
-    .attr("height", h_loss);
-    svg4.attr("width", w)
-    .attr("height", h);
+    svg3.attr("width", w)
+    .attr("height", h_progress);
 
     var curve_domain_x = [-5,5];
     var curve_domain_y = [-2,2];
@@ -38,8 +35,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
 
     var curve_plotter = Plotter(svg, curve_domain_x, curve_domain_y, w, h);
     var train_posterior_plotter = Plotter(svg2, loss_domain_x, loss_domain_y, w_loss, h_loss);
-    var valid_posterior_plotter = Plotter(svg3, loss_domain_x, loss_domain_y, w_loss, h_loss);
-    var progress_plotter = Plotter(svg4, progress_domain_x, progress_domain_y, w, h);
+    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, w, h_progress);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, w_loss]).range([-4,4]);
     var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4]);
@@ -72,9 +68,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
        -0.20313738,  0.09017244,  0.08452561,  0.0044375 ,  0.09312328];
 
     var train_posterior_data = new Array(n * m);
-    var valid_posterior_data = new Array(n * m);
     var train_sampling_interval = new Array(n * m);
-    var valid_sampling_interval = new Array(n * m);
 
     //hard coded optimum value
     var opt_layer1_w = [[2], [0]];
@@ -100,10 +94,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
     var avg_curve_by_train = [];
     var loss_for_train_samples = [];
 
-    var valid_sampled_nets = [];
-    var valid_sample_predictions = [];
-    var valid_sampled_weights = [];
-
     setup();
     initial_plot();
 
@@ -128,43 +118,29 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
 
     function setup() {
         var dummy_net = make_preset_net();
-        var point_prob_train = 0;
-        var point_prob_valid = 0;
-
+        var logprob = 0;
         var train_log_sum_exp = 0;
-        var valid_log_sum_exp = 0;
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                point_prob_train = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_2*8));
-                train_posterior_data[k] = point_prob_train;
-                train_log_sum_exp += Math.exp(-point_prob_train);
-                dummy_net.getLayer(1).setWeights([[x_scale_loss_inverse(w_1*8)], [-x_scale_loss_inverse(w_2*8)]]);
-                point_prob_valid = get_valid_posterior(dummy_net);
-                valid_posterior_data[k] = point_prob_valid;
-                valid_log_sum_exp += Math.exp(-point_prob_valid);
+                logprob = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1*8), -x_scale_loss_inverse(w_2*8));
+                train_posterior_data[k] = logprob;
+                train_log_sum_exp += Math.exp(-logprob);
             }
         }
-
         train_log_sum_exp = Math.log(train_log_sum_exp);
-        valid_log_sum_exp = Math.log(valid_log_sum_exp);
-
         train_sampling_interval[0] = 0;
-        valid_sampling_interval[0] = 0;
         for (var i = 1; i < train_sampling_interval.length; i++) {
             train_sampling_interval[i] = train_sampling_interval[i-1] + Math.exp(-train_posterior_data[i] - train_log_sum_exp);
-            valid_sampling_interval[i] = valid_sampling_interval[i-1] + Math.exp(-valid_posterior_data[i] - valid_log_sum_exp);
         }
+        console.log(train_sampling_interval[2000]);
     }
 
     function reset() {
         train_sampled_nets = [];
-        valid_sampled_nets = [];
         train_sampled_weights = [];
-        valid_sampled_weights = [];
         train_sample_predictions = [];
         avg_curve_by_train = [];
         avg_pred_by_train = [];
-        valid_sample_predictions = [];
         loss_for_train_samples = [];
         clear();
         plot();
@@ -211,24 +187,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         plot();
     }
 
-    function sample_valid() {
-        var uniform = Math.random();
-        var i;
-        for (i = 0; uniform > valid_sampling_interval[i]; i++) {}
-        var n_sampled = i % m;
-        var m_sampled = (i-n_sampled)/n;
-        valid_sampled_weights.push({
-            x: x_scale_loss_inverse(n_sampled*8),
-            y: -x_scale_loss_inverse(m_sampled*8)
-        });
-        var sampled_net = make_preset_net();
-        sampled_net.getLayer(1).setWeights([[x_scale_loss_inverse(n_sampled*8)], [-x_scale_loss_inverse(m_sampled*8)]]);
-        valid_sampled_nets.push(sampled_net);
-        valid_sample_predictions.push(predicted_points(sampled_net).curve);
-        clear();
-        plot();
-    }
-
     function predicted_points(net) {
         points = {};
         curve = [];
@@ -255,12 +213,8 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
 
     function plot_line() {
         for (var i = 0; i < train_sample_predictions.length; i++) {
-            curve_plotter.plot_line(train_sample_predictions[i], "darkorange", 1, 0.2);
+            curve_plotter.plot_line(train_sample_predictions[i], "orange", 1, 0.3);
         }
-        for (var i = 0; i < valid_sample_predictions.length; i++) {
-            curve_plotter.plot_line(valid_sample_predictions[i], "darkblue", 1, 0.2);
-        }
-
         var avg_loss_data = [];
         for (var i = 0; i < loss_for_train_samples.length; i++) {
             avg_loss_data.push({x:(i+1)/(loss_for_train_samples.length+1), y:loss_for_train_samples[i]});
@@ -268,6 +222,12 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         progress_plotter.plot_line(avg_loss_data, "black", 3, 1);
         // Also plot the average over sampled nets from training posterior
         curve_plotter.plot_line(avg_curve_by_train, "red", 3, 1);
+
+        MLE = []
+        for (var i = -6; i < 6; i+=step_size) {
+            MLE.push({x:i,y:5.8890}); //MLE validation loss
+        }
+        progress_plotter.plot_line(MLE, "red", 1, 1);
     }
 
     function plot_weight() {
@@ -278,29 +238,21 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
             size=5,
             opacity=1,
         );
-        valid_posterior_plotter.plot_points(
-            data=valid_sampled_weights,
-            stroke="black",
-            color="darkblue",
-            size=5,
-            opacity=1,
-        );
     }
 
     function clear() {
         svg.selectAll("path").remove();
         svg2.selectAll("circle").remove();
         svg3.selectAll("circle").remove();
-        svg4.selectAll("path").remove();
+        svg3.selectAll("path").remove();
     }
 
     function initial_plot() {
-        plot_train_and_valid_points();
+        plot_points();
         plot_train_posterior();
-        plot_valid_posterior();
     }
 
-    function plot_train_and_valid_points() {
+    function plot_points() {
         //individual training and validation points
         training_points_data = [];
         //training data points
@@ -319,7 +271,7 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
             });
         }
         curve_plotter.plot_points(training_points_data, "red", "red", 4, 1);
-        curve_plotter.plot_points(validation_points_data, "green", "green", 4, 0.3);
+        curve_plotter.plot_points(validation_points_data, "teal", "teal", 4, 1);
     }
 
     function plot_train_posterior() {
@@ -344,37 +296,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
         );
     }
 
-    function plot_valid_posterior() {
-        var color = d3.scaleLog()
-            .domain([1,100])
-            .interpolate(function() { return d3.interpolateSpectral; });
-        var contours = d3.contours()
-            .size([n, m])
-            .thresholds(d3.range(0.01, 500, .5));
-
-        valid_posterior_plotter.plot_contour(
-            data=valid_posterior_data,
-            n=n,
-            m=m,
-            color_scale=color,
-            contour_scale=contours
-        );
-    }
-
-    function get_valid_posterior(dummy_net) {
-        var total_loss = 0;
-        var predicted;
-        var true_label;
-        var x_val;
-        for (var j = 0; j < validation_points.length; j++) {
-            x_val = new net_lib.Vol([validation_points[j]]);
-            true_label = Math.sin(validation_points[j]) + noise_validation[j];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
-        }
-        return total_loss;
-    }
-
     function get_train_posterior(dummy_net, w_1, w_2) {
         var total_loss = 0;
         var predicted;
@@ -393,7 +314,6 @@ function exact_bayes(div, train_posterior_div, valid_posterior_div, progress_div
     return {
         plot: plot,
         sample_train: sample_train,
-        sample_valid: sample_valid,
         reset: reset
     };
 }
