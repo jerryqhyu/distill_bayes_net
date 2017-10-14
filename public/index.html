@@ -62,10 +62,7 @@ In this example, we've pre-trained all the weights in the neural network except 
 There are many possible strategies to try to avoid overfitting, generally called regularization methods.
 Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.
 </p>
-<div id="exacttex">.</div>
-<script>
-katex.render("p(w|x)\\ vs.\\ q(w|x)", exacttex);
-</script>
+<div id="exacttex">$$p(w|x)\ vs\ q(w|x) \sim \dfrac{1}{\sqrt{(2\pi)^k|\Sigma|}}exp(-\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x-\mu))$$</div>
 <p>
 But why do we have to choose one particular set of weights?
 There are usually many different sets of weights that are compatible with the data.
@@ -74,32 +71,23 @@ Bayesian methods keep around <i>all possible</i> weights, and weight them in pro
 
     <!-- Exact Inference figures -->
     <figure style = "position:relative; width:984px; height:400px;">
-        <div id="exact_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 320px;">
             Now we integrate out the of weights in proportion to the posterior.
         </figcaption>
     </figure>
 
-    <figure style = "position:relative; width:600px; height:700px;">
+    <figure style = "position:relative; width:600px; height:850px;">
         <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
         <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
         </figcaption>
         <button type="button" onclick="bayes.sample_train()">Sample</button>
         <button type="button" onclick="bayes.reset()">Clear</button>
+        <div id="progress" style="position:relative; width:984px; height:150px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
     </figure>
-
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="progress" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-    </figure>
-
-    <figure style = "position:relative; width:600px; height:700px;">
-        <div id="exact_valid_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
-        <figcaption id="exact_valid_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-        </figcaption>
-        <button type="button" onclick="bayes.sample_valid()">Sample</button>
-        <button type="button" onclick="bayes.reset()">Clear</button>
-    </figure>
-
+<p>
+We can see that the posterior puts a lot of mass
+</p>
 
 <H3>What about the prior?</H3>
 <p>
@@ -211,7 +199,7 @@ Once we find a nice tractable distribution that approximates the intractable one
     net_nn.plot();
 
     // training var on sine
-    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#exact_valid_contour"), d3.select("#progress"));
+    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
     bayes.plot();
 
     // training var on sine
