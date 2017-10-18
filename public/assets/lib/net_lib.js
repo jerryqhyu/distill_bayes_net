@@ -25,8 +25,8 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
   var randf = function(a, b) { return Math.random()*(b-a)+a; }
   var randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); }
 
-  var randn = function(mu, log_sigma, random_func){
-      return mu+gaussRandom(random_func)*Math.exp(log_sigma);
+  var randn = function(mu, sigma, random_func){
+      return mu+gaussRandom(random_func)*Math.exp(sigma);
   }
 
   // Array utilities
@@ -435,7 +435,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     getParamsAndGrads: function() {
       var response = [];
       if (!this.weights_frozen) {
-      for(var i=0;i<this.out_depth;i++) {
+          for(var i=0;i<this.out_depth;i++) {
               response.push({params: this.filters[i].w, grads: this.filters[i].dw, l1_decay_mul: this.l1_decay_mul, l2_decay_mul: this.l2_decay_mul});
           }
       }
@@ -518,15 +518,15 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
 
     // initializations
     this.mu = [];
-    for(var i=0;i<this.out_depth ;i++) { this.mu.push(new Vol(1, 1, this.num_inputs)); }
-    this.log_sigma = [];
-    for(var i=0;i<this.out_depth ;i++) { this.log_sigma.push(new Vol(1, 1, this.num_inputs)); }
+    for(var i=0;i<this.out_depth ;i++) { this.mu.push(new Vol(1, 1, this.num_inputs, 0)); }
+    this.sigma = [];
+    for(var i=0;i<this.out_depth ;i++) { this.sigma.push(new Vol(1, 1, this.num_inputs, 1)); }
     this.sampled_epsilon = [];
     for(var i=0;i<this.out_depth ;i++) { this.sampled_epsilon.push(new Vol(1, 1, this.num_inputs)); }
     this.sampled_w = [];
     for(var i=0;i<this.out_depth ;i++) { this.sampled_w.push(new Vol(1, 1, this.num_inputs)); }
 
-    this.biases = new Vol(1, 1, this.out_depth, 0.0);
+    this.biases = new Vol(1, 1, this.out_depth, 0.5);
   }
 
   VariationalLayer.prototype = {
@@ -564,6 +564,30 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
           return this.out_act;
       }
     },
+    specialForward: function(V, seed) {
+      this.in_act = V;
+      var A = new Vol(1, 1, this.out_depth, 0.0);
+
+      var sample = [];
+      for(var i=0;i<this.out_depth ;i++) { sample.push(new Vol(1, 1, this.num_inputs)); }
+      for (var i = 0; i < sample.length; i++) {
+          for (var j = 0; j < sample[i].w.length; j++) {
+              sample[i].w[j] = seed[i*this.num_inputs + j] * this.sigma[i].w[j] + this.mu[i].w[j];
+          }
+      }
+      var Vw = V.w;
+      for(var i=0;i<this.out_depth;i++) {
+        var a = 0.0;
+        var wi = sample[i].w;
+        for(var d=0;d<this.num_inputs;d++) {
+          a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
+        }
+        a += this.biases.w[i];
+        A.w[i] = a;
+      }
+      this.out_act = A;
+      return this.out_act;
+    },
     backward: function() {
       var V = this.in_act;
       V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
@@ -579,9 +603,9 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       }
 
       for (var j = 0; j < this.sampled_w.length; j++) {
-          for (var k = 0; k < this.sampled_w[0].dw.length; k++) {
-              this.mu[j].dw[k] = this.sampled_w[j].dw[k] - 0.1 * this.mu[j].w[k];
-              this.log_sigma[j].dw[k] = this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k] - 0.1 * (this.log_sigma[j].w[k] + 1/this.log_sigma[j].w[k]);
+          for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
+              this.mu[j].dw[k] = this.sampled_w[j].dw[k];
+              this.sigma[j].dw[k] += (this.sigma[j].w[k] + 1/this.sigma[j].w[k]) - this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
           }
       }
     },
@@ -589,28 +613,30 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         //sample a set of weights
         for (var i = 0; i < this.sampled_w.length; i++) {
             for (var j = 0; j < this.sampled_w[i].w.length; j++) {
-                this.sampled_epsilon[i].w[j] = global.randn(0, 1);
-                this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.log_sigma[i].w[j] + this.mu[i].w[j];
+                this.sampled_epsilon[i].w[j] = 0;
+                this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.sigma[i].w[j] + this.mu[i].w[j];
             }
         }
     },
-    mutate: function(random_func) {
-        //sample a set of weights
-        for (var i = 0; i < this.sampled_w.length; i++) {
-            for (var j = 0; j < this.sampled_w[i].w.length; j++) {
-                this.sampled_epsilon[i].w[j] = global.randn(0, 1, random_func);
-                this.mu[i].w[j] = this.sampled_epsilon[i].w[j] * this.log_sigma[i].w[j] + this.mu[i].w[j];
+    sampled_weights: function(seeds) {
+        var sample = [];
+        for (var n = 0; n < seeds.length; n++) {
+            sample.push([]);
+            for (var i = 0; i < this.out_depth; i++) {
+                for (var j = 0; j < this.num_inputs; j++) {
+                    sample[n].push(seeds[n][i*this.num_inputs + j] * this.sigma[i].w[j] + this.mu[i].w[j]);
+                }
             }
         }
+        return sample;
     },
     getParamsAndGrads: function() {
         var response = [];
         for(var i=0;i<this.out_depth;i++) {
             response.push({params: this.mu[i].w, grads: this.mu[i].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
-
         }
         for(var j=0;j<this.out_depth;j++) {
-            response.push({params: this.log_sigma[j].w, grads: this.log_sigma[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+            response.push({params: this.sigma[j].w, grads: this.sigma[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
         }
         return response;
     },
@@ -630,7 +656,7 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
     },
     setStds: function(std_list) {
         for (var i = 0; i < this.std.length; i++) {
-            this.log_sigma[i].w = std_list[i];
+            this.sigma[i].w = std_list[i];
         }
     },
     toJSON: function() {
@@ -646,9 +672,9 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       for(var i=0;i<this.mu.length;i++) {
         json.mu.push(this.mu[i].toJSON());
       }
-      json.log_sigma = [];
-      for(var i=0;i<this.log_sigma.length;i++) {
-        json.log_sigma.push(this.log_sigma[i].toJSON());
+      json.sigma = [];
+      for(var i=0;i<this.sigma.length;i++) {
+        json.sigma.push(this.sigma[i].toJSON());
       }
       json.sampled_w = [];
       for(var i=0;i<this.sampled_w.length;i++) {
@@ -675,11 +701,11 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         v.fromJSON(json.mu[i]);
         this.mu.push(v);
       }
-      this.log_sigma = [];
-      for(var i=0;i<json.log_sigma.length;i++) {
+      this.sigma = [];
+      for(var i=0;i<json.sigma.length;i++) {
         var v = new Vol(0,0,0,0);
-        v.fromJSON(json.log_sigma[i]);
-        this.log_sigma.push(v);
+        v.fromJSON(json.sigma[i]);
+        this.sigma.push(v);
       }
       this.sampled_w = [];
       for(var i=0;i<json.sampled_w.length;i++) {
@@ -1132,7 +1158,21 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
       }
       return act;
     },
-
+    variationalForward: function(V, seeds) {
+      var acts = [];
+      for (var i = 0; i < seeds.length; i++) {
+          var act = this.layers[0].forward(V, false);
+          for(var j=1;j<this.layers.length;j++) {
+              if (this.layers[j].layer_type === 'variational') {
+                  act = this.layers[j].specialForward(act, seeds[i]);
+              } else {
+                  act = this.layers[j].forward(act, false);
+              }
+          }
+          acts.push(act);
+      }
+      return acts;
+    },
     getCostLoss: function(V, y) {
       this.forward(V, false);
       var N = this.layers.length;

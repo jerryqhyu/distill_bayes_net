@@ -40,8 +40,16 @@ function var_full(div, train_loss_div, valid_loss_div) {
     var y_scale_loss_inverse = d3.scaleLinear().domain([h_loss,0]).range([-4,4])
 
     //hard coded points for consistentcy
-    seeds = ["wow", "undertale", "bayesian", "toronto", "iphonex"];
-    // seeds = ["wow", "wow", "wow", "wow", "wow"];
+    seeds = [[-0.10546053,  0.64185363],
+       [ 0.2023968 ,  0.87036015],
+       [ 0.53764036,  0.67859313],
+       [-1.19854575, -0.92250938],
+       [-0.44016375, -0.47246149],
+       [-0.46442054,  0.08449271],
+       [ 1.18639015,  0.03213133],
+       [ 1.52207574,  0.44376529],
+       [-1.15038849,  0.99079206],
+       [-0.63797049,  0.00673246]];
     var train_points = [ 0.98348382,  0.33239784, 1.31901198,
       -1.33424016, -2.49962207, 2.671385];
     var validation_points = [0.0074539 , -2.25649362,  1.2912101 ,         -1.15521679,  0.15278725,
@@ -86,11 +94,11 @@ function var_full(div, train_loss_div, valid_loss_div) {
     //define a neural network
     var net = make_preset_net();
     var epoch_count = 0;
-    var learning_rate = 0.01;
+    var learning_rate = 0.05;
     var l1_decay = 0;
     var l2_decay = 0;
     var momentum = 0;
-    var batch_size = 16;
+    var batch_size = 64;
 
     var trainer = new net_lib.Trainer(net, {method: 'sgd', learning_rate: learning_rate,
     l2_decay: l2_decay, momentum: momentum, batch_size: batch_size,
@@ -115,7 +123,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
         valid_loss_plotter.add_group("contours");
         train_loss_plotter.add_group("var_dists");
         valid_loss_plotter.add_group("var_dists");
-
     }
 
     function make_preset_net() {
@@ -205,21 +212,25 @@ function var_full(div, train_loss_div, valid_loss_div) {
 
     function plot() {
         plot_line();
+        plot_weight();
         plot_variational_distribution();
     }
 
     function plot_line() {
-        var predicted_value;
+        var predicted_values;
         var x_val;
         var pred = [];
         for (var i = 0; i < seeds.length; i++) {
             pred.push([]);
-            sampled_net = net.sampleNet(seeds[i]);
-            for (var j = -6; j < 6; j+=step_size) {
-                x_val = new net_lib.Vol([j]);
-                predicted_value = sampled_net.forward(x_val);
-                pred[i].push({x:j,y:predicted_value.w[0]});
+        }
+        for (var j = -6; j < 6; j+=step_size) {
+            x_val = new net_lib.Vol([j]);
+            predicted_values = net.variationalForward(x_val, seeds);
+            for (var i = 0; i < seeds.length; i++) {
+                pred[i].push({x:j,y:predicted_values[i].w[0]});
             }
+        }
+        for (var i = 0; i < seeds.length; i++) {
             curve_plotter.plot_line(pred[i], "orange", 1, 0.5);
         }
         mean = [];
@@ -267,9 +278,49 @@ function var_full(div, train_loss_div, valid_loss_div) {
         return data;
     }
 
+    function plot_weight() {
+        var mean = [net.getLayer(1).mu[0].w[0], net.getLayer(1).mu[1].w[0]];
+        var samples = net.getLayer(1).sampled_weights(seeds);
+        var samples_for_plot = [];
+        for (var i = 0; i < samples.length; i++) {
+            samples_for_plot.push({x:samples[i][0], y:samples[i][1]});
+        }
+        console.log(samples);
+        console.log(samples_for_plot);
+        //for testing
+        train_loss_plotter.plot_points(
+            data=[{x:mean[0],y:mean[1]}],
+            stroke="black",
+            color="black",
+            size=5,
+            opacity=1,
+            );
+        valid_loss_plotter.plot_points(
+            data=[{x:mean[0],y:mean[1]}],
+            stroke="black",
+            color="black",
+            size=5,
+            opacity=1,
+            );
+        train_loss_plotter.plot_points(
+            data=samples_for_plot,
+            stroke="black",
+            color="orange",
+            size=3,
+            opacity=1,
+            );
+        valid_loss_plotter.plot_points(
+            data=samples_for_plot,
+            stroke="black",
+            color="orange",
+            size=3,
+            opacity=1,
+            );
+    }
+
     function plot_variational_distribution() {
         var mean = [net.getLayer(1).mu[0].w[0], net.getLayer(1).mu[1].w[0]];
-        var std = [net.getLayer(1).log_sigma[0].w[0], net.getLayer(1).log_sigma[1].w[0]];
+        var std = [net.getLayer(1).sigma[0].w[0], net.getLayer(1).sigma[1].w[0]];
 
         // mean = [0,0];
         // std = [1,1];
@@ -313,23 +364,6 @@ function var_full(div, train_loss_div, valid_loss_div) {
             stroke="black"
         );
 
-        // console.log(mean);
-
-        //for testing
-        train_loss_plotter.plot_points(
-            data=[{x:mean[0],y:mean[1]}],
-            stroke="black",
-            color="black",
-            size=5,
-            opacity=1,
-            );
-        valid_loss_plotter.plot_points(
-            data=[{x:mean[0],y:mean[1]}],
-            stroke="black",
-            color="black",
-            size=5,
-            opacity=1,
-            );
     }
 
     function clear() {
