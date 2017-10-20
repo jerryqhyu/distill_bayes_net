@@ -597,17 +597,22 @@ var net_lib = net_lib || { REVISION: 'ALPHA' };
         var tfi = this.sampled_w[i];
         var chain_grad = this.out_act.dw[i];
         for(var d=0;d<this.num_inputs;d++) {
-          V.dw[d] += tfi.w[d]*chain_grad; // grad wrt input data
-          tfi.dw[d] += V.w[d]*chain_grad; // grad wrt params
+          V.dw[d] = tfi.w[d]*chain_grad; // grad wrt input data
+          tfi.dw[d] = V.w[d]*chain_grad; // grad wrt params
         }
       }
 
       for (var j = 0; j < this.sampled_w.length; j++) {
           for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
-              this.mu[j].dw[k] = this.sampled_w[j].dw[k];
-              this.sigma[j].dw[k] += (this.sigma[j].w[k] + 1/this.sigma[j].w[k]) - this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
+              this.mu[j].dw[k] -= this.mu[j].w[k] - this.sampled_w[j].dw[k];
+              //this.sigma[j].dw[k] += (this.sigma[j].w[k] + 1/this.sigma[j].w[k]) - this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k];
+              this.sigma[j].dw[k] += 0;
+              //???????????????
           }
+          console.log(this.mu[j].w);
+          console.log(this.mu[j].dw);
       }
+      console.log("--");
     },
     sample: function() {
         //sample a set of weights

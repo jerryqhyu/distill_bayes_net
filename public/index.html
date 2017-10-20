@@ -148,6 +148,7 @@ Once we find a nice tractable distribution that approximates the intractable one
         </figcaption>
     </figure>
 
+    <script src="assets/lib/parameters.js"></script>
     <script src="assets/lib/plotter.js"></script>
     <script src="assets/lib/gaussian_curve.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
@@ -157,11 +158,12 @@ Once we find a nice tractable distribution that approximates the intractable one
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
-
     <script>
 
 
     //DIVERGENCES
+    var parameters = param;
+
     var curve = GaussianCurve(0, 1, d3.select("#curve"));
     var sdScaler = d3.scaleLinear().domain([0,4]).range([0.5,2.5])
 
@@ -193,17 +195,16 @@ Once we find a nice tractable distribution that approximates the intractable one
     var getsd  = sliderd( d3.select("#slider4")).xval
     curve.drawLine();
 
-
     //training NN on sine
     var net_nn = nn_full(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
     net_nn.plot();
 
     // training var on sine
-    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
+    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"), parameters);
     bayes.plot();
 
     // training var on sine
-    var net_var = var_full(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"));
+    var net_var = var_full(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), parameters);
     </script>
 
 <H3>Connection to Dropout</H3>
