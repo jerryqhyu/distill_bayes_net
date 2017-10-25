@@ -68,18 +68,16 @@
         <!-- Exact Inference figures -->
         <figure style="position:relative; width:984px; height:400px;">
             <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-            <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 320px;">
+            <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 50px;">
                 Now we integrate out the of weights in proportion to the posterior.
             </figcaption>
         </figure>
 
-        <figure style="position:relative; width:600px; height:850px;">
-            <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
-            <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-            </figcaption>
+        <figure style="position:relative; width:984px; height:400px;">
+            <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
+            <div id="progress" style="position:relative; margin-left: 384px; width:600px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
             <button type="button" onclick="sampler.sample_train()">Sample</button>
             <button type="button" onclick="sampler.reset()">Clear</button>
-            <div id="progress" style="position:relative; width:984px; height:150px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
         </figure>
         <p>
             We can see that the posterior puts a lot of mass

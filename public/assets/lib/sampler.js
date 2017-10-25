@@ -1,7 +1,7 @@
 function sampler(div, train_posterior_div, progress_div, parameters) {
 
     //svg properties
-    var h_progress = 150;
+    var h_progress = 300;
     var div = div;
     var train_posterior_div = train_posterior_div;
     var progress_div = progress_div;
@@ -9,23 +9,18 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     var svg2 = train_posterior_div.append("svg");
     var svg3 = progress_div.append("svg");
     svg.attr("width", parameters.w).attr("height", parameters.h);
-    svg2.attr("width", parameters.w_loss * 2).attr("height", parameters.h_loss * 2);
-    svg3.attr("width", parameters.w).attr("height", h_progress);
+    svg2.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
+    svg3.attr("width", parameters.w_loss * 2).attr("height", h_progress);
 
     var progress_domain_x = [0, 1];
     var progress_domain_y = [0, 20];
 
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
-    var train_posterior_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss * 2, parameters.h_loss * 2);
-    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, parameters.w, h_progress);
+    var train_posterior_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
+    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, parameters.w_loss * 2, h_progress);
 
-    var x_scale_loss_inverse = d3.scaleLinear().domain([
-        0, parameters.w_loss * 2
-    ]).range(parameters.loss_domain_x);
-    var y_scale_loss_inverse = d3.scaleLinear().domain([
-        parameters.h_loss * 2,
-        0
-    ]).range(parameters.loss_domain_y);
+    var x_scale_loss_inverse = d3.scaleLinear().domain([0, parameters.w_loss]).range(parameters.loss_domain_x);
+    var y_scale_loss_inverse = d3.scaleLinear().domain([parameters.h_loss, 0]).range(parameters.loss_domain_y);
 
     var train_posterior_data = new Array(parameters.n * parameters.m);
     var train_sampling_interval = new Array(parameters.n * parameters.m);
@@ -69,7 +64,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         var train_log_sum_exp = 0;
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                logprob = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1 * 8), y_scale_loss_inverse(w_2 * 8));
+                logprob = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
                 train_posterior_data[k] = logprob;
                 train_log_sum_exp += Math.exp(-logprob);
             }
@@ -98,13 +93,13 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         var n_sampled = i % parameters.m;
         var m_sampled = (i - n_sampled) / parameters.n;
         train_sampled_weights.push({
-            x: x_scale_loss_inverse(n_sampled * 8),
-            y: y_scale_loss_inverse(m_sampled * 8)
+            x: x_scale_loss_inverse(n_sampled * 4),
+            y: y_scale_loss_inverse(m_sampled * 4)
         });
         var sampled_net = make_preset_net();
         sampled_net.getLayer(1).setWeights([
-            [x_scale_loss_inverse(n_sampled * 8)],
-            [y_scale_loss_inverse(m_sampled * 8)]
+            [x_scale_loss_inverse(n_sampled * 4)],
+            [y_scale_loss_inverse(m_sampled * 4)]
         ]);
         train_sampled_nets.push(sampled_net);
 
@@ -186,7 +181,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     }
 
     function plot_weight() {
-        train_posterior_plotter.plot_points(data = train_sampled_weights, stroke = "black", color = "darkorange", size = 5, opacity = 1,);
+        train_posterior_plotter.plot_points(data = train_sampled_weights, stroke = "black", color = "darkorange", size = 3, opacity = 1,);
     }
 
     function clear() {

@@ -235,15 +235,15 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1,);
+        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag=on_drag, dragging=dragging, end_drag=end_drag);
         valid_loss_plotter.plot_points(data = [
             {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1,);
-        train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,on_drag=on_drag, dragging=dragging, end_drag=end_drag);
-        valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,on_drag=on_drag, dragging=dragging, end_drag=end_drag);
+        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag=on_drag, dragging=dragging, end_drag=end_drag);
+        train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
+        valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
     }
 
     function plot_variational_distribution() {
@@ -266,8 +266,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
         var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.005));
 
-        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.075, stroke = "black");
-        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.075, stroke = "black");
+        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.05, stroke = "black");
+        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.05, stroke = "black");
 
     }
 
