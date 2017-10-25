@@ -13,251 +13,243 @@
 
 <title>Bayesian Neural Networks</title>
 
-<body><html>
+<body>
+    <html>
 
-<dt-article class="centered">
-    <link rel="stylesheet" type="text/css" href="assets/widgets.css">
-    <!-- <script src="assets/lib/lib.js"></script> -->
-    <script src="assets/utils.js"></script>
+    <dt-article class="centered">
+        <link rel="stylesheet" type="text/css" href="assets/widgets.css">
+        <!-- <script src="assets/lib/lib.js"></script> -->
+        <script src="assets/utils.js"></script>
 
-<H1>Bayesian Neural Networks</H1>
+        <H1>Bayesian Neural Networks</H1>
 
-<p>
-How do we prevent neural networks from overfitting?
-
-We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
-</p>
-
+        <p>
+            How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
+        </p>
 
 
-    <!-- Regular MLP figure -->
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <button type="button" onclick="net_nn.train()">Train</button>
-        <button type="button" onclick="net_nn.reset()">Reset</button>
-        <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            A three-layer neural network fitting a small training set (red dots).
-            The green dots show the test set.
-        </figcaption>
-    </figure>
 
-    <figure style = "position:relative; width:984px; height:400px;">
-        <section class="container">
-            <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
-            <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
-        </section>
-        <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-            The loss surface of the neural network.
-            The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
-        </figcaption>
-    </figure>
+        <!-- Regular MLP figure -->
+        <figure style="position:relative; width:984px; height:400px;">
+            <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <button type="button" onclick="mlp.train()">Train</button>
+            <button type="button" onclick="mlp.reset()">Reset</button>
+            <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+                A three-layer neural network fitting a small training set (red dots). The green dots show the test set.
+            </figcaption>
+        </figure>
 
-<p>
-In this example, we've pre-trained all the weights in the neural network except for two weights in the last layer.
-</p>
+        <figure style="position:relative; width:984px; height:400px;">
+            <section class="container">
+                <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
+                <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+            </section>
+            <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+                The loss surface of the neural network. The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
+            </figcaption>
+        </figure>
 
-
-<H2>Exact Inference</H2>
-<p>
-There are many possible strategies to try to avoid overfitting, generally called regularization methods.
-Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.
-</p>
-<div id="exacttex">$$p(w|x)\ vs\ q(w|x) \sim \dfrac{1}{\sqrt{(2\pi)^k|\Sigma|}}exp(-\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x-\mu))$$</div>
-<p>
-But why do we have to choose one particular set of weights?
-There are usually many different sets of weights that are compatible with the data.
-Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how well they fit the data.
-</p>
-
-    <!-- Exact Inference figures -->
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 320px;">
-            Now we integrate out the of weights in proportion to the posterior.
-        </figcaption>
-    </figure>
-
-    <figure style = "position:relative; width:600px; height:850px;">
-        <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
-        <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-        </figcaption>
-        <button type="button" onclick="bayes.sample_train()">Sample</button>
-        <button type="button" onclick="bayes.reset()">Clear</button>
-        <div id="progress" style="position:relative; width:984px; height:150px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-    </figure>
-<p>
-We can see that the posterior puts a lot of mass
-</p>
-
-<H3>What about the prior?</H3>
-<p>
-One difficulty with Bayesian methods is that we're sometimes forced to choose a prior.
-Sometimes, this is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
-</p>
-<p>
-The important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one.
-</p>
-<p>
-To show that Bayesian methods aren't necessarily about priors, in this example we won't use a prior at all.
-</p>
-<p>
-Why doesn't everyone use exact Bayesian inference all the time?
-There are a few problems.
-First, computing the training likelihood for many possible weights is slow.
-Second, we have to store how well each set of weights fits the training data.
-</p>
-
-<H2>Variational Inference</H2>
-<p>
-Variational inference means, loosely, fitting a nice, tractable distribution (such as Gaussian) to be as close as possible to the complicated, intractable posterior.
-Once we find a nice tractable distribution that approximates the intractable one, we can use the tractable distribution to make predictions or measure uncertainty.
-</p>
+        <p>
+            In this example, we've pre-trained all the weights in the neural network except for two weights in the last layer.
+        </p>
 
 
-    <!-- KL divergence figure -->
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
-        </div>
-        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
-        </div>
-        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the areas. Do these measures agree?
-        </figcaption>
-    </figure>
+        <H2>Exact Inference</H2>
+        <p>
+            There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
+            learned.
+        </p>
+        <div id="exacttex">$$p(w|x)\ vs\ q(w|x) \sim \dfrac{1}{\sqrt{(2\pi)^k|\Sigma|}}exp(-\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x-\mu))$$</div>
+        <p>
+            But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how
+            well they fit the data.
+        </p>
 
-    <!-- Variational Inference Layer -->
-    <figure style = "position:relative; width:984px; height:400px;">
-        <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-        <button type="button" onclick="net_var.train()">Train</button>
-        <button type="button" onclick="net_var.reset()">Reset</button>
-        <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            Now we fit a distribution of weights to the underlying latent distribution.
-        </figcaption>
-    </figure>
+        <!-- Exact Inference figures -->
+        <figure style="position:relative; width:984px; height:400px;">
+            <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 320px;">
+                Now we integrate out the of weights in proportion to the posterior.
+            </figcaption>
+        </figure>
 
-    <figure style = "position:relative; width:984px; height:400px;">
-        <section class="container">
-            <div id="var_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
-            <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
-        </section>
-        <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
-            The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
-        </figcaption>
-    </figure>
+        <figure style="position:relative; width:600px; height:850px;">
+            <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 600px; height: 600px;"></div>
+            <figcaption id="exact_train_contour_caption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            </figcaption>
+            <button type="button" onclick="sampler.sample_train()">Sample</button>
+            <button type="button" onclick="sampler.reset()">Clear</button>
+            <div id="progress" style="position:relative; width:984px; height:150px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        </figure>
+        <p>
+            We can see that the posterior puts a lot of mass
+        </p>
 
-    <script src="assets/lib/parameters.js"></script>
-    <script src="assets/lib/plotter.js"></script>
-    <script src="assets/lib/gaussian_curve.js"></script>
-    <script src="assets/lib/contour_plot.js"></script>
-    <script src="assets/lib/nn_full.js"></script>
-    <script src="assets/lib/var_full.js"></script>
-    <script src="assets/lib/exact_bayes.js"></script>
-    <script src="assets/lib/net_lib.js"></script>
-    <script src="assets/lib/seedrandom.min.js"></script>
-    <script src="assets/iterates.js"></script>
+        <H3>What about the prior?</H3>
+        <p>
+            One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. Sometimes, this is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
+        </p>
+        <p>
+            The important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one.
+        </p>
+        <p>
+            To show that Bayesian methods aren't necessarily about priors, in this example we won't use a prior at all.
+        </p>
+        <p>
+            Why doesn't everyone use exact Bayesian inference all the time? There are a few problems. First, computing the training likelihood for many possible weights is slow. Second, we have to store how well each set of weights fits the training data.
+        </p>
+
+        <H2>Variational Inference</H2>
+        <p>
+            Variational inference means, loosely, fitting a nice, tractable distribution (such as Gaussian) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates the intractable one, we
+            can use the tractable distribution to make predictions or measure uncertainty.
+        </p>
+
+
+        <!-- KL divergence figure -->
+        <figure style="position:relative; width:984px; height:400px;">
+            <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
+                <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
+            </div>
+            <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
+                <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
+            </div>
+            <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+                If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the
+                areas. Do these measures agree?
+            </figcaption>
+        </figure>
+
+        <!-- Variational Inference Layer -->
+        <figure style="position:relative; width:984px; height:400px;">
+            <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <button type="button" onclick="bnn.train()">Train</button>
+            <button type="button" onclick="bnn.reset()">Reset</button>
+            <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+                Now we fit a distribution of weights to the underlying latent distribution.
+            </figcaption>
+        </figure>
+
+        <figure style="position:relative; width:984px; height:400px;">
+            <section class="container">
+                <div id="var_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
+                <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+            </section>
+            <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+                The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
+            </figcaption>
+        </figure>
+
+        <script src="assets/lib/parameters.js"></script>
+        <script src="assets/lib/plotter.js"></script>
+        <script src="assets/lib/gaussian_curve.js"></script>
+        <script src="assets/lib/contour_plot.js"></script>
+        <script src="assets/lib/mlp.js"></script>
+        <script src="assets/lib/bnn.js"></script>
+        <script src="assets/lib/sampler.js"></script>
+        <script src="assets/lib/net_lib.js"></script>
+        <script src="assets/lib/seedrandom.min.js"></script>
+        <script src="assets/iterates.js"></script>
+        <script>
+            //DIVERGENCES
+            var parameters = param;
+
+            var curve = GaussianCurve(0, 1, d3.select("#curve"));
+            var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
+
+            var sliderc = sliderGen([230, 40])
+                .ticks([0, 5, 10, 15, 20])
+                .ticktitles(function(d, i) {
+                    return ["-10", "-5", "0", "5", "10"][i]
+                })
+                .change(function(i) {
+                    d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 10).toPrecision(2))
+                    curve.update(getmean() - 10, sdScaler(getsd()))
+                })
+                .startxval(10)
+                .cRadius(7)
+                .shifty(-12)
+                .margins(20, 20)
+
+            var sliderd = sliderGen([230, 40])
+                .ticks([0, 1, 2, 3, 4])
+                .ticktitles(function(d, i) {
+                    return ["0.5", "1", "1.5", "2", "2.5"][i]
+                })
+                .change(function(i) {
+                    d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2))
+                    curve.update(getmean() - 10, sdScaler(getsd()))
+                })
+                .cRadius(7)
+                .shifty(-12)
+                .startxval(1)
+                .margins(20, 20)
+
+            var getmean = sliderc(d3.select("#slider3")).xval
+            var getsd = sliderd(d3.select("#slider4")).xval
+            curve.drawLine();
+
+            //training NN on sine
+            var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), parameters);
+            mlp.plot();
+
+            // training var on sine
+            var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"), parameters);
+            sampler.plot();
+
+            // training var on sine
+            var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), parameters);
+        </script>
+
+        <H3>Connection to Dropout</H3>
+        <p>
+            Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
+        </p>
+
+        <H3>Connection to Ensembles</H3>
+        <p>
+            asdf
+        </p>
+
+        <H3>Connection to Gradient Noise</H3>
+        <p>
+            asdf
+        </p>
+        <p>
+            <a href="http://proceedings.mlr.press/v48/gal16.html">Gal and Ghahramani, 2016. Dropout as Bayesian approximation: representing model uncertainty in deep learning</a>
+        </p>
+        <p>
+            <a href="http://papers.nips.cc/paper/5666-variational-dropout-and-the-local-reparameterization-trick">Kingma, Salimans, and Welling, 2015. Variational dropout and the local reparameterization trick.</a>
+        </p>
+
+        <H2>References</H2>
+        <p>
+            Blundell, Charles, Cornebise, Julien, Kavukcuoglu, Koray, and Wierstra, Daan. Weight uncertainty in neural networks. arXiv preprint arXiv:1505.05424, 2015
+        </p>
+        <p>
+            Kucukelbir, Alp, Ranganath, Rajesh, Gelman, Andrew, and Blei, David. Fully automatic variational inference of differentiable probability models. In NIPS Workshop on Probabilistic Programming, 2014.
+        </p>
+        <p>
+            Ranganath, Rajesh, Gerrish, Sean, and Blei, David M. Black box variational inference. arXiv preprint arXiv:1401.0118, 2013.
+        </p>
+        <p>
+            <a href="http://www.csri.utoronto.ca/~radford/ftp/thesis.pdf">Neal, 1995. Bayesian learning for neural networks.</a>
+        </p>
+        <p>
+            <a href="http://papers.nips.cc/paper/4329-practical-variational-inference-for-neural-networks">Graves, 2011. Practical variational inference for neural networks</a>
+        </p>
+        <p>
+            <a href="http://cs.stanford.edu/people/karpathy/convnetjs/">ConvNetJS by Andrej Karpathy</a>
+        </p>
+
+
+
+
+    </dt-article>
     <script>
-
-
-    //DIVERGENCES
-    var parameters = param;
-
-    var curve = GaussianCurve(0, 1, d3.select("#curve"));
-    var sdScaler = d3.scaleLinear().domain([0,4]).range([0.5,2.5])
-
-    var sliderc = sliderGen([230, 40])
-    .ticks([0,5,10,15,20])
-    .ticktitles( function(d,i) { return ["-10", "-5", "0", "5", "10"][i]})
-    .change( function (i) {
-        d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean()-10).toPrecision(2) )
-        curve.update(getmean()-10, sdScaler(getsd()))
-    } )
-    .startxval(10)
-    .cRadius(7)
-    .shifty(-12)
-    .margins(20,20)
-
-    var sliderd = sliderGen([230, 40])
-    .ticks([0,1,2,3,4])
-    .ticktitles( function(d,i) { return ["0.5", "1", "1.5", "2", "2.5"][i]})
-    .change( function (i) {
-        d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2) )
-        curve.update(getmean()-10, sdScaler(getsd()))
-    } )
-    .cRadius(7)
-    .shifty(-12)
-    .startxval(1)
-    .margins(20,20)
-
-    var getmean = sliderc( d3.select("#slider3")).xval
-    var getsd  = sliderd( d3.select("#slider4")).xval
-    curve.drawLine();
-
-    //training NN on sine
-    var net_nn = nn_full(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
-    net_nn.plot();
-
-    // training var on sine
-    var bayes = exact_bayes(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"), parameters);
-    bayes.plot();
-
-    // training var on sine
-    var net_var = var_full(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), parameters);
+        renderMathInElement(document.body);
     </script>
+</body>
 
-<H3>Connection to Dropout</H3>
-<p>
-Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
-</p>
-
-<H3>Connection to Ensembles</H3>
-<p>
-asdf
-</p>
-
-<H3>Connection to Gradient Noise</H3>
-<p>
-asdf
-</p>
-
-<p>
-<a href="http://proceedings.mlr.press/v48/gal16.html">Gal and Ghahramani, 2016. Dropout as Bayesian approximation: representing model uncertainty in deep learning</a>
-</p>
-<p>
-<a href="http://papers.nips.cc/paper/5666-variational-dropout-and-the-local-reparameterization-trick">Kingma, Salimans, and Welling, 2015. Variational dropout and the local reparameterization trick.</a>
-</p>
-
-<H2>References</H2>
-<p>
-Blundell, Charles, Cornebise, Julien, Kavukcuoglu, Koray, and Wierstra, Daan. Weight uncertainty
-in neural networks. arXiv preprint arXiv:1505.05424, 2015
-</p>
-<p>
-Kucukelbir, Alp, Ranganath, Rajesh, Gelman, Andrew, and Blei, David. Fully automatic variational
-inference of differentiable probability models. In NIPS Workshop on Probabilistic Programming,
-2014.
-</p>
-<p>
-Ranganath, Rajesh, Gerrish, Sean, and Blei, David M. Black box variational inference. arXiv
-preprint arXiv:1401.0118, 2013.
-</p>
-<p>
-<a href="http://www.csri.utoronto.ca/~radford/ftp/thesis.pdf">Neal, 1995. Bayesian learning for neural networks.</a>
-</p>
-<p>
-<a href="http://papers.nips.cc/paper/4329-practical-variational-inference-for-neural-networks">Graves, 2011. Practical variational inference for neural networks</a>
-</p>
-<p>
-<a href="http://cs.stanford.edu/people/karpathy/convnetjs/">ConvNetJS by Andrej Karpathy</a>
-</p>
-
-
-
-
-</dt-article>
-<script>
-    renderMathInElement(document.body);
-</script>
-</body></html>
+</html>

@@ -8,8 +8,8 @@ param = {
     step_size: 0.1,
     curve_domain_x: [-5, 5],
     curve_domain_y: [-2, 2],
-    loss_domain_x: [-4, 4],
-    loss_domain_y: [-4, 4],
+    loss_domain_x: [-1, 3],
+    loss_domain_y: [-1, 3],
     train_points: [
         0.98348382,
         0.33239784,

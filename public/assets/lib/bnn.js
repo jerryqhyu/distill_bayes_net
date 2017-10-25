@@ -1,4 +1,4 @@
-function var_full(div, train_loss_div, valid_loss_div, parameters) {
+function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     //svg properties
     var div = div;
@@ -22,12 +22,13 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
 
     var train_contour_data = new Array(parameters.n * parameters.m);
     var valid_contour_data = new Array(parameters.n * parameters.m);
+    var var_dist_data = new Array(30 * 30);
 
     //define a neural network
     var obtaining_param = 0;
     var net = make_preset_net();
     var epoch_count = 0;
-    var learning_rate = 0.05;
+    var learning_rate = 0.1;
     var l1_decay = 0;
     var l2_decay = 0;
     var momentum = 0;
@@ -53,8 +54,8 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), -x_scale_loss_inverse(w_2 * 4));
-                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), -x_scale_loss_inverse(w_2 * 4));
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
+                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
             }
         }
         train_loss_plotter.add_group("contours");
@@ -107,9 +108,9 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
             if (obtaining_param) {
                 net.getLayer(1).freeze_weights();
             } else {
-                net.freezeAllButX(1);
+                net.freezeAllButLayer(1);
             }
-            currently_training = setInterval(train_epoch, 50);
+            currently_training = setInterval(train_epoch, 15);
         }
     }
 
@@ -229,10 +230,6 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
             samples_for_plot.push({x: samples[i][0], y: samples[i][1]
             });
         }
-        //for testing
-        console.log(net.getLayer(1).sigma[0].w);
-        console.log(net.getLayer(1).sigma[1].w);
-
         train_loss_plotter.plot_points(data = [
             {
                 x: mean[0],
@@ -245,8 +242,8 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
                 y: mean[1]
             }
         ], stroke = "black", color = "black", size = 5, opacity = 1,);
-        train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,);
-        valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,);
+        train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,on_drag=on_drag, dragging=dragging, end_drag=end_drag);
+        valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1,on_drag=on_drag, dragging=dragging, end_drag=end_drag);
     }
 
     function plot_variational_distribution() {
@@ -256,23 +253,21 @@ function var_full(div, train_loss_div, valid_loss_div, parameters) {
         // mean = [0,0];
         // std = [1,1];
 
-        var n = 75;
-        var m = 75;
-        var data = new Array(n * m);
+        var n = 30;
+        var m = 30;
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * 4) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(-x_scale_loss_inverse(w_2 * 4) - mean[1], 2) / (2 * (std[1] * std[1]))))
+                var_dist_data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * 10) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(y_scale_loss_inverse(w_2 * 10) - mean[1], 2) / (2 * (std[1] * std[1]))))
             }
         }
-
         var color = d3.scaleLinear().domain([0, 1]).interpolate(function() {
             return d3.interpolateGreys;
         });
 
-        var contours = d3.contours().size([n, m]).thresholds(d3.range(1e-20, 0.3, 0.01));
+        var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.005));
 
-        train_loss_plotter.plot_contour(data = data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.1, stroke = "black");
-        valid_loss_plotter.plot_contour(data = data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.1, stroke = "black");
+        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.075, stroke = "black");
+        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.075, stroke = "black");
 
     }
 
