@@ -211,7 +211,7 @@ var net_lib = net_lib || {
                 // weight normalization is done to equalize the output
                 // variance of every neuron, otherwise neurons with a lot
                 // of incoming connections have outputs of larger variance
-                var scale = 1;
+                var scale = 0.1;
                 for (var i = 0; i < n; i++) {
                     this.w[i] = global.randn(0.0, scale);
                 }

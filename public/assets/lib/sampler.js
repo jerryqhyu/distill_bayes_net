@@ -1,7 +1,6 @@
 function sampler(div, train_posterior_div, progress_div, parameters) {
 
     //svg properties
-    var h_progress = 300;
     var div = div;
     var train_posterior_div = train_posterior_div;
     var progress_div = progress_div;
@@ -10,14 +9,14 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     var svg3 = progress_div.append("svg");
     svg.attr("width", parameters.w).attr("height", parameters.h);
     svg2.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-    svg3.attr("width", parameters.w_loss * 2).attr("height", h_progress);
+    svg3.attr("width", parameters.w_progress).attr("height", parameters.h_progress);
 
     var progress_domain_x = [0, 1];
-    var progress_domain_y = [0, 20];
+    var progress_domain_y = [2, 10];
 
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
     var train_posterior_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
-    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, parameters.w_loss * 2, h_progress);
+    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, parameters.w_progress, parameters.h_progress);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, parameters.w_loss]).range(parameters.loss_domain_x);
     var y_scale_loss_inverse = d3.scaleLinear().domain([parameters.h_loss, 0]).range(parameters.loss_domain_y);
@@ -124,7 +123,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         var true_label;
         for (var j = 0; j < parameters.validation_points.length; j++) {
             true_label = Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j];
-            total_loss += (true_label - avg_pred_by_train[j].y) * (true_label - avg_pred_by_train[j].y);
+            total_loss += 0.5 * (true_label - avg_pred_by_train[j].y) * (true_label - avg_pred_by_train[j].y);
         }
         loss_for_train_samples.push(total_loss);
         clear();
@@ -133,19 +132,19 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
 
     function predicted_points(net) {
         points = {};
-        curve = [];
+        predicted_curve = [];
         valid = [];
         for (var i = -6; i < 6; i += parameters.step_size) {
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
-            curve.push({x: i, y: predicted_value.w[0]});
+            predicted_curve.push({x: i, y: predicted_value.w[0]});
         }
         for (var j = 0; j < parameters.validation_points.length; j++) {
             x_val = new net_lib.Vol([parameters.validation_points[j]]);
             predicted_value = net.forward(x_val);
             valid.push({x: parameters.validation_points[j], y: predicted_value.w[0]});
         }
-        points.curve = curve;
+        points.curve = predicted_curve;
         points.valid = valid;
         return points;
     }
@@ -173,7 +172,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         MLE = [];
         overfit = [];
         for (var i = -6; i < 6; i += parameters.step_size) {
-            MLE.push({x: i, y: 5.8890}); //MLE validation loss
+            MLE.push({x: i, y: 5.6071}); //MLE validation loss
             overfit.push({x: i, y: 6.2716}); //MLE validation loss
         }
         progress_plotter.plot_line(overfit, "red", 1, 1);
@@ -219,10 +218,12 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     }
 
     function plot_train_posterior() {
-        var color = d3.scaleLog().domain([1, 100]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.01, 500, .5));
+        var color = d3.scaleLinear()
+            .domain([0,12])
+            .interpolate(function() { return d3.interpolateSpectral; });
+        var contours = d3.contours()
+            .size([parameters.n, parameters.m])
+            .thresholds(d3.range(0.2, 20, 0.45));
 
         var new_data = new Array(parameters.n * parameters.m);
         for (var i = 0; i < train_posterior_data.length; i++) {
@@ -242,8 +243,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         for (var i = 0; i < parameters.train_points.length; i++) {
             x_val = new net_lib.Vol([parameters.train_points[i]]);
             true_label = Math.sin(parameters.train_points[i]) + parameters.train_noise[i];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
+            total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
         return total_loss;
     }

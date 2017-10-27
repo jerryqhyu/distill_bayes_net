@@ -233,12 +233,12 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function plot_train_contour() {
-        var color = d3.scaleLog()
-            .domain([1,100])
+        var color = d3.scaleLinear()
+            .domain([0,12])
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([parameters.n, parameters.m])
-            .thresholds(d3.range(0.1, 500, .5));
+            .thresholds(d3.range(0.1, 50, 0.5));
 
         train_loss_plotter.plot_contour(
             data=train_contour_data,
@@ -250,12 +250,12 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function plot_valid_contour() {
-        var color = d3.scaleLog()
-            .domain([1,100])
+        var color = d3.scaleLinear()
+            .domain([0,12])
             .interpolate(function() { return d3.interpolateSpectral; });
         var contours = d3.contours()
             .size([parameters.n, parameters.m])
-            .thresholds(d3.range(0.01, 500, .5));
+            .thresholds(d3.range(0.1, 50, 0.5));
 
         valid_loss_plotter.plot_contour(
             data=valid_contour_data,
@@ -275,8 +275,7 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         for (var j = 0; j < parameters.validation_points.length; j++) {
             x_val = new net_lib.Vol([parameters.validation_points[j]]);
             true_label = Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
+            total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
         return total_loss;
     }
@@ -290,8 +289,7 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         for (var i = 0; i < parameters.train_points.length; i++) {
             x_val = new net_lib.Vol([parameters.train_points[i]]);
             true_label = Math.sin(parameters.train_points[i]) + parameters.train_noise[i];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
+            total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
         return total_loss;
     }

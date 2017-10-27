@@ -54,7 +54,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4)) * parameters.validation_points.length / parameters.train_points.length / 1.125;
                 valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
             }
         }
@@ -260,14 +260,14 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                 var_dist_data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * 10) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(y_scale_loss_inverse(w_2 * 10) - mean[1], 2) / (2 * (std[1] * std[1]))))
             }
         }
-        var color = d3.scaleLinear().domain([0, 1]).interpolate(function() {
+        var color = d3.scaleLinear().domain([0, 2]).interpolate(function() {
             return d3.interpolateGreys;
         });
 
-        var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.005));
+        var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.01));
 
-        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.05, stroke = "black");
-        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.05, stroke = "black");
+        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
+        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
 
     }
 
@@ -309,19 +309,23 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function plot_train_contour() {
-        var color = d3.scaleLog().domain([1, 100]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 500, .5));
+        var color = d3.scaleLinear()
+            .domain([0,12])
+            .interpolate(function() { return d3.interpolateSpectral; });
+        var contours = d3.contours()
+            .size([parameters.n, parameters.m])
+            .thresholds(d3.range(0.1, 50, 0.5));
 
         train_loss_plotter.plot_contour(data = train_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
     }
 
     function plot_valid_contour() {
-        var color = d3.scaleLog().domain([1, 100]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.01, 500, .5));
+        var color = d3.scaleLinear()
+            .domain([0,12])
+            .interpolate(function() { return d3.interpolateSpectral; });
+        var contours = d3.contours()
+            .size([parameters.n, parameters.m])
+            .thresholds(d3.range(0.1, 50, 0.5));
 
         valid_loss_plotter.plot_contour(data = valid_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
     }
@@ -336,10 +340,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         for (var j = 0; j < parameters.validation_points.length; j++) {
             x_val = new net_lib.Vol([parameters.validation_points[j]]);
             true_label = Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
+            total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
-        return total_loss / 1.125;
+        return total_loss;
     }
 
     function compute_training_loss(dummy_net, w_1, w_2) {
@@ -352,10 +355,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         for (var i = 0; i < parameters.train_points.length; i++) {
             x_val = new net_lib.Vol([parameters.train_points[i]]);
             true_label = Math.sin(parameters.train_points[i]) + parameters.train_noise[i];
-            predicted = dummy_net.forward(x_val).w[0];
-            total_loss += (true_label - predicted) * (true_label - predicted);
+            total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
-        return total_loss * parameters.validation_points.length / parameters.train_points.length / 1.125;
+        return total_loss;
     }
 
     function on_drag(d) {
