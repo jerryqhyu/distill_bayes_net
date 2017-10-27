@@ -5,8 +5,12 @@ param = {
     h_loss: 300,
     w_progress: 650,
     h_progress: 300,
-    n: 75,
-    m: 75,
+    n: 50,
+    m: 50,
+    var_n: 30,
+    var_m: 30,
+    scaling_factor: 6,
+    var_scaling_factor: 10,
     step_size: 0.1,
     curve_domain_x: [
         -5, 5
@@ -15,10 +19,10 @@ param = {
         -2, 2
     ],
     loss_domain_x: [
-        -1, 3
+        -0.5, 2.5
     ],
     loss_domain_y: [
-        -1, 3
+        -0.5, 2.5
     ],
     train_points: [
         0.98348382,
@@ -139,6 +143,8 @@ param = {
         0.08452561,
         0.0044375,
         0.09312328
+    ],
+    opt_layer1_w: [[1], [1]
     ],
     opt_layer1_b: [
         -1.471708721550612, 1.4638299054171822

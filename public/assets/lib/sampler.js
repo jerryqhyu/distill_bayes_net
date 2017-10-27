@@ -12,7 +12,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     svg3.attr("width", parameters.w_progress).attr("height", parameters.h_progress);
 
     var progress_domain_x = [0, 1];
-    var progress_domain_y = [2, 10];
+    var progress_domain_y = [0, 8];
 
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
     var train_posterior_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
@@ -61,9 +61,10 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         var dummy_net = make_preset_net();
         var logprob = 0;
         var train_log_sum_exp = 0;
+        max = 0;
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                logprob = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
+                logprob = get_train_posterior(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
                 train_posterior_data[k] = logprob;
                 train_log_sum_exp += Math.exp(-logprob);
             }
@@ -71,8 +72,12 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         train_log_sum_exp = Math.log(train_log_sum_exp);
         train_sampling_interval[0] = 0;
         for (var i = 1; i < train_sampling_interval.length; i++) {
+            if (Math.exp(-train_posterior_data[i] - train_log_sum_exp) > max) {
+                max = Math.exp(-train_posterior_data[i] - train_log_sum_exp);
+            }
             train_sampling_interval[i] = train_sampling_interval[i - 1] + Math.exp(-train_posterior_data[i] - train_log_sum_exp);
         }
+        console.log(max);
     }
 
     function reset() {
@@ -92,13 +97,13 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         var n_sampled = i % parameters.m;
         var m_sampled = (i - n_sampled) / parameters.n;
         train_sampled_weights.push({
-            x: x_scale_loss_inverse(n_sampled * 4),
-            y: y_scale_loss_inverse(m_sampled * 4)
+            x: x_scale_loss_inverse(n_sampled * parameters.scaling_factor),
+            y: y_scale_loss_inverse(m_sampled * parameters.scaling_factor)
         });
         var sampled_net = make_preset_net();
         sampled_net.getLayer(1).setWeights([
-            [x_scale_loss_inverse(n_sampled * 4)],
-            [y_scale_loss_inverse(m_sampled * 4)]
+            [x_scale_loss_inverse(n_sampled * parameters.scaling_factor)],
+            [y_scale_loss_inverse(m_sampled * parameters.scaling_factor)]
         ]);
         train_sampled_nets.push(sampled_net);
 
@@ -172,8 +177,8 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
         MLE = [];
         overfit = [];
         for (var i = -6; i < 6; i += parameters.step_size) {
-            MLE.push({x: i, y: 5.6071}); //MLE validation loss
-            overfit.push({x: i, y: 6.2716}); //MLE validation loss
+            MLE.push({x: i, y: 2.7963}); //MLE validation loss
+            overfit.push({x: i, y: 3.1934}); //MLE validation loss
         }
         progress_plotter.plot_line(overfit, "red", 1, 1);
         progress_plotter.plot_line(MLE, "green", 1, 1);
@@ -218,12 +223,10 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     }
 
     function plot_train_posterior() {
-        var color = d3.scaleLinear()
-            .domain([0,12])
-            .interpolate(function() { return d3.interpolateSpectral; });
-        var contours = d3.contours()
-            .size([parameters.n, parameters.m])
-            .thresholds(d3.range(0.2, 20, 0.45));
+        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+            return d3.interpolateSpectral;
+        });
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.2, 20, 0.45));
 
         var new_data = new Array(parameters.n * parameters.m);
         for (var i = 0; i < train_posterior_data.length; i++) {

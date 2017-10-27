@@ -22,7 +22,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     var train_contour_data = new Array(parameters.n * parameters.m);
     var valid_contour_data = new Array(parameters.n * parameters.m);
-    var var_dist_data = new Array(30 * 30);
+    var var_dist_data = new Array(parameters.var_n * parameters.var_m);
 
     //define a neural network
     var obtaining_param = 0;
@@ -54,8 +54,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4)) * parameters.validation_points.length / parameters.train_points.length / 1.125;
-                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * 4), y_scale_loss_inverse(w_2 * 4));
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor)) * parameters.validation_points.length / parameters.train_points.length / 1.125;
+                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
             }
         }
         train_loss_plotter.add_group("contours");
@@ -235,13 +235,13 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag=on_drag, dragging=dragging, end_drag=end_drag);
+        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
         valid_loss_plotter.plot_points(data = [
             {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag=on_drag, dragging=dragging, end_drag=end_drag);
+        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
         train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
         valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
     }
@@ -253,11 +253,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         // mean = [0,0];
         // std = [1,1];
 
-        var n = 30;
-        var m = 30;
         for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
             for (var w_1 = 0; w_1 < n; w_1++, k++) {
-                var_dist_data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * 10) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(y_scale_loss_inverse(w_2 * 10) - mean[1], 2) / (2 * (std[1] * std[1]))))
+                var_dist_data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * parameters.var_scaling_factor) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(y_scale_loss_inverse(w_2 * parameters.var_scaling_factor) - mean[1], 2) / (2 * (std[1] * std[1]))))
             }
         }
         var color = d3.scaleLinear().domain([0, 2]).interpolate(function() {
@@ -266,7 +264,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
         var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.01));
 
-        train_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
+        train_loss_plotter.plot_contour(data = var_dist_data, n = parameters.var_n, m = parameters.var_m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
         valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
 
     }
@@ -309,23 +307,19 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function plot_train_contour() {
-        var color = d3.scaleLinear()
-            .domain([0,12])
-            .interpolate(function() { return d3.interpolateSpectral; });
-        var contours = d3.contours()
-            .size([parameters.n, parameters.m])
-            .thresholds(d3.range(0.1, 50, 0.5));
+        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+            return d3.interpolateSpectral;
+        });
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
 
         train_loss_plotter.plot_contour(data = train_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
     }
 
     function plot_valid_contour() {
-        var color = d3.scaleLinear()
-            .domain([0,12])
-            .interpolate(function() { return d3.interpolateSpectral; });
-        var contours = d3.contours()
-            .size([parameters.n, parameters.m])
-            .thresholds(d3.range(0.1, 50, 0.5));
+        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+            return d3.interpolateSpectral;
+        });
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
 
         valid_loss_plotter.plot_contour(data = valid_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
     }
