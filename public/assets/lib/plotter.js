@@ -22,30 +22,96 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         return y_scale(d.y);
     })
 
-    function plot_line(data, color, width = 2, opacity = 1) {
-        if (typeof(opacity) === 'undefined') {
-            opacity = 1;
-        }
-        svg.append('path').attr('d', line(data)).attr('stroke', color).attr('stroke-width', width).attr('fill', "none").attr("opacity", opacity);
+    function plot_line(data, options) {
+        var options = options || {};
+        var color = typeof(options.color) === 'undefined'
+            ? "black"
+            : options.color
+        var width = typeof(options.width) === 'undefined'
+            ? 1
+            : options.width
+        var opacity = typeof(options.opacity) === 'undefined'
+            ? 1
+            : options.opacity
+        svg.append('path')
+            .attr('d', line(data))
+            .attr('stroke', color)
+            .attr('stroke-width', width)
+            .attr('fill', "none")
+            .attr("opacity", opacity);
     }
 
-    function plot_points(data, stroke = "black", color = "black", size = 3, opacity = 1, on_drag, dragging, end_drag) {
-        if (typeof(opacity) === 'undefined') {
-            opacity = 1;
-        }
+    function plot_points(data, options) {
+        // stroke = "black", color = "black", size = 3, opacity = 1, on_drag, dragging, end_drag
+        var options = options || {};
+        var stroke = typeof(options.stroke) === 'undefined'
+            ? "none"
+            : options.stroke
+        var color = typeof(options.color) === 'undefined'
+            ? "black"
+            : options.color
+        var size = typeof(options.size) === 'undefined'
+            ? 2
+            : options.size
+        var opacity = typeof(options.opacity) === 'undefined'
+            ? 1
+            : options.opacity
+        var on_drag = typeof(options.on_drag) === 'undefined'
+            ? undefined
+            : options.on_drag
+        var dragging = typeof(options.dragging) === 'undefined'
+            ? undefined
+            : options.dragging
+        var end_drag = typeof(options.end_drag) === 'undefined'
+            ? undefined
+            : options.end_drag
+
         for (var i = 0; i < data.length; i++) {
-            svg.append("circle").attr("cx", x_scale(data[i].x)).attr("cy", y_scale(data[i].y)).attr("r", size).attr("stroke", stroke).attr("fill", color).attr("opacity", opacity).call(d3.drag().on("start", on_drag).on("drag", dragging).on("end", end_drag));
+            svg.append("circle").attr("cx", x_scale(data[i].x))
+            .attr("cy", y_scale(data[i].y))
+            .attr("r", size)
+            .attr("stroke", stroke)
+            .attr("fill", color)
+            .attr("opacity", opacity)
+            .call(d3.drag()
+                .on("start", on_drag)
+                .on("drag", dragging)
+                .on("end", end_drag)
+            );
         }
     }
 
-    function plot_contour(data, n, m, color_scale, contour_scale, id, opacity, stroke) {
+    function plot_contour(data, options) {
         //contour is a marching square, we have to scale the squares to svg size
+        // n, m, color_scale, contour_scale, id, opacity, stroke
+        var options = options || {};
+        var n = typeof(options.n) === 'undefined'
+            ? 0
+            : options.n
+        var m = typeof(options.m) === 'undefined'
+            ? 0
+            : options.m
+        var color_scale = typeof(options.color_scale) === 'undefined'
+            ? null
+            : options.color_scale
+        var contour_scale = typeof(options.contour_scale) === 'undefined'
+            ? null
+            : options.contour_scale
+        var id = typeof(options.id) === 'undefined'
+            ? ""
+            : options.id
+        var opacity = typeof(options.opacity) === 'undefined'
+            ? 1
+            : options.opacity
+        var stroke = typeof(options.stroke) === 'undefined'
+            ? "none"
+            : options.stroke
+
         if (id) {
             size_multiplier = width / n;
             svg.select(id).selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("id", id).attr("fill", function(d) {
                 return color_scale(d.value);
             }).attr("opacity", opacity).attr("stroke", stroke);
-
         } else {
             size_multiplier = width / n;
             svg.selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("id", id).attr("fill", function(d) {

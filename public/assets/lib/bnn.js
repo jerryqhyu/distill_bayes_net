@@ -36,11 +36,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: learning_rate,
-        l2_decay: l2_decay,
-        momentum: momentum,
-        batch_size: batch_size,
-        l1_decay: l1_decay
+        learning_rate: parameters.learning_rate * 10,
+        momentum: parameters.momentum,
+        batch_size: parameters.batch_size,
     });
 
     //interval controller
@@ -54,7 +52,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor)) * parameters.validation_points.length / parameters.train_points.length / 1.125;
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
                 valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
             }
         }
@@ -90,11 +88,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
-            learning_rate: learning_rate,
-            l2_decay: l2_decay,
-            momentum: momentum,
-            batch_size: batch_size,
-            l1_decay: l1_decay
+            learning_rate: parameters.learning_rate * 10,
+            momentum: parameters.momentum,
+            batch_size: parameters.batch_size,
         });
         clear();
         plot();
@@ -124,22 +120,6 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             for (var j = 0; j < parameters.validation_points.length; j++) {
                 x = new net_lib.Vol([parameters.validation_points[j]]);
                 trainer.train(x, [Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j]]);
-            }
-            if (epoch_count % 100 == 0) {
-                console.log(epoch_count);
-            }
-            if (epoch_count === 500) {
-                for (var i = 0; i < net.layers.length; i++) {
-                    layer = net.getLayer(i);
-                    if (layer.filters) {
-                        console.log("This is layer" + i);
-                        console.log("Biases");
-                        console.log(layer.biases.w);
-                        for (var j = 0; j < layer.filters.length; j++) {
-                            console.log(layer.filters[j].w);
-                        }
-                    }
-                }
             }
         }
         clear();
@@ -175,7 +155,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             }
         }
         for (var i = 0; i < parameters.seeds.length; i++) {
-            curve_plotter.plot_line(pred[i], "orange", 1, 0.5);
+            curve_plotter.plot_line(pred[i], {color: "orange", width: 1, opacity: 0.5});
         }
         mean = [];
         for (var i = -6; i < 6; i += parameters.step_size) {
@@ -183,7 +163,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             predicted_value = net.forward(x_val);
             mean.push({x: i, y: predicted_value.w[0]});
         }
-        curve_plotter.plot_line(mean, "red", 2);
+        curve_plotter.plot_line(mean, {color: "red", width: 2});
 
         //individual training and validation points
         training_points_data = [];
@@ -201,8 +181,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             });
         }
 
-        curve_plotter.plot_points(training_points_data, "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "green", 3, 0.3);
+        curve_plotter.plot_points(training_points_data, {color: "red", size: 3, opacity: 1});
+        curve_plotter.plot_points(validation_points_data, {color: "green", size: 3, opacity: 0.3});
     }
 
     function get_curve() {
@@ -230,20 +210,23 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             samples_for_plot.push({x: samples[i][0], y: samples[i][1]
             });
         }
-        train_loss_plotter.plot_points(data = [
+        train_loss_plotter.plot_points([
             {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
-        valid_loss_plotter.plot_points(data = [
+        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        valid_loss_plotter.plot_points([
             {
                 x: mean[0],
                 y: mean[1]
             }
-        ], stroke = "black", color = "black", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
-        train_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
-        valid_loss_plotter.plot_points(data = samples_for_plot, stroke = "black", color = "orange", size = 3, opacity = 1);
+        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        train_loss_plotter.plot_points(samples_for_plot, {stroke: "black", color: "orange", size: 3, opacity: 1});
+        valid_loss_plotter.plot_points(samples_for_plot, {stroke: "black", color: "orange", size: 3, opacity: 1});
+    }
+
+    function sample_weight() {
     }
 
     function plot_variational_distribution() {
@@ -253,8 +236,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         // mean = [0,0];
         // std = [1,1];
 
-        for (var w_2 = 0, k = 0; w_2 < m; w_2++) {
-            for (var w_1 = 0; w_1 < n; w_1++, k++) {
+        for (var w_2 = 0, k = 0; w_2 < parameters.var_m; w_2++) {
+            for (var w_1 = 0; w_1 < parameters.var_n; w_1++, k++) {
                 var_dist_data[k] = (1 / (std[0] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x_scale_loss_inverse(w_1 * parameters.var_scaling_factor) - mean[0], 2) / (2 * (std[0] * std[0])))) * (1 / (std[1] * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(y_scale_loss_inverse(w_2 * parameters.var_scaling_factor) - mean[1], 2) / (2 * (std[1] * std[1]))))
             }
         }
@@ -262,11 +245,10 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             return d3.interpolateGreys;
         });
 
-        var contours = d3.contours().size([n, m]).thresholds(d3.range(0, 0.5, 0.01));
+        var contours = d3.contours().size([parameters.var_n, parameters.var_n]).thresholds(d3.range(0, 0.5, 0.01));
 
-        train_loss_plotter.plot_contour(data = var_dist_data, n = parameters.var_n, m = parameters.var_m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
-        valid_loss_plotter.plot_contour(data = var_dist_data, n = n, m = m, color_scale = color, contour_scale = contours, id = "#var_dists", opacity = 0.04, stroke = "black");
-
+        train_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.04, stroke: "black"});
+        valid_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.04, stroke: "black"});
     }
 
     function clear() {
@@ -302,17 +284,17 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                 y: Math.sin(parameters.validation_points[i]) + parameters.validation_noise[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, "red", "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "green", "green", 3, 0.5);
+        curve_plotter.plot_points(training_points_data, {stroke: "red", color: "red", size: 3, opacity: 1});
+        curve_plotter.plot_points(validation_points_data, {stroke: "green", color: "green", size: 3, opacity: 0.5});
     }
 
     function plot_train_contour() {
-        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+        var color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
             return d3.interpolateSpectral;
         });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 5, 0.1));
 
-        train_loss_plotter.plot_contour(data = train_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
+        train_loss_plotter.plot_contour(train_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours, id: "#contours"});
     }
 
     function plot_valid_contour() {
@@ -321,7 +303,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         });
         var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
 
-        valid_loss_plotter.plot_contour(data = valid_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours, id = "#contours");
+        valid_loss_plotter.plot_contour(valid_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours, id: "#contours"});
     }
 
     function compute_validation_loss(dummy_net, w_1, w_2) {
@@ -384,5 +366,5 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         }
     }
 
-    return {train: train, plot: plot, reset: reset};
+    return {train: train, plot: plot, reset: reset, sample: sample_weight};
 }

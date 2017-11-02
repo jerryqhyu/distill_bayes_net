@@ -1,20 +1,13 @@
 function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
-    var div = div;
-    var train_loss_div = train_loss_div;
-    var valid_loss_div = valid_loss_div;
-    var svg = div.append("svg");
-    var svg2 = train_loss_div.append("svg");
-    var svg3 = valid_loss_div.append("svg");
-    svg.attr("width", parameters.w).attr("height", parameters.h);
-    svg2.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-    svg3.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-
-    var obtaining_param = 0;
+    var svg = div.append("svg").attr("width", parameters.w).attr("height", parameters.h);
+    var svg2 = train_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
+    var svg3 = valid_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
 
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
     var train_loss_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
     var valid_loss_plotter = Plotter(svg3, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
+
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, parameters.w_loss]).range(parameters.loss_domain_x)
     var y_scale_loss_inverse = d3.scaleLinear().domain([parameters.h_loss, 0]).range(parameters.loss_domain_y)
 
@@ -23,23 +16,17 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
     //define a neural network
     var net = make_preset_net();
-    var epoch_count = 0;
-    var learning_rate = 0.01;
-    var l1_decay = 0;
-    var l2_decay = 0;
-    var momentum = 0.95;
-    var batch_size = 16;
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: learning_rate,
-        l2_decay: l2_decay,
-        momentum: momentum,
-        batch_size: batch_size,
-        l1_decay: l1_decay
+        learning_rate: parameters.learning_rate,
+        momentum: parameters.momentum,
+        batch_size: parameters.batch_size
     });
 
     //interval controller
+    var epoch_count = 0;
+    var obtaining_param = 0;
     var currently_training = 0;
     var was_training = 0;
 
@@ -50,10 +37,11 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor)) * parameters.validation_points.length / parameters.train_points.length;
+                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor))
                 valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
             }
         }
+        initial_plot();
     }
 
     function make_preset_net() {
@@ -66,6 +54,7 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
+            new_net.getLayer(1).setWeights(parameters.opt_layer1_w);
             new_net.getLayer(3).setWeights(parameters.opt_layer3_w);
             new_net.getLayer(5).setWeights(parameters.opt_layer5_w);
             new_net.getLayer(7).setWeights(parameters.opt_layer7_w);
@@ -73,7 +62,6 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             new_net.getLayer(3).setBiases(parameters.opt_layer3_b);
             new_net.getLayer(5).setBiases(parameters.opt_layer5_b);
             new_net.getLayer(7).setBiases(parameters.opt_layer7_b);
-            new_net.getLayer(1).setWeights(parameters.opt_layer1_w);
         }
         return new_net;
     }
@@ -82,11 +70,9 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
-            learning_rate: learning_rate,
-            l2_decay: l2_decay,
-            momentum: momentum,
-            batch_size: batch_size,
-            l1_decay: l1_decay
+            learning_rate: parameters.learning_rate,
+            momentum: parameters.momentum,
+            batch_size: parameters.batch_size
         });
         clear();
         plot();
@@ -116,35 +102,6 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
                 x = new net_lib.Vol([parameters.validation_points[j]]);
                 trainer.train(x, [Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j]]);
             }
-            if (epoch_count % 100 == 0) {
-                console.log(epoch_count);
-                for (var i = 0; i < net.layers.length; i++) {
-                    layer = net.getLayer(i);
-                    if (layer.filters) {
-                        console.log("This is layer" + i);
-                        console.log("Biases");
-                        console.log(layer.biases.w);
-                        for (var j = 0; j < layer.filters.length; j++) {
-                            console.log(layer.filters[j].w);
-                        }
-                    }
-                }
-            }
-        }
-        if (epoch_count % 100 === 0) {
-            console.log(epoch_count);
-            console.log("loss is");
-            var total_loss = 0;
-            var predicted;
-            var true_label;
-            var x_val;
-            for (var j = 0; j < parameters.validation_points.length; j++) {
-                x_val = new net_lib.Vol([parameters.validation_points[j]]);
-                true_label = Math.sin(parameters.validation_points[j]) + parameters.validation_noise[j];
-                predicted = net.forward(x_val).w[0];
-                total_loss += 0.5 * (true_label - predicted) * (true_label - predicted);
-            }
-            console.log(total_loss);
         }
         clear();
         plot();
@@ -172,23 +129,18 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             predicted_value = net.forward(x_val);
             pred.push({x: i, y: predicted_value.w[0]});
         }
-        curve_plotter.plot_line(pred, "darkorange", 2, 1);
+        curve_plotter.plot_line(pred, {color: "darkorange", width: 2, opacity: 1});
     }
 
     function plot_weight() {
-        weights = get_first_two_weights();
         data = [
             {
-                x: weights[0],
-                y: weights[1]
+                x: net.getLayer(1).filters[0].w,
+                y: net.getLayer(1).filters[1].w
             }
         ];
-        train_loss_plotter.plot_points(data = data, stroke = "black", color = "darkslategray", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
-        valid_loss_plotter.plot_points(data = data, stroke = "black", color = "darkslategray", size = 5, opacity = 1, on_drag = on_drag, dragging = dragging, end_drag = end_drag);
-    }
-
-    function get_first_two_weights() {
-        return [net.getLayer(1).filters[0].w, net.getLayer(1).filters[1].w];
+        train_loss_plotter.plot_points(data, {stroke: "black", color: "darkslategray", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        valid_loss_plotter.plot_points(data, {stroke: "black", color: "darkslategray", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
     }
 
     function clear() {
@@ -221,17 +173,16 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
                 y: Math.sin(parameters.validation_points[i]) + parameters.validation_noise[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, "red", "red", 3, 1);
-        curve_plotter.plot_points(validation_points_data, "green", "green", 3, 0.5);
+        curve_plotter.plot_points(training_points_data, {stroke: "red", color: "red", width: 3, opacity: 1});
+        curve_plotter.plot_points(validation_points_data, {stroke: "green", color: "green", width: 3, opacity: 0.5});
     }
 
     function plot_train_contour() {
-        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+        var color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
             return d3.interpolateSpectral;
         });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
-
-        train_loss_plotter.plot_contour(data = train_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours);
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 5, 0.1));
+        train_loss_plotter.plot_contour(train_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours});
     }
 
     function plot_valid_contour() {
@@ -239,8 +190,7 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             return d3.interpolateSpectral;
         });
         var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
-
-        valid_loss_plotter.plot_contour(data = valid_contour_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours);
+        valid_loss_plotter.plot_contour(valid_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours});
     }
 
     function compute_validation_loss(dummy_net, w_1, w_2) {

@@ -12,6 +12,11 @@ param = {
     scaling_factor: 6,
     var_scaling_factor: 10,
     step_size: 0.1,
+    learning_rate: 0.01,
+    l1_decay: 0,
+    l2_decay: 0,
+    momentum: 0.95,
+    batch_size: 16,
     curve_domain_x: [
         -5, 5
     ],

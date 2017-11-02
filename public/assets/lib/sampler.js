@@ -161,7 +161,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
 
     function plot_line() {
         for (var i = 0; i < train_sample_predictions.length; i++) {
-            curve_plotter.plot_line(train_sample_predictions[i], "orange", 1, 0.3);
+            curve_plotter.plot_line(train_sample_predictions[i], {color: "orange", width: 1, opacity: 0.3});
         }
         var avg_loss_data = [];
         for (var i = 0; i < loss_for_train_samples.length; i++) {
@@ -170,9 +170,9 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
                 y: loss_for_train_samples[i]
             });
         }
-        progress_plotter.plot_line(avg_loss_data, "black", 3, 1);
+        progress_plotter.plot_line(avg_loss_data, {color: "black", width: 3, opacity: 1});
         // Also plot the average over sampled nets from training posterior
-        curve_plotter.plot_line(avg_curve_by_train, "red", 3, 1);
+        curve_plotter.plot_line(avg_curve_by_train, {color: "red", width: 3, opacity: 1});
 
         MLE = [];
         overfit = [];
@@ -180,12 +180,12 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
             MLE.push({x: i, y: 2.7963}); //MLE validation loss
             overfit.push({x: i, y: 3.1934}); //MLE validation loss
         }
-        progress_plotter.plot_line(overfit, "red", 1, 1);
-        progress_plotter.plot_line(MLE, "green", 1, 1);
+        progress_plotter.plot_line(overfit, {color:"red", width: 2, opacity: 0.5});
+        progress_plotter.plot_line(MLE, {color:"green", width: 2, opacity: 0.5});
     }
 
     function plot_weight() {
-        train_posterior_plotter.plot_points(data = train_sampled_weights, stroke = "black", color = "darkorange", size = 3, opacity = 1,);
+        train_posterior_plotter.plot_points(train_sampled_weights, {stroke: "black", color: "darkorange", size: 3, opacity: 1});
     }
 
     function clear() {
@@ -218,22 +218,16 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
                 y: Math.sin(parameters.validation_points[i]) + parameters.validation_noise[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, "red", "red", 4, 1);
-        curve_plotter.plot_points(validation_points_data, "teal", "teal", 4, 1);
+        curve_plotter.plot_points(training_points_data, {stroke: "red", color: "red", size: 4, opacity: 1});
+        curve_plotter.plot_points(validation_points_data, {stroke: "teal", color: "teal", size: 4, opacity: 1});
     }
 
     function plot_train_posterior() {
-        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+        var color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
             return d3.interpolateSpectral;
         });
-        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.2, 20, 0.45));
-
-        var new_data = new Array(parameters.n * parameters.m);
-        for (var i = 0; i < train_posterior_data.length; i++) {
-            new_data[i] = train_posterior_data[i] * parameters.validation_points.length / parameters.train_points.length;
-        }
-
-        train_posterior_plotter.plot_contour(data = new_data, n = parameters.n, m = parameters.m, color_scale = color, contour_scale = contours);
+        var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 5, 0.1));
+        train_posterior_plotter.plot_contour(train_posterior_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours});
     }
 
     function get_train_posterior(dummy_net, w_1, w_2) {
