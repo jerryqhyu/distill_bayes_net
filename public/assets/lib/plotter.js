@@ -65,6 +65,12 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         var end_drag = typeof(options.end_drag) === 'undefined'
             ? undefined
             : options.end_drag
+        var mouseover = typeof(options.mouseover) === 'undefined'
+            ? undefined
+            : options.mouseover
+        var mouseout = typeof(options.mouseout) === 'undefined'
+            ? undefined
+            : options.mouseout
 
         for (var i = 0; i < data.length; i++) {
             svg.append("circle").attr("cx", x_scale(data[i].x))
@@ -73,6 +79,8 @@ function Plotter(svg, domain_x, domain_y, width, height) {
             .attr("stroke", stroke)
             .attr("fill", color)
             .attr("opacity", opacity)
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
             .call(d3.drag()
                 .on("start", on_drag)
                 .on("drag", dragging)

@@ -30,7 +30,6 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     var train_sampled_nets = [];
     var train_sample_predictions = [];
     var train_sampled_weights = [];
-
     var avg_pred_by_train = [];
     var avg_curve_by_train = [];
     var loss_for_train_samples = [];
@@ -185,7 +184,7 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
     }
 
     function plot_weight() {
-        train_posterior_plotter.plot_points(train_sampled_weights, {stroke: "black", color: "darkorange", size: 3, opacity: 1});
+        train_posterior_plotter.plot_points(train_sampled_weights, {stroke: "black", color: "darkorange", size: 4, opacity: 1, mouseover: mouseover, mouseout: mouseout});
     }
 
     function clear() {
@@ -243,6 +242,16 @@ function sampler(div, train_posterior_div, progress_div, parameters) {
             total_loss += dummy_net.getCostLoss(x_val, true_label);
         }
         return total_loss;
+    }
+
+    function mouseover() {
+        var element = d3.select(this);
+        element.attr("r", element.attr("r") * 2);
+    }
+
+    function mouseout() {
+        var element = d3.select(this);
+        element.attr("r", element.attr("r") / 2);
     }
 
     return {plot: plot, sample_train: sample_train, reset: reset};

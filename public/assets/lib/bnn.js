@@ -26,25 +26,18 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     //define a neural network
     var obtaining_param = 0;
-    var net = make_preset_net();
     var epoch_count = 0;
-    var learning_rate = 0.1;
-    var l1_decay = 0;
-    var l2_decay = 0;
-    var momentum = 0;
-    var batch_size = 64;
+    var net = make_preset_net();
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: parameters.learning_rate * 10,
+        learning_rate: parameters.learning_rate,
         momentum: parameters.momentum,
         batch_size: parameters.batch_size,
     });
 
     //interval controller
-    var currently_training = 0;
-    var was_training = 0;
-
+    var timer;
     setup();
     initial_plot();
 
@@ -88,7 +81,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
-            learning_rate: parameters.learning_rate * 10,
+            learning_rate: parameters.learning_rate,
             momentum: parameters.momentum,
             batch_size: parameters.batch_size,
         });
@@ -99,14 +92,14 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function train() {
-        if (!currently_training) {
+        if (!timer) {
             console.log("started training");
             if (obtaining_param) {
                 net.getLayer(1).freeze_weights();
             } else {
                 net.freezeAllButLayer(1);
             }
-            currently_training = setInterval(train_epoch, 15);
+            timer = d3.timer(train_epoch, 50);
         }
     }
 
@@ -128,9 +121,9 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function pause_training() {
-        if (currently_training) {
-            clearInterval(currently_training);
-            currently_training = 0;
+        if (timer) {
+            timer.stop();
+            timer = undefined;
         }
     }
 
@@ -227,14 +220,12 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function sample_weight() {
+        parameters.seeds.push([net_lib.randn(0, 1), net_lib.randn(0, 1)]);
     }
 
     function plot_variational_distribution() {
         var mean = [net.getLayer(1).mu[0].w[0], net.getLayer(1).mu[1].w[0]];
         var std = [net.getLayer(1).sigma[0].w[0], net.getLayer(1).sigma[1].w[0]];
-
-        // mean = [0,0];
-        // std = [1,1];
 
         for (var w_2 = 0, k = 0; w_2 < parameters.var_m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.var_n; w_1++, k++) {
@@ -245,10 +236,10 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
             return d3.interpolateGreys;
         });
 
-        var contours = d3.contours().size([parameters.var_n, parameters.var_n]).thresholds(d3.range(0, 0.5, 0.01));
+        var contours = d3.contours().size([parameters.var_n, parameters.var_n]).thresholds(d3.range(0, 1, 0.3));
 
-        train_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.04, stroke: "black"});
-        valid_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.04, stroke: "black"});
+        train_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.1, stroke: "black"});
+        valid_loss_plotter.plot_contour(var_dist_data, {n: parameters.var_n, m: parameters.var_m, color_scale: color, contour_scale: contours, id: "#var_dists", opacity: 0.1, stroke: "black"});
     }
 
     function clear() {
@@ -338,11 +329,6 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     function on_drag(d) {
         d3.select(this).raise().classed("active", true);
-        if (currently_training) {
-            was_training = 1;
-        } else {
-            was_training = 0;
-        }
         pause_training();
     }
 
@@ -361,9 +347,18 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
 
     function end_drag(d) {
         d3.select(this).raise().classed("active", false);
-        if (was_training) {
-            train();
-        }
+    }
+
+    function mouseover() {
+        d3.select(this).attr({
+            r: r * 2
+        });
+    }
+
+    function mouseout() {
+        d3.select(this).attr({
+            r: r / 2
+        });
     }
 
     return {train: train, plot: plot, reset: reset, sample: sample_weight};

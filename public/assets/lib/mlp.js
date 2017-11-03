@@ -3,16 +3,15 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     var svg = div.append("svg").attr("width", parameters.w).attr("height", parameters.h);
     var svg2 = train_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
     var svg3 = valid_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
     var train_loss_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
     var valid_loss_plotter = Plotter(svg3, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
-
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, parameters.w_loss]).range(parameters.loss_domain_x)
     var y_scale_loss_inverse = d3.scaleLinear().domain([parameters.h_loss, 0]).range(parameters.loss_domain_y)
-
     var train_contour_data = new Array(parameters.n * parameters.m);
     var valid_contour_data = new Array(parameters.n * parameters.m);
+
+    var opt_first = [[1], [1]]; // this is because of js aliasing
 
     //define a neural network
     var net = make_preset_net();
@@ -25,10 +24,9 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     });
 
     //interval controller
+    var timer;
     var epoch_count = 0;
     var obtaining_param = 0;
-    var currently_training = 0;
-    var was_training = 0;
 
     setup();
     initial_plot();
@@ -54,7 +52,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
-            new_net.getLayer(1).setWeights(parameters.opt_layer1_w);
+            opt_first = [[1], [1]];
+            new_net.getLayer(1).setWeights(opt_first);
             new_net.getLayer(3).setWeights(parameters.opt_layer3_w);
             new_net.getLayer(5).setWeights(parameters.opt_layer5_w);
             new_net.getLayer(7).setWeights(parameters.opt_layer7_w);
@@ -81,8 +80,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function train() {
-        if (!currently_training) {
-            currently_training = setInterval(train_epoch, 50);
+        if (!timer) {
+            timer = d3.timer(train_epoch, 50);
             if (obtaining_param) {
                 net.getLayer(1).freeze_weights();
             } else {
@@ -109,9 +108,9 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function pause_training() {
-        if (currently_training) {
-            clearInterval(currently_training);
-            currently_training = 0;
+        if (timer) {
+            timer.stop();
+            timer = undefined;
         }
     }
 
@@ -225,11 +224,6 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
     function on_drag(d) {
         d3.select(this).raise().classed("active", true);
-        if (currently_training) {
-            was_training = 1;
-        } else {
-            was_training = 0;
-        }
         pause_training();
     }
 
@@ -247,9 +241,6 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
     function end_drag(d) {
         d3.select(this).raise().classed("active", false);
-        if (was_training) {
-            train();
-        }
     }
 
     return {train: train, plot: plot, reset: reset};
