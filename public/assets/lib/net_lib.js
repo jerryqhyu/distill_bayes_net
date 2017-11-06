@@ -7,16 +7,13 @@ var net_lib = net_lib || {
     // Random number utilities
     var return_v = false;
     var v_val = 0.0;
-    var gaussRandom = function(random_func) {
-        if (typeof random_func === 'undefined') {
-            random_func = Math.random;
-        }
+    var gaussRandom = function() {
         if (return_v) {
             return_v = false;
             return v_val;
         }
-        var u = 2 * random_func() - 1;
-        var v = 2 * random_func() - 1;
+        var u = 2 * Math.random() - 1;
+        var v = 2 * Math.random() - 1;
         var r = u * u + v * v;
         if (r == 0 || r > 1)
             return gaussRandom();
@@ -32,8 +29,8 @@ var net_lib = net_lib || {
         return Math.floor(Math.random() * (b - a) + a);
     }
 
-    var randn = function(mu, sigma, random_func) {
-        return mu + gaussRandom(random_func) * Math.exp(sigma);
+    var randn = function(mu, sigma) {
+        return mu + gaussRandom() * Math.exp(sigma);
     }
 
     // Array utilities
@@ -592,7 +589,7 @@ var net_lib = net_lib || {
         }
         this.sigma = [];
         for (var i = 0; i < this.out_depth; i++) {
-            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.3));
+            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.01));
         }
         this.sampled_epsilon = [];
         for (var i = 0; i < this.out_depth; i++) {
@@ -651,7 +648,6 @@ var net_lib = net_lib || {
             }
             for (var i = 0; i < sample.length; i++) {
                 for (var j = 0; j < sample[i].w.length; j++) {
-                    console.log(this.sigma);
                     sample[i].w[j] = seed[i * this.num_inputs + j] * this.sigma[i].w[j] + this.mu[i].w[j];
                 }
             }
@@ -685,7 +681,7 @@ var net_lib = net_lib || {
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += (-0.01 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k])) / 5;
+                    this.sigma[j].dw[k] += -2e-2 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
@@ -693,7 +689,7 @@ var net_lib = net_lib || {
             //sample a set of weights
             for (var i = 0; i < this.sampled_w.length; i++) {
                 for (var j = 0; j < this.sampled_w[i].w.length; j++) {
-                    this.sampled_epsilon[i].w[j] = global.randn(0, 1);
+                    this.sampled_epsilon[i].w[j] = global.randn(0, 0);
                     this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.sigma[i].w[j] + this.mu[i].w[j];
                 }
             }
@@ -1274,14 +1270,11 @@ var net_lib = net_lib || {
             return act;
         },
         variationalForward: function(V, seeds) {
-            console.log("hit0");
             var acts = [];
             for (var i = 0; i < seeds.length; i++) {
                 var act = this.layers[0].forward(V, false);
                 for (var j = 1; j < this.layers.length; j++) {
-                    console.log("hit1");
                     if (this.layers[j].layer_type === 'variational') {
-                        console.log("hit");
                         act = this.layers[j].specialForward(act, seeds[i]);
                     } else {
                         act = this.layers[j].forward(act, false);

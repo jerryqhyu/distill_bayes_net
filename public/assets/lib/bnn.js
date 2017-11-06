@@ -220,7 +220,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function sample_weight() {
-        parameters.seeds.push([net_lib.randn(0, 1), net_lib.randn(0, 1)]);
+        var s = [net_lib.randn(0, 0), net_lib.randn(0, 0)];
+        parameters.seeds.push(s);
     }
 
     function plot_variational_distribution() {

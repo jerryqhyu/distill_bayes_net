@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
 
-<script src="https://distill.pub/template.v1.js"></script>
+<script src="assets/lib/template.v1.js"></script>
 <script src="assets/lib/d3.v4.min.js"></script>
 <script src="assets/lib/d3-contour.v1.min.js"></script>
 <script src="assets/lib/d3-scale-chromatic.v1.min.js"></script>
@@ -124,6 +124,7 @@
             <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
             <button type="button" onclick="bnn.train()">Train</button>
             <button type="button" onclick="bnn.reset()">Reset</button>
+            <button type="button" onclick="bnn.sample()">Sample</button>
             <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
                 Now we fit a distribution of weights to the underlying latent distribution.
             </figcaption>
