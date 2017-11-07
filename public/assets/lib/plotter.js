@@ -27,18 +27,35 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         var color = typeof(options.color) === 'undefined'
             ? "black"
             : options.color
+        var fill = typeof(options.fill) === 'undefined'
+            ? "none"
+            : options.fill
         var width = typeof(options.width) === 'undefined'
             ? 1
             : options.width
         var opacity = typeof(options.opacity) === 'undefined'
             ? 1
             : options.opacity
-        svg.append('path')
-            .attr('d', line(data))
-            .attr('stroke', color)
-            .attr('stroke-width', width)
-            .attr('fill', "none")
-            .attr("opacity", opacity);
+        var id = typeof(options.id) === 'undefined'
+            ? ""
+            : options.id
+        if (id) {
+            svg.select(id).append('path')
+                .attr('d', line(data))
+                .attr('stroke', color)
+                .attr('stroke-width', width)
+                .attr('fill', fill)
+                .attr("opacity", opacity)
+                .attr("id", id);
+        } else {
+            svg.append('path')
+                .attr('d', line(data))
+                .attr('stroke', color)
+                .attr('stroke-width', width)
+                .attr('fill', fill)
+                .attr("opacity", opacity)
+                .attr("id", id);
+        }
     }
 
     function plot_points(data, options) {
