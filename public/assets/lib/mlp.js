@@ -11,7 +11,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     var train_contour_data = new Array(parameters.n * parameters.m);
     var valid_contour_data = new Array(parameters.n * parameters.m);
 
-    var opt_first = [[1], [1]]; // this is because of js aliasing
+    var opt_first = [[1], [1]
+    ]; // this is because of js aliasing
 
     //define a neural network
     var net = make_preset_net();
@@ -52,7 +53,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
-            opt_first = [[1], [1]];
+            opt_first = [[1], [1]
+            ];
             new_net.getLayer(1).setWeights(opt_first);
             new_net.getLayer(3).setWeights(parameters.opt_layer3_w);
             new_net.getLayer(5).setWeights(parameters.opt_layer5_w);
@@ -128,7 +130,11 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             predicted_value = net.forward(x_val);
             pred.push({x: i, y: predicted_value.w[0]});
         }
-        curve_plotter.plot_line(pred, {color: "darkorange", width: 2, opacity: 1});
+        curve_plotter.plot_line(pred, {
+            color: "darkorange",
+            width: 2,
+            opacity: 1
+        });
     }
 
     function plot_weight() {
@@ -138,8 +144,24 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
                 y: net.getLayer(1).filters[1].w
             }
         ];
-        train_loss_plotter.plot_points(data, {stroke: "black", color: "darkslategray", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
-        valid_loss_plotter.plot_points(data, {stroke: "black", color: "darkslategray", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        train_loss_plotter.plot_points(data, {
+            stroke: "black",
+            color: "darkslategray",
+            size: 5,
+            opacity: 1,
+            on_drag: on_drag,
+            dragging: dragging,
+            end_drag: end_drag
+        });
+        valid_loss_plotter.plot_points(data, {
+            stroke: "black",
+            color: "darkslategray",
+            size: 5,
+            opacity: 1,
+            on_drag: on_drag,
+            dragging: dragging,
+            end_drag: end_drag
+        });
     }
 
     function clear() {
@@ -172,8 +194,18 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
                 y: Math.sin(parameters.validation_points[i]) + parameters.validation_noise[i]
             });
         }
-        curve_plotter.plot_points(training_points_data, {stroke: "red", color: "red", width: 3, opacity: 1});
-        curve_plotter.plot_points(validation_points_data, {stroke: "green", color: "green", width: 3, opacity: 0.5});
+        curve_plotter.plot_points(training_points_data, {
+            stroke: "red",
+            color: "red",
+            width: 3,
+            opacity: 1
+        });
+        curve_plotter.plot_points(validation_points_data, {
+            stroke: "green",
+            color: "green",
+            width: 3,
+            opacity: 0.5
+        });
     }
 
     function plot_train_contour() {
@@ -181,7 +213,12 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             return d3.interpolateSpectral;
         });
         var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 5, 0.1));
-        train_loss_plotter.plot_contour(train_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours});
+        train_loss_plotter.plot_contour(train_contour_data, {
+            n: parameters.n,
+            m: parameters.m,
+            color_scale: color,
+            contour_scale: contours
+        });
     }
 
     function plot_valid_contour() {
@@ -189,7 +226,12 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             return d3.interpolateSpectral;
         });
         var contours = d3.contours().size([parameters.n, parameters.m]).thresholds(d3.range(0.1, 50, 0.5));
-        valid_loss_plotter.plot_contour(valid_contour_data, {n: parameters.n, m: parameters.m, color_scale: color, contour_scale: contours});
+        valid_loss_plotter.plot_contour(valid_contour_data, {
+            n: parameters.n,
+            m: parameters.m,
+            color_scale: color,
+            contour_scale: contours
+        });
     }
 
     function compute_validation_loss(dummy_net, w_1, w_2) {

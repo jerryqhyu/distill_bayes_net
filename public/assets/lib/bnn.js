@@ -228,7 +228,7 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         var mean = [net.getLayer(1).mu[0].w[0], net.getLayer(1).mu[1].w[0]];
         var std = [net.getLayer(1).sigma[0].w[0], net.getLayer(1).sigma[1].w[0]];
         var isocontours = [];
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
             isocontours.push([]);
             for (var t = 0; t < 6.3; t+=parameters.step_size) {
                 isocontours[i].push(
@@ -238,8 +238,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                     }
                 );
             }
-            train_loss_plotter.plot_line(isocontours[i], {color: "black", fill: "white", width: 1, opacity: 0.05, id: "#var_dists"});
-            valid_loss_plotter.plot_line(isocontours[i], {color: "black", fill: "white", width: 1, opacity: 0.05, id: "#var_dists"});
+            train_loss_plotter.plot_line(isocontours[i], {color: "black", fill: "white", width: 1, opacity: 1/(4*i), id: "#var_dists"});
+            valid_loss_plotter.plot_line(isocontours[i], {color: "black", fill: "white", width: 1, opacity: 1/(4*i), id: "#var_dists"});
         }
     }
 

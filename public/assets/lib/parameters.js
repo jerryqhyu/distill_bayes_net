@@ -16,7 +16,7 @@ param = {
     l1_decay: 0,
     l2_decay: 0,
     momentum: 0.95,
-    batch_size: 8,
+    batch_size: 16,
     curve_domain_x: [
         -5, 5
     ],
