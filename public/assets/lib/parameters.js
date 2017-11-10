@@ -219,8 +219,8 @@ param = {
         ],
         [-0.63797049, 0.00673246, 0.086348]
     ]
-}
+};
 
 // scales
-var x_scale_loss_inverse = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x)
-var y_scale_loss_inverse = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y)
+var x_scale_loss_inverse = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
+var y_scale_loss_inverse = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);

@@ -1,5 +1,5 @@
 function sampler(div, posterior_div, progress_div) {
-    
+
     // svg properties
     var svg = div.append("svg");
     var svg2 = posterior_div.append("svg");
@@ -30,9 +30,8 @@ function sampler(div, posterior_div, progress_div) {
     var avg_pred_by_train = [];
     var avg_curve_by_train = [];
     var loss_for_samples = [];
-
     var rng = new Math.seedrandom('Toronto');
-
+    
     setup();
     initial_plot();
 
