@@ -8,8 +8,8 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     var svg2 = train_loss_div.append("svg");
     var svg3 = valid_loss_div.append("svg");
     svg.attr("width", parameters.w).attr("height", parameters.h);
-    svg2.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-    svg3.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
+    svg2.attr("width", parameters.w_loss + 20).attr("height", parameters.h_loss + 20);
+    svg3.attr("width", parameters.w_loss + 20).attr("height", parameters.h_loss + 20);
 
     //plotters
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
@@ -72,6 +72,10 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
         valid_loss_plotter.add_group("contours");
         train_loss_plotter.add_group("var_dists");
         valid_loss_plotter.add_group("var_dists");
+        train_loss_plotter.add_x_axis_label("w1");
+        train_loss_plotter.add_y_axis_label("w2");
+        valid_loss_plotter.add_x_axis_label("w1");
+        valid_loss_plotter.add_y_axis_label("w2");
     }
 
     function make_preset_net() {
@@ -208,20 +212,22 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
                 x: mean[0],
                 y: mean[1]
             }
-        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag, mouseover: mouseover, mouseout: mouseout});
         valid_loss_plotter.plot_points([
             {
                 x: mean[0],
                 y: mean[1]
             }
-        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag});
+        ], {stroke: "black", color: "black", size: 5, opacity: 1, on_drag: on_drag, dragging: dragging, end_drag: end_drag, mouseover: mouseover, mouseout: mouseout});
         train_loss_plotter.plot_points(samples_for_plot, {stroke: "black", color: "orange", size: 3, opacity: 1});
         valid_loss_plotter.plot_points(samples_for_plot, {stroke: "black", color: "orange", size: 3, opacity: 1});
     }
 
     function sample_weight() {
-        var s = [net_lib.randn(0, 0), net_lib.randn(0, 0)];
+        var s = [net_lib.randn(0, 0), net_lib.randn(0, 0), net_lib.randn(0, -2)];
         parameters.seeds.push(s);
+        clear();
+        plot();
     }
 
     function plot_variational_distribution() {
@@ -351,15 +357,11 @@ function bnn(div, train_loss_div, valid_loss_div, parameters) {
     }
 
     function mouseover() {
-        d3.select(this).attr({
-            r: r * 2
-        });
+        d3.select(this).attr("r", 10);
     }
 
     function mouseout() {
-        d3.select(this).attr({
-            r: r / 2
-        });
+        d3.select(this).attr("r", 5);
     }
 
     return {train: train, plot: plot, reset: reset, sample: sample_weight};

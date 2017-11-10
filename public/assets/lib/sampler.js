@@ -8,8 +8,8 @@ function sampler(div, posterior_div, progress_div, parameters) {
     var svg2 = posterior_div.append("svg");
     var svg3 = progress_div.append("svg");
     svg.attr("width", parameters.w).attr("height", parameters.h);
-    svg2.attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-    svg3.attr("width", parameters.w_progress).attr("height", parameters.h_progress);
+    svg2.attr("width", parameters.w_loss + 20).attr("height", parameters.h_loss + 20);
+    svg3.attr("width", parameters.w_progress + 20).attr("height", parameters.h_progress + 20);
 
     var progress_domain_x = [0, 1];
     var progress_domain_y = [0, 8];
@@ -60,7 +60,6 @@ function sampler(div, posterior_div, progress_div, parameters) {
         var dummy_net = make_preset_net();
         var logprob = 0;
         var log_sum_exp = 0;
-        max = 0;
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
                 logprob = get_posterior(dummy_net, x_scale_loss_inverse(w_1 * parameters.scaling_factor), y_scale_loss_inverse(w_2 * parameters.scaling_factor));
@@ -71,12 +70,12 @@ function sampler(div, posterior_div, progress_div, parameters) {
         log_sum_exp = Math.log(log_sum_exp);
         sampling_interval[0] = 0;
         for (var i = 1; i < sampling_interval.length; i++) {
-            if (Math.exp(-posterior_data[i] - log_sum_exp) > max) {
-                max = Math.exp(-posterior_data[i] - log_sum_exp);
-            }
             sampling_interval[i] = sampling_interval[i - 1] + Math.exp(-posterior_data[i] - log_sum_exp);
         }
-        console.log(max);
+        posterior_plotter.add_x_axis_label("w1");
+        posterior_plotter.add_y_axis_label("w2");
+        progress_plotter.add_x_axis_label("Number of Samples");
+        progress_plotter.add_y_axis_label("Average Loss");
     }
 
     function reset() {
@@ -175,7 +174,7 @@ function sampler(div, posterior_div, progress_div, parameters) {
 
         MLE = [];
         overfit = [];
-        for (var i = -6; i < 6; i += parameters.step_size) {
+        for (var i = 0; i < 1; i += parameters.step_size) {
             MLE.push({x: i, y: 2.7963}); //MLE validation loss
             overfit.push({x: i, y: 3.1934}); //MLE validation loss
         }

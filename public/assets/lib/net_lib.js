@@ -600,7 +600,7 @@ var net_lib = net_lib || {
             this.sampled_w.push(new Vol(1, 1, this.num_inputs));
         }
 
-        this.biases = new Vol(1, 1, this.out_depth, 0.5);
+        this.biases = new Vol(1, 1, this.out_depth);
     }
 
     VariationalLayer.prototype = {
@@ -658,7 +658,7 @@ var net_lib = net_lib || {
                 for (var d = 0; d < this.num_inputs; d++) {
                     a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
                 }
-                a += this.biases.w[i];
+                a += this.biases.w[i] + seed[2];
                 A.w[i] = a;
             }
             this.out_act = A;

@@ -29,27 +29,39 @@
 
 
         <!-- Regular MLP figure -->
-        <figure style="position:relative; width:984px; height:400px;">
-            <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <figure style="position:relative; width:984px; height:330px;">
+            <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);">
+                <figcaption id="NN_caption">
+                Neural Network
+                </figcaption>
+            </div>
             <button type="button" onclick="mlp.train()">Train</button>
             <button type="button" onclick="mlp.reset()">Reset</button>
-            <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 30px; left: 540px; top: 320px;">
                 A three-layer neural network fitting a small training set (red dots). The green dots show the test set.
             </figcaption>
         </figure>
 
-        <figure style="position:relative; width:984px; height:400px;">
+        <figure style="position:relative; width:984px; height:330px;">
             <section class="container">
-                <div id="nn_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
-                <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 300px; height: 300px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+                <div id="nn_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
+                    <figcaption id="nn_loss_train_title" style="">
+                    Training Loss
+                    </figcaption>
+                </div>
+                <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
+                    <figcaption id="nn_loss_test_title" style="position:relative; text-aligh:center;">
+                        Test Loss
+                    </figcaption>
+                </div>
             </section>
-            <figcaption id="NNLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            <figcaption id="NNLosscaption" style="position:absolute; width: 152px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
                 The loss surface of the neural network. The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
             </figcaption>
         </figure>
 
         <p>
-            In this example, we've pre-trained all the weights in the neural network except for two weights in the last layer.
+            In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer.
         </p>
 
 
@@ -65,16 +77,20 @@
         </p>
 
         <!-- Exact Inference figures -->
-        <figure style="position:relative; width:984px; height:400px;">
-            <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
-            <figcaption id="exact_caption" style="position:relative; width: 420px; height: 90px; left: 540px; top: 50px;">
+        <figure style="position:relative; width:984px; height:330px;">
+            <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+            <figcaption id="exact_caption" style="position:relative; width: 420px; height: 10px; left: 540px; top: 20px;">
                 Now we integrate out the of weights in proportion to the posterior.
             </figcaption>
         </figure>
 
         <figure style="position:relative; width:984px; height:400px;">
-            <div id="exact_train_contour" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 300px; height: 300px;"></div>
-            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
+                <figcaption id="exact_train_loss_title">
+                Training Loss
+                </figcaption>
+            </div>
+            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
             <button type="button" onclick="sampler.sample_train()">Sample</button>
             <button type="button" onclick="sampler.reset()">Clear</button>
         </figure>
@@ -105,11 +121,11 @@
 
         <!-- KL divergence figure -->
         <figure style="position:relative; width:984px; height:400px;">
-            <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+            <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
             <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
                 <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
             </div>
-            <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;;">
+            <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;">
                 <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
             </div>
             <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
@@ -119,20 +135,32 @@
         </figure>
 
         <!-- Variational Inference Layer -->
-        <figure style="position:relative; width:984px; height:400px;">
-            <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.2);"></div>
+        <figure style="position:relative; width:984px; height:330px;">
+            <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.1);">
+                <figcaption id="Var_inf_caption">
+                Variational Inference
+                </figcaption>
+            </div>
             <button type="button" onclick="bnn.train()">Train</button>
             <button type="button" onclick="bnn.reset()">Reset</button>
             <button type="button" onclick="bnn.sample()">Sample</button>
-            <figcaption id="var_caption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            <figcaption id="var_caption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 320px;">
                 Now we fit a distribution of weights to the underlying latent distribution.
             </figcaption>
         </figure>
 
-        <figure style="position:relative; width:984px; height:400px;">
+        <figure style="position:relative; width:984px; height:320px;">
             <section class="container">
-                <div id="var_loss_train" style="position:relative; border: 1px solid rgba(0, 0, 0, 1); float:left; width: 302px; height: 302px;"></div>
-                <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 302px; height: 302px; border: 1px solid rgba(0, 0, 0, 1);"></div>
+                <div id="var_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
+                    <figcaption id="var_loss_train_title">
+                    Training Loss
+                    </figcaption>
+                </div>
+                <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
+                    <figcaption id="var_loss_valid_title">
+                    Test Loss
+                    </figcaption>
+                </div>
             </section>
             <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
                 The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.

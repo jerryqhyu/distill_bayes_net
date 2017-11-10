@@ -46,7 +46,6 @@ function Plotter(svg, domain_x, domain_y, width, height) {
                 .attr('stroke-width', width)
                 .attr('fill', fill)
                 .attr("opacity", opacity)
-                .attr("id", id);
         } else {
             svg.append('path')
                 .attr('d', line(data))
@@ -54,7 +53,6 @@ function Plotter(svg, domain_x, domain_y, width, height) {
                 .attr('stroke-width', width)
                 .attr('fill', fill)
                 .attr("opacity", opacity)
-                .attr("id", id);
         }
     }
 
@@ -73,6 +71,9 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         var opacity = typeof(options.opacity) === 'undefined'
             ? 1
             : options.opacity
+        var id = typeof(options.id) === 'undefined'
+            ? ""
+            : options.id
         var on_drag = typeof(options.on_drag) === 'undefined'
             ? undefined
             : options.on_drag
@@ -90,19 +91,35 @@ function Plotter(svg, domain_x, domain_y, width, height) {
             : options.mouseout
 
         for (var i = 0; i < data.length; i++) {
-            svg.append("circle").attr("cx", x_scale(data[i].x))
-            .attr("cy", y_scale(data[i].y))
-            .attr("r", size)
-            .attr("stroke", stroke)
-            .attr("fill", color)
-            .attr("opacity", opacity)
-            .on("mouseover", mouseover)
-            .on("mouseout", mouseout)
-            .call(d3.drag()
-                .on("start", on_drag)
-                .on("drag", dragging)
-                .on("end", end_drag)
-            );
+            if (id) {
+                svg.select(id).append("circle").attr("cx", x_scale(data[i].x))
+                .attr("cy", y_scale(data[i].y))
+                .attr("r", size)
+                .attr("stroke", stroke)
+                .attr("fill", color)
+                .attr("opacity", opacity)
+                .on("mouseover", mouseover)
+                .on("mouseout", mouseout)
+                .call(d3.drag()
+                    .on("start", on_drag)
+                    .on("drag", dragging)
+                    .on("end", end_drag)
+                );
+            } else {
+                svg.append("circle").attr("cx", x_scale(data[i].x))
+                .attr("cy", y_scale(data[i].y))
+                .attr("r", size)
+                .attr("stroke", stroke)
+                .attr("fill", color)
+                .attr("opacity", opacity)
+                .on("mouseover", mouseover)
+                .on("mouseout", mouseout)
+                .call(d3.drag()
+                    .on("start", on_drag)
+                    .on("drag", dragging)
+                    .on("end", end_drag)
+                );
+            }
         }
     }
 
@@ -134,12 +151,12 @@ function Plotter(svg, domain_x, domain_y, width, height) {
 
         if (id) {
             size_multiplier = width / n;
-            svg.select(id).selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("id", id).attr("fill", function(d) {
+            svg.select(id).selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("fill", function(d) {
                 return color_scale(d.value);
             }).attr("opacity", opacity).attr("stroke", stroke);
         } else {
             size_multiplier = width / n;
-            svg.selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("id", id).attr("fill", function(d) {
+            svg.selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("fill", function(d) {
                 return color_scale(d.value);
             }).attr("opacity", opacity);
         }
@@ -149,5 +166,25 @@ function Plotter(svg, domain_x, domain_y, width, height) {
         svg.append("g").attr("id", name);
     }
 
-    return {plot_line: plot_line, plot_points: plot_points, plot_contour: plot_contour, add_group: add_group};
+    function add_x_axis_label(t) {
+        svg.append("text")
+          .attr("transform",
+                "translate(" + (width / 2) + " ," +
+                               (height + 15) + ")")
+          .style("text-anchor", "middle")
+          .attr("color", "grey")
+          .attr("opacity", 0.3)
+          .text(t);
+    }
+
+    function add_y_axis_label(t) {
+        svg.append("text")
+            .attr("transform", "translate("+ (width + 15) + "," + (height / 2)+")rotate(-90)")
+            .style("text-anchor", "middle")
+            .attr("color", "grey")
+            .attr("opacity", 0.3)
+            .text(t);
+    }
+
+    return {plot_line: plot_line, plot_points: plot_points, plot_contour: plot_contour, add_group: add_group, add_x_axis_label: add_x_axis_label, add_y_axis_label: add_y_axis_label};
 }

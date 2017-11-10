@@ -92,7 +92,6 @@ function GaussianCurve(mean, sd, div) {
 
     function redrawLine(mean, sd) {
         svg.selectAll("*").remove();
-
         updateMean(mean);
         updateSd(sd);
 

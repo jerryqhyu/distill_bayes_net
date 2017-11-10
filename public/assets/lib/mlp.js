@@ -1,8 +1,8 @@
 function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
     var svg = div.append("svg").attr("width", parameters.w).attr("height", parameters.h);
-    var svg2 = train_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
-    var svg3 = valid_loss_div.append("svg").attr("width", parameters.w_loss).attr("height", parameters.h_loss);
+    var svg2 = train_loss_div.append("svg").attr("width", parameters.w_loss + 20).attr("height", parameters.h_loss + 20);
+    var svg3 = valid_loss_div.append("svg").attr("width", parameters.w_loss + 20).attr("height", parameters.h_loss + 20);
     var curve_plotter = Plotter(svg, parameters.curve_domain_x, parameters.curve_domain_y, parameters.w, parameters.h);
     var train_loss_plotter = Plotter(svg2, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
     var valid_loss_plotter = Plotter(svg3, parameters.loss_domain_x, parameters.loss_domain_y, parameters.w_loss, parameters.h_loss);
@@ -10,9 +10,6 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     var y_scale_loss_inverse = d3.scaleLinear().domain([parameters.h_loss, 0]).range(parameters.loss_domain_y)
     var train_contour_data = new Array(parameters.n * parameters.m);
     var valid_contour_data = new Array(parameters.n * parameters.m);
-
-    var opt_first = [[1], [1]
-    ]; // this is because of js aliasing
 
     //define a neural network
     var net = make_preset_net();
@@ -33,6 +30,12 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
     initial_plot();
 
     function setup() {
+        curve_plotter.add_group("fixed");
+        train_loss_plotter.add_group("fixed");
+        valid_loss_plotter.add_group("fixed");
+        curve_plotter.add_group("float")
+        train_loss_plotter.add_group("float");
+        valid_loss_plotter.add_group("float");
         var dummy_net = make_preset_net();
         for (var w_2 = 0, k = 0; w_2 < parameters.m; w_2++) {
             for (var w_1 = 0; w_1 < parameters.n; w_1++, k++) {
@@ -53,9 +56,7 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
-            opt_first = [[1], [1]
-            ];
-            new_net.getLayer(1).setWeights(opt_first);
+            new_net.getLayer(1).setWeights([[-0.2], [-0.2]]);
             new_net.getLayer(3).setWeights(parameters.opt_layer3_w);
             new_net.getLayer(5).setWeights(parameters.opt_layer5_w);
             new_net.getLayer(7).setWeights(parameters.opt_layer7_w);
@@ -133,7 +134,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
         curve_plotter.plot_line(pred, {
             color: "darkorange",
             width: 2,
-            opacity: 1
+            opacity: 1,
+            id: "#float"
         });
     }
 
@@ -149,31 +151,41 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             color: "darkslategray",
             size: 5,
             opacity: 1,
+            id: "#float",
             on_drag: on_drag,
             dragging: dragging,
-            end_drag: end_drag
+            end_drag: end_drag,
+            mouseover: mouseover,
+            mouseout: mouseout
         });
         valid_loss_plotter.plot_points(data, {
             stroke: "black",
             color: "darkslategray",
             size: 5,
             opacity: 1,
+            id: "#float",
             on_drag: on_drag,
             dragging: dragging,
-            end_drag: end_drag
+            end_drag: end_drag,
+            mouseover: mouseover,
+            mouseout: mouseout
         });
     }
 
     function clear() {
-        svg.selectAll("path").remove();
-        svg2.selectAll("circle").remove();
-        svg3.selectAll("circle").remove();
+        svg.select("#float").selectAll("*").remove();
+        svg2.select("#float").selectAll("*").remove();
+        svg3.select("#float").selectAll("*").remove();
     }
 
     function initial_plot() {
         plot_train_and_valid_points();
         plot_train_contour();
         plot_valid_contour();
+        train_loss_plotter.add_x_axis_label("w1");
+        train_loss_plotter.add_y_axis_label("w2");
+        valid_loss_plotter.add_x_axis_label("w1");
+        valid_loss_plotter.add_y_axis_label("w2");
     }
 
     function plot_train_and_valid_points() {
@@ -198,13 +210,15 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             stroke: "red",
             color: "red",
             width: 3,
-            opacity: 1
+            opacity: 1,
+            id: "#fixed"
         });
         curve_plotter.plot_points(validation_points_data, {
             stroke: "green",
             color: "green",
             width: 3,
-            opacity: 0.5
+            opacity: 0.5,
+            id: "#fixed"
         });
     }
 
@@ -217,7 +231,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             n: parameters.n,
             m: parameters.m,
             color_scale: color,
-            contour_scale: contours
+            contour_scale: contours,
+            id: "#fixed"
         });
     }
 
@@ -230,7 +245,8 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
             n: parameters.n,
             m: parameters.m,
             color_scale: color,
-            contour_scale: contours
+            contour_scale: contours,
+            id: "#fixed"
         });
     }
 
@@ -283,6 +299,14 @@ function mlp(div, train_loss_div, valid_loss_div, parameters) {
 
     function end_drag(d) {
         d3.select(this).raise().classed("active", false);
+    }
+
+    function mouseover() {
+        d3.select(this).attr("r", 10);
+    }
+
+    function mouseout() {
+        d3.select(this).attr("r", 5);
     }
 
     return {train: train, plot: plot, reset: reset};
