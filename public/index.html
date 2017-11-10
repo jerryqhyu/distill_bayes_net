@@ -19,25 +19,20 @@
         <link rel="stylesheet" type="text/css" href="assets/widgets.css">
         <!-- <script src="assets/lib/lib.js"></script> -->
         <script src="assets/utils.js"></script>
-
         <H1>Bayesian Neural Networks</H1>
-
         <p>
             How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
         </p>
 
-
-
-        <!-- Regular MLP figure -->
-        <figure style="position:relative; width:984px; height:330px;">
-            <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);">
-                <figcaption id="NN_caption">
-                Neural Network
-                </figcaption>
-            </div>
+    <!-- Regular MLP figure -->
+        <figure style="position:relative; width:984px; height:350px;">
+            <figcaption id="NN_caption">
+            Neural Network
+            </figcaption>
+            <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
             <button type="button" onclick="mlp.train()">Train</button>
             <button type="button" onclick="mlp.reset()">Reset</button>
-            <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 30px; left: 540px; top: 320px;">
+            <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
                 A three-layer neural network fitting a small training set (red dots). The green dots show the test set.
             </figcaption>
         </figure>
@@ -55,7 +50,7 @@
                     </figcaption>
                 </div>
             </section>
-            <figcaption id="NNLosscaption" style="position:absolute; width: 152px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            <figcaption id="NNLosscaption" style="position:absolute; width: 152px; height: 90px; left: 416px; top: 120px; margin: 0 auto;">
                 The loss surface of the neural network. The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
             </figcaption>
         </figure>
@@ -135,16 +130,15 @@
         </figure>
 
         <!-- Variational Inference Layer -->
-        <figure style="position:relative; width:984px; height:330px;">
-            <div id="var_full" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.1);">
-                <figcaption id="Var_inf_caption">
-                Variational Inference
-                </figcaption>
-            </div>
+        <figure style="position:relative; width:984px; height:350px;">
+            <figcaption id="Var_inf_caption">
+            Variational Inference
+            </figcaption>
+            <div id="var_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
             <button type="button" onclick="bnn.train()">Train</button>
             <button type="button" onclick="bnn.reset()">Reset</button>
             <button type="button" onclick="bnn.sample()">Sample</button>
-            <figcaption id="var_caption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 320px;">
+            <figcaption id="var_caption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
                 Now we fit a distribution of weights to the underlying latent distribution.
             </figcaption>
         </figure>
@@ -162,7 +156,7 @@
                     </figcaption>
                 </div>
             </section>
-            <figcaption id="VarLosscaption" style="position:absolute; width: 192px; height: 90px; left: 396px; top: 150px; margin: 0 auto;">
+            <figcaption id="VarLosscaption" style="position:absolute; width: 152px; height: 90px; left: 416px; top: 120px; margin: 0 auto;">
                 The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
             </figcaption>
         </figure>
@@ -179,8 +173,6 @@
         <script src="assets/iterates.js"></script>
         <script>
             //DIVERGENCES
-            var parameters = param;
-
             var curve = GaussianCurve(0, 1, d3.select("#curve"));
             var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
 
@@ -197,7 +189,6 @@
                 .cRadius(7)
                 .shifty(-12)
                 .margins(20, 20)
-
             var sliderd = sliderGen([230, 40])
                 .ticks([0, 1, 2, 3, 4])
                 .ticktitles(function(d, i) {
@@ -216,16 +207,16 @@
             var getsd = sliderd(d3.select("#slider4")).xval
             curve.drawLine();
 
-            //training NN on sine
-            var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), parameters);
+            // NN on sine
+            var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
             mlp.plot();
 
-            // training var on sine
-            var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"), parameters);
+            // exact inference
+            var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
             sampler.plot();
 
-            // training var on sine
-            var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), parameters);
+            // variational inference
+            var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"));
         </script>
 
         <H3>Connection to Dropout</H3>
