@@ -86,11 +86,10 @@
                 Training Loss
                 </figcaption>
             </div>
-            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);">
-                <figcaption id="exact_caption" style="position:relative; width: 500px; height: 50px; left: 140px; top: 400px;">
-                    The black line shows the validation loss of the average. Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
-                </figcaption>
-            </div>
+            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+            <figcaption id="exact_caption" style="position:absolute; width: 470px; height: 60px; left: 510px; top: 310px;">
+                The black line shows the validation loss of the average. Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
+            </figcaption>
             <button type="button" onclick="sampler.sample_train()">Sample</button>
             <button type="button" onclick="sampler.reset()">Clear</button>
         </figure>

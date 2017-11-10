@@ -6,7 +6,7 @@ function sampler(div, posterior_div, progress_div) {
     var svg3 = progress_div.append("svg");
     svg.attr("width", param.w).attr("height", param.h);
     svg2.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
-    svg3.attr("width", param.w_progress + 20).attr("height", param.h_progress + 20);
+    svg3.attr("width", param.w_progress + 20).attr("height", param.h_progress);
 
     var progress_domain_x = [0, 1];
     var progress_domain_y = [0, 8];
@@ -72,7 +72,6 @@ function sampler(div, posterior_div, progress_div) {
         }
         posterior_plotter.add_x_axis_label("w1");
         posterior_plotter.add_y_axis_label("w2");
-        progress_plotter.add_x_axis_label("Number of Samples");
         progress_plotter.add_y_axis_label("Average Loss");
     }
 
