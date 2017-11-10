@@ -1,5 +1,5 @@
 function mlp(div, train_loss_div, valid_loss_div) {
-    
+
     var svg = div.append("svg").attr("width", param.w).attr("height", param.h);
     var svg2 = train_loss_div.append("svg").attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     var svg3 = valid_loss_div.append("svg").attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
@@ -285,6 +285,8 @@ function mlp(div, train_loss_div, valid_loss_div) {
     function dragging(d) {
         var new_x = d3.event.x;
         var new_y = d3.event.y;
+        console.log(x_scale_loss_inverse(new_x));
+        console.log(y_scale_loss_inverse(new_y));
         d3.select(this).attr("cx", new_x).attr("cy", new_y);
         net.getLayer(1).setWeights([
             [x_scale_loss_inverse(new_x)],

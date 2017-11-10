@@ -2,7 +2,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
 <html>
-<script src="assets/lib/template.v1.js"></script>
+<script src="https://distill.pub/template.v1.js"></script>
+<!-- <script src="assets/lib/template.v1.js"></script> -->
 <script src="assets/lib/d3.v4.min.js"></script>
 <script src="assets/lib/d3-contour.v1.min.js"></script>
 <script src="assets/lib/d3-scale-chromatic.v1.min.js"></script>
@@ -79,13 +80,17 @@
             </figcaption>
         </figure>
 
-        <figure style="position:relative; width:984px; height:400px;">
+        <figure style="position:relative; width:984px; height:450px;">
             <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
                 <figcaption id="exact_train_loss_title">
                 Training Loss
                 </figcaption>
             </div>
-            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+            <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);">
+                <figcaption id="exact_caption" style="position:relative; width: 500px; height: 50px; left: 140px; top: 400px;">
+                    The black line shows the validation loss of the average. Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
+                </figcaption>
+            </div>
             <button type="button" onclick="sampler.sample_train()">Sample</button>
             <button type="button" onclick="sampler.reset()">Clear</button>
         </figure>

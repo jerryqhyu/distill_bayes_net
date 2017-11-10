@@ -31,7 +31,7 @@ function sampler(div, posterior_div, progress_div) {
     var avg_curve_by_train = [];
     var loss_for_samples = [];
     var rng = new Math.seedrandom('Toronto');
-    
+
     setup();
     initial_plot();
 
@@ -189,14 +189,26 @@ function sampler(div, posterior_div, progress_div) {
             overfit.push({x: i, y: 3.1934}); //MLE validation loss
         }
         progress_plotter.plot_line(overfit, {
-            color: "red",
+            color: "darkred",
             width: 2,
             opacity: 0.5
         });
         progress_plotter.plot_line(MLE, {
-            color: "green",
+            color: "darkgreen",
             width: 2,
             opacity: 0.5
+        });
+        posterior_plotter.plot_points([{x:0.8133331298828126, y:1.4501043701171876}], {
+            stroke: "black",
+            color: "darkgreen",
+            size: 5,
+            opacity: 1
+        });
+        posterior_plotter.plot_points([{x:0.8533331298828124, y:0.04666687011718773}], {
+            stroke: "black",
+            color: "darkred",
+            size: 5,
+            opacity: 1
         });
     }
 
