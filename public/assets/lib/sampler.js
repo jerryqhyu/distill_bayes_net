@@ -75,7 +75,7 @@ function sampler(div, posterior_div, progress_div) {
     }
 
     function reset() {
-        var rng = new Math.seedrandom('Toronto');
+        rng = new Math.seedrandom('Toronto');
         sampled_nets = [];
         sampled_weights = [];
         sample_predictions = [];
