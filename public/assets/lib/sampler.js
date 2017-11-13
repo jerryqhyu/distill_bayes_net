@@ -87,7 +87,6 @@ function sampler(curve_div, posterior_div, progress_div) {
     function sample_train() {
         var seed = rng();
         var sampled_net = get_sampled_net(seed);
-        console.log(seed);
         predictions = predicted_points(sampled_net);
 
         curve_plotter.plot_line(predictions.curve, {
@@ -197,7 +196,6 @@ function sampler(curve_div, posterior_div, progress_div) {
                 y: test_loss_for_avg_prediction[i]
             });
         }
-        console.log(avg_curve_points);
         progress_plotter.plot_line(avg_loss_data, {
             color: "black",
             width: 3,
