@@ -1,7 +1,7 @@
-function sampler(div, posterior_div, progress_div) {
+function sampler(curve_div, posterior_div, progress_div) {
 
     // svg properties
-    var svg = div.append("svg");
+    var svg = curve_div.append("svg");
     var svg2 = posterior_div.append("svg");
     var svg3 = progress_div.append("svg");
     svg.attr("width", param.w).attr("height", param.h);
@@ -23,17 +23,128 @@ function sampler(div, posterior_div, progress_div) {
 
     //define a neural network
     var net = make_preset_net();
-
-    var sampled_nets = [];
-    var sample_predictions = [];
-    var sampled_weights = [];
-    var avg_pred_by_train = [];
-    var avg_curve_by_train = [];
-    var loss_for_samples = [];
     var rng = new Math.seedrandom('Toronto');
+
+    var sampled_weights = [];
+    var avg_prediction = [];
+    var avg_curve_points = [];
+    var test_loss_for_avg_prediction = [];
 
     setup();
     initial_plot();
+
+    function setup() {
+        var dummy_net = make_preset_net();
+        var logprob = 0;
+        var log_sum_exp = 0;
+        for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
+            for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
+                logprob = get_posterior(dummy_net, x_scale_loss_inverse(w_1 * param.scaling_factor), y_scale_loss_inverse(w_2 * param.scaling_factor));
+                posterior_data[k] = logprob;
+                log_sum_exp += Math.exp(-logprob);
+            }
+        }
+        log_sum_exp = Math.log(log_sum_exp);
+        sampling_interval[0] = 0;
+        for (var i = 1; i < sampling_interval.length; i++) {
+            sampling_interval[i] = sampling_interval[i - 1] + Math.exp(-posterior_data[i] - log_sum_exp);
+        }
+        curve_plotter.add_group("fixed");
+        posterior_plotter.add_group("fixed");
+        progress_plotter.add_group("fixed");
+        curve_plotter.add_group("float");
+        posterior_plotter.add_group("float");
+        progress_plotter.add_group("float");
+
+        posterior_plotter.add_x_axis_label("w1");
+        posterior_plotter.add_y_axis_label("w2");
+        progress_plotter.add_y_axis_label("Average Loss");
+    }
+
+    function initial_plot() {
+        plot_datapoints();
+        plot_posterior();
+        plot_MLE();
+    }
+
+    function reset() {
+        rng = new Math.seedrandom('Toronto');
+        sampled_weights = [];
+        avg_curve_points = [];
+        avg_prediction = [];
+        test_loss_for_avg_prediction = [];
+        svg.selectAll("path").remove();
+        clear();
+        plot();
+    }
+
+    function clear() {
+        svg.select("#float").selectAll("*").remove();
+        svg2.select("#float").selectAll("*").remove();
+        svg3.select("#float").selectAll("*").remove();
+    }
+
+    function sample_train() {
+        var seed = rng();
+        var sampled_net = get_sampled_net(seed);
+        console.log(seed);
+        predictions = predicted_points(sampled_net);
+
+        curve_plotter.plot_line(predictions.curve, {
+            color: "orange",
+            width: 1,
+            opacity: 0.3,
+            id: "#fixed"
+        });
+
+        online_update_average(predictions);
+
+        var total_loss = get_test_loss_from_prediction(avg_prediction)
+        test_loss_for_avg_prediction.push(total_loss);
+        clear();
+        plot();
+    }
+
+    function get_sampled_net(seed) {
+        for (var i = 0; seed > sampling_interval[i]; i++) {}
+        var n_sampled = i % param.m;
+        var m_sampled = (i - n_sampled) / param.n;
+        sampled_weights.push({
+            x: x_scale_loss_inverse(n_sampled * param.scaling_factor),
+            y: y_scale_loss_inverse(m_sampled * param.scaling_factor)
+        });
+        sampled_net = make_preset_net();
+        sampled_net.getLayer(1).setWeights([
+            [x_scale_loss_inverse(n_sampled * param.scaling_factor)],
+            [y_scale_loss_inverse(m_sampled * param.scaling_factor)]
+        ]);
+        return sampled_net;
+    }
+
+    function online_update_average(predictions) {
+        if (avg_prediction.length == 0) {
+            avg_prediction = predictions.valid;
+            avg_curve_points = predictions.curve;
+        } else {
+            for (var i = 0; i < avg_prediction.length; i++) {
+                avg_prediction[i].y = avg_prediction[i].y * test_loss_for_avg_prediction.length / (test_loss_for_avg_prediction.length + 1) + predictions.valid[i].y / (test_loss_for_avg_prediction.length + 1);
+            }
+            for (var i = 0; i < avg_curve_points.length; i++) {
+                avg_curve_points[i].y = avg_curve_points[i].y * test_loss_for_avg_prediction.length / (test_loss_for_avg_prediction.length + 1) + predictions.curve[i].y / (test_loss_for_avg_prediction.length + 1);
+            }
+        }
+    }
+
+    function get_test_loss_from_prediction(avg_prediction) {
+        var total_loss = 0;
+        var predicted;
+        var true_label;
+        for (var j = 0; j < param.validation_points.length; j++) {
+            true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
+            total_loss += 0.5 * (true_label - avg_prediction[j].y) * (true_label - avg_prediction[j].y);
+        }
+        return total_loss;
+    }
 
     function make_preset_net() {
         var layer_defs = [];
@@ -52,83 +163,6 @@ function sampler(div, posterior_div, progress_div) {
         new_net.getLayer(5).setBiases(param.opt_layer5_b);
         new_net.getLayer(7).setBiases(param.opt_layer7_b);
         return new_net;
-    }
-
-    function setup() {
-        var dummy_net = make_preset_net();
-        var logprob = 0;
-        var log_sum_exp = 0;
-        for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
-            for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                logprob = get_posterior(dummy_net, x_scale_loss_inverse(w_1 * param.scaling_factor), y_scale_loss_inverse(w_2 * param.scaling_factor));
-                posterior_data[k] = logprob;
-                log_sum_exp += Math.exp(-logprob);
-            }
-        }
-        log_sum_exp = Math.log(log_sum_exp);
-        sampling_interval[0] = 0;
-        for (var i = 1; i < sampling_interval.length; i++) {
-            sampling_interval[i] = sampling_interval[i - 1] + Math.exp(-posterior_data[i] - log_sum_exp);
-        }
-        posterior_plotter.add_x_axis_label("w1");
-        posterior_plotter.add_y_axis_label("w2");
-        progress_plotter.add_y_axis_label("Average Loss");
-    }
-
-    function reset() {
-        rng = new Math.seedrandom('Toronto');
-        sampled_nets = [];
-        sampled_weights = [];
-        sample_predictions = [];
-        avg_curve_by_train = [];
-        avg_pred_by_train = [];
-        loss_for_samples = [];
-        clear();
-        plot();
-    }
-
-    function sample_train() {
-        var uniform = rng();
-        for (var i = 0; uniform > sampling_interval[i]; i++) {}
-        var n_sampled = i % param.m;
-        var m_sampled = (i - n_sampled) / param.n;
-        sampled_weights.push({
-            x: x_scale_loss_inverse(n_sampled * param.scaling_factor),
-            y: y_scale_loss_inverse(m_sampled * param.scaling_factor)
-        });
-        var sampled_net = make_preset_net();
-        sampled_net.getLayer(1).setWeights([
-            [x_scale_loss_inverse(n_sampled * param.scaling_factor)],
-            [y_scale_loss_inverse(m_sampled * param.scaling_factor)]
-        ]);
-        sampled_nets.push(sampled_net);
-
-        point_predictions = predicted_points(sampled_net);
-        sample_predictions.push(point_predictions.curve);
-
-        if (avg_pred_by_train.length == 0) {
-            avg_pred_by_train = point_predictions.valid;
-            avg_curve_by_train = point_predictions.curve;
-        } else {
-            for (var i = 0; i < avg_pred_by_train.length; i++) {
-                avg_pred_by_train[i].y = avg_pred_by_train[i].y * (sampled_nets.length - 1) / sampled_nets.length + point_predictions.valid[i].y / sampled_nets.length;
-            }
-            for (var i = 0; i < avg_curve_by_train.length; i++) {
-                avg_curve_by_train[i].y = avg_curve_by_train[i].y * (sampled_nets.length - 1) / sampled_nets.length + point_predictions.curve[i].y / sampled_nets.length;
-            }
-        }
-
-        //compute the loss for the average curve
-        var total_loss = 0;
-        var predicted;
-        var true_label;
-        for (var j = 0; j < param.validation_points.length; j++) {
-            true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
-            total_loss += 0.5 * (true_label - avg_pred_by_train[j].y) * (true_label - avg_pred_by_train[j].y);
-        }
-        loss_for_samples.push(total_loss);
-        clear();
-        plot();
     }
 
     function predicted_points(net) {
@@ -151,64 +185,31 @@ function sampler(div, posterior_div, progress_div) {
     }
 
     function plot() {
-        plot_line();
+        plot_avg();
         plot_weight();
     }
 
-    function plot_line() {
-        for (var i = 0; i < sample_predictions.length; i++) {
-            curve_plotter.plot_line(sample_predictions[i], {
-                color: "orange",
-                width: 1,
-                opacity: 0.3
-            });
-        }
+    function plot_avg() {
         var avg_loss_data = [];
-        for (var i = 0; i < loss_for_samples.length; i++) {
+        for (var i = 0; i < test_loss_for_avg_prediction.length; i++) {
             avg_loss_data.push({
-                x: (i + 1) / (loss_for_samples.length + 1),
-                y: loss_for_samples[i]
+                x: (i + 1) / (test_loss_for_avg_prediction.length + 1),
+                y: test_loss_for_avg_prediction[i]
             });
         }
+        console.log(avg_curve_points);
         progress_plotter.plot_line(avg_loss_data, {
             color: "black",
             width: 3,
-            opacity: 1
+            opacity: 1,
+            id: "#float"
         });
         // Also plot the average over sampled nets from training posterior
-        curve_plotter.plot_line(avg_curve_by_train, {
+        curve_plotter.plot_line(avg_curve_points, {
             color: "red",
             width: 3,
-            opacity: 1
-        });
-
-        MLE = [];
-        overfit = [];
-        for (var i = 0; i < 1; i += param.step_size) {
-            MLE.push({x: i, y: 2.7963}); //MLE validation loss
-            overfit.push({x: i, y: 3.1934}); //MLE validation loss
-        }
-        progress_plotter.plot_line(overfit, {
-            color: "darkred",
-            width: 2,
-            opacity: 0.5
-        });
-        progress_plotter.plot_line(MLE, {
-            color: "darkgreen",
-            width: 2,
-            opacity: 0.5
-        });
-        posterior_plotter.plot_points([{x:0.8133331298828126, y:1.4501043701171876}], {
-            stroke: "black",
-            color: "darkgreen",
-            size: 5,
-            opacity: 1
-        });
-        posterior_plotter.plot_points([{x:0.8533331298828124, y:0.04666687011718773}], {
-            stroke: "black",
-            color: "darkred",
-            size: 5,
-            opacity: 1
+            opacity: 1,
+            id: "#float"
         });
     }
 
@@ -219,23 +220,57 @@ function sampler(div, posterior_div, progress_div) {
             size: 4,
             opacity: 1,
             mouseover: mouseover,
-            mouseout: mouseout
+            mouseout: mouseout,
+            id: "#float"
         });
     }
 
-    function clear() {
-        svg.selectAll("path").remove();
-        svg2.selectAll("circle").remove();
-        svg3.selectAll("circle").remove();
-        svg3.selectAll("path").remove();
+    function plot_MLE() {
+        MLE = [];
+        overfit = [];
+        for (var i = 0; i < 1; i += param.step_size) {
+            MLE.push({x: i, y: 2.7963}); //MLE validation loss
+            overfit.push({x: i, y: 3.1934}); //MLE validation loss
+        }
+        progress_plotter.plot_line(overfit, {
+            color: "darkred",
+            width: 2,
+            opacity: 0.5,
+            id: "#fixed"
+        });
+        progress_plotter.plot_line(MLE, {
+            color: "darkgreen",
+            width: 2,
+            opacity: 0.5,
+            id: "#fixed"
+        });
+        posterior_plotter.plot_points([
+            {
+                x: 0.8133331298828126,
+                y: 1.4501043701171876
+            }
+        ], {
+            stroke: "black",
+            color: "darkgreen",
+            size: 5,
+            opacity: 1,
+            id: "#fixed"
+        });
+        posterior_plotter.plot_points([
+            {
+                x: 0.8533331298828124,
+                y: 0.04666687011718773
+            }
+        ], {
+            stroke: "black",
+            color: "darkred",
+            size: 5,
+            opacity: 1,
+            id: "#fixed"
+        });
     }
 
-    function initial_plot() {
-        plot_points();
-        plot_posterior();
-    }
-
-    function plot_points() {
+    function plot_datapoints() {
         //individual training and validation points
         training_points_data = [];
         //training data points
@@ -257,13 +292,15 @@ function sampler(div, posterior_div, progress_div) {
             stroke: "red",
             color: "red",
             size: 4,
-            opacity: 1
+            opacity: 1,
+            id: "#fixed"
         });
         curve_plotter.plot_points(validation_points_data, {
             stroke: "teal",
             color: "teal",
             size: 4,
-            opacity: 1
+            opacity: 1,
+            id: "#fixed"
         });
     }
 
@@ -276,7 +313,8 @@ function sampler(div, posterior_div, progress_div) {
             n: param.n,
             m: param.m,
             color_scale: color,
-            contour_scale: contours
+            contour_scale: contours,
+            id: "#fixed"
         });
     }
 
