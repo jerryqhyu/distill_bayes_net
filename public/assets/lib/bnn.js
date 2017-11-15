@@ -14,13 +14,11 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
     svg3.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     svg4.attr("width", param.w + 20).attr("height", param.h_loss);
 
-    var progress_domain_y = [0, 20];
-
-    //plotters
+    // plotters
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
     var train_loss_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
-    var progress_plotter = Plotter(svg4, param.progress_domain_x, progress_domain_y, param.w, param.h_progress);
+    var progress_plotter = Plotter(svg4, param.progress_domain_x, param.progress_domain_y, param.w, param.h_progress);
 
     var train_contour_data = new Array(param.n * param.m);
     var valid_contour_data = new Array(param.n * param.m);
@@ -99,6 +97,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
             momentum: param.momentum,
             batch_size: param.batch_size
         });
+        avg_loss = [];
         clear();
         plot();
         pause_training();
@@ -174,23 +173,6 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
             width: 2,
             id: "#float"
         });
-    }
-
-    function get_curve() {
-        var data = {};
-        var real = [];
-        var pred = [];
-        var predicted_value;
-        var x_val;
-        for (var i = -6; i < 6; i += param.step_size) {
-            real.push({x: i, y: Math.sin(i)});
-            x_val = new net_lib.Vol([i]);
-            predicted_value = net.forward(x_val);
-            pred.push({x: i, y: predicted_value.w[0]});
-        }
-        data.real = real;
-        data.pred = pred;
-        return data;
     }
 
     function plot_weight() {
@@ -476,8 +458,8 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         for (var i = 0; i < x.length; i++) {
             x_val = new net_lib.Vol([x[i]]);
             predicted_values = net.variationalForward(x_val, param.seeds);
-            for (var i = 0; i < param.seeds.length; i++) {
-                pred[i].push({x: x[i], y: predicted_values[i].w[0]});
+            for (var j = 0; j < param.seeds.length; j++) {
+                pred[j].push({x: x[i], y: predicted_values[j].w[0]});
             }
         }
         return pred;

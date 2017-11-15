@@ -585,7 +585,7 @@ var net_lib = net_lib || {
         this.mu = [];
 
         for (var i = 0; i < this.out_depth; i++) {
-            this.mu.push(new Vol(1, 1, this.num_inputs, 1.5));
+            this.mu.push(new Vol(1, 1, this.num_inputs, 2));
         }
         this.sigma = [];
         for (var i = 0; i < this.out_depth; i++) {
