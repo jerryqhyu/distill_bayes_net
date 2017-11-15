@@ -8,12 +8,9 @@ function sampler(curve_div, posterior_div, progress_div) {
     svg2.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     svg3.attr("width", param.w_progress + 20).attr("height", param.h_progress);
 
-    var progress_domain_x = [0, 1];
-    var progress_domain_y = [0, 8];
-
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
     var posterior_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
-    var progress_plotter = Plotter(svg3, progress_domain_x, progress_domain_y, param.w_progress, param.h_progress);
+    var progress_plotter = Plotter(svg3, param.progress_domain_x, param.progress_domain_y, param.w_progress, param.h_progress);
 
     var x_scale_loss_inverse = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
     var y_scale_loss_inverse = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);

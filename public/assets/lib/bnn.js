@@ -1,24 +1,32 @@
-function bnn(div, train_loss_div, valid_loss_div) {
-    
+function bnn(div, train_loss_div, valid_loss_div, progress_div) {
+
     // svg properties
     var div = div;
     var train_loss_div = train_loss_div;
     var valid_loss_div = valid_loss_div;
+    var progress_div = progress_div;
     var svg = div.append("svg");
     var svg2 = train_loss_div.append("svg");
     var svg3 = valid_loss_div.append("svg");
+    var svg4 = progress_div.append("svg");
     svg.attr("width", param.w).attr("height", param.h);
     svg2.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     svg3.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
+    svg4.attr("width", param.w + 20).attr("height", param.h_loss);
+
+    var progress_domain_y = [0, 20];
 
     //plotters
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
     var train_loss_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
+    var progress_plotter = Plotter(svg4, param.progress_domain_x, progress_domain_y, param.w, param.h_progress);
 
     var train_contour_data = new Array(param.n * param.m);
     var valid_contour_data = new Array(param.n * param.m);
     var var_dist_data = new Array(param.var_n * param.var_m);
+
+    var avg_loss = [];
 
     //define a neural network
     var obtaining_param = 0;
@@ -48,14 +56,17 @@ function bnn(div, train_loss_div, valid_loss_div) {
         curve_plotter.add_group("fixed");
         train_loss_plotter.add_group("fixed");
         valid_loss_plotter.add_group("fixed");
+        progress_plotter.add_group("fixed");
         curve_plotter.add_group("float");
         train_loss_plotter.add_group("float");
         valid_loss_plotter.add_group("float");
+        progress_plotter.add_group("float");
 
         train_loss_plotter.add_x_axis_label("w1");
         train_loss_plotter.add_y_axis_label("w2");
         valid_loss_plotter.add_x_axis_label("w1");
         valid_loss_plotter.add_y_axis_label("w2");
+        progress_plotter.add_y_axis_label("Average Loss");
     }
 
     function make_preset_net() {
@@ -137,21 +148,15 @@ function bnn(div, train_loss_div, valid_loss_div) {
     }
 
     function plot_line() {
-        var predicted_values;
-        var x_val;
-        var pred = [];
-        for (var i = 0; i < param.seeds.length; i++) {
-            pred.push([]);
+        var curve_x = [];
+        for (var i = -6; i < 6; i+=param.step_size) {
+            curve_x.push(i);
         }
-        for (var j = -6; j < 6; j += param.step_size) {
-            x_val = new net_lib.Vol([j]);
-            predicted_values = net.variationalForward(x_val, param.seeds);
-            for (var i = 0; i < param.seeds.length; i++) {
-                pred[i].push({x: j, y: predicted_values[i].w[0]});
-            }
-        }
+        var curve = variational_prediction(curve_x);
+        var valid = variational_prediction(param.validation_points);
+        plot_avg(curve, valid);
         for (var i = 0; i < param.seeds.length; i++) {
-            curve_plotter.plot_line(pred[i], {
+            curve_plotter.plot_line(curve[i], {
                 color: "orange",
                 width: 1,
                 opacity: 0.5,
@@ -196,8 +201,7 @@ function bnn(div, train_loss_div, valid_loss_div) {
         var samples = net.getLayer(1).sampled_weights(param.seeds);
         var samples_for_plot = [];
         for (var i = 0; i < samples.length; i++) {
-            samples_for_plot.push({x: samples[i][0], y: samples[i][1]
-            });
+            samples_for_plot.push({x: samples[i][0], y: samples[i][1]});
         }
         train_loss_plotter.plot_points([
             {
@@ -299,9 +303,11 @@ function bnn(div, train_loss_div, valid_loss_div) {
         svg.select("#float").selectAll("*").remove();
         svg2.select("#float").selectAll("*").remove();
         svg3.select("#float").selectAll("*").remove();
+        svg4.select("#float").selectAll("*").remove();
     }
 
     function initial_plot() {
+        plot_MLE();
         plot_train_and_valid_points();
         plot_train_contour();
         plot_valid_contour();
@@ -340,6 +346,66 @@ function bnn(div, train_loss_div, valid_loss_div) {
             opacity: 0.5,
             id: "#fixed"
         });
+    }
+
+    function plot_MLE() {
+        MLE = [];
+        overfit = [];
+        for (var i = 0; i < 1; i += param.step_size) {
+            MLE.push({x: i, y: 2.7963}); //MLE validation loss
+            overfit.push({x: i, y: 3.1934}); //MLE validation loss
+        }
+        progress_plotter.plot_line(overfit, {
+            color: "darkred",
+            width: 2,
+            opacity: 0.5,
+            id: "#fixed"
+        });
+        progress_plotter.plot_line(MLE, {
+            color: "darkgreen",
+            width: 2,
+            opacity: 0.5,
+            id: "#fixed"
+        });
+    }
+
+    function plot_avg(curve, valid) {
+        var avg_curve = compute_avg_prediction(curve);
+        curve_plotter.plot_line(avg_curve, {
+            color: "darkred",
+            width: 5,
+            opacity: 1,
+            id: "#float"
+        });
+
+        var avg_valid = compute_avg_prediction(valid);
+        avg_loss.push(get_test_loss_from_prediction(avg_valid));
+
+        var avg_loss_data = [];
+        for (var i = 0; i < avg_loss.length; i++) {
+            avg_loss_data.push({
+                x: (i + 1) / (avg_loss.length + 1),
+                y: avg_loss[i]
+            });
+        }
+        progress_plotter.plot_line(avg_loss_data, {
+            color: "black",
+            width: 3,
+            opacity: 1,
+            id: "#float"
+        });
+    }
+
+    function compute_avg_prediction(pred) {
+        var avg_pred = [];
+        for (var i = 0; i < pred[0].length; i++) {
+            avg = 0;
+            for (var j = 0; j < pred.length; j++) {
+                avg += pred[j][i].y / pred.length;
+            }
+            avg_pred.push({x: pred[0][i].x, y: avg});
+        }
+        return avg_pred;
     }
 
     function plot_train_contour() {
@@ -396,6 +462,34 @@ function bnn(div, train_loss_div, valid_loss_div) {
             x_val = new net_lib.Vol([param.train_points[i]]);
             true_label = Math.sin(param.train_points[i]) + param.train_noise[i];
             total_loss += dummy_net.getCostLoss(x_val, true_label);
+        }
+        return total_loss;
+    }
+
+    function variational_prediction(x) {
+        var predicted_values;
+        var x_val;
+        var pred = [];
+        for (var i = 0; i < param.seeds.length; i++) {
+            pred.push([]);
+        }
+        for (var i = 0; i < x.length; i++) {
+            x_val = new net_lib.Vol([x[i]]);
+            predicted_values = net.variationalForward(x_val, param.seeds);
+            for (var i = 0; i < param.seeds.length; i++) {
+                pred[i].push({x: x[i], y: predicted_values[i].w[0]});
+            }
+        }
+        return pred;
+    }
+
+    function get_test_loss_from_prediction(avg_prediction) {
+        var total_loss = 0;
+        var predicted;
+        var true_label;
+        for (var j = 0; j < param.validation_points.length; j++) {
+            true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
+            total_loss += 0.5 * (true_label - avg_prediction[j].y) * (true_label - avg_prediction[j].y);
         }
         return total_loss;
     }
