@@ -20,10 +20,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var progress_plotter = Plotter(svg4, param.progress_domain_x, param.progress_domain_y, param.w, param.h_progress);
 
-    var train_contour_data = new Array(param.n * param.m);
-    var valid_contour_data = new Array(param.n * param.m);
     var var_dist_data = new Array(param.var_n * param.var_m);
-
     var avg_loss = [];
 
     //define a neural network
@@ -41,16 +38,37 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
     //interval controller
     var timer;
     setup();
-    initial_plot();
 
-    function setup() {
-        var dummy_net = make_preset_net();
-        for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
-            for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                train_contour_data[k] = compute_training_loss(dummy_net, x_scale_loss_inverse(w_1 * param.scaling_factor), y_scale_loss_inverse(w_2 * param.scaling_factor));
-                valid_contour_data[k] = compute_validation_loss(dummy_net, x_scale_loss_inverse(w_1 * param.scaling_factor), y_scale_loss_inverse(w_2 * param.scaling_factor));
+    function train() {
+        if (!timer) {
+            console.log("started training");
+            if (obtaining_param) {
+                net.getLayer(1).freeze_weights();
+            } else {
+                net.freezeAllButLayer(1);
+            }
+            timer = d3.timer(train_epoch, 50);
+        }
+    }
+
+    function train_epoch() {
+        var x;
+        for (var j = 0; j < param.train_points.length; j++) {
+            x = new net_lib.Vol([param.train_points[j]]);
+            trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
+        }
+        if (obtaining_param) {
+            for (var j = 0; j < param.validation_points.length; j++) {
+                x = new net_lib.Vol([param.validation_points[j]]);
+                trainer.train(x, [Math.sin(param.validation_points[j]) + param.validation_noise[j]]);
             }
         }
+        clear();
+        plot();
+        epoch_count++;
+    }
+
+    function setup() {
         curve_plotter.add_group("fixed");
         train_loss_plotter.add_group("fixed");
         valid_loss_plotter.add_group("fixed");
@@ -65,6 +83,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         valid_loss_plotter.add_x_axis_label("w1");
         valid_loss_plotter.add_y_axis_label("w2");
         progress_plotter.add_y_axis_label("Average Loss");
+        initial_plot();
     }
 
     function make_preset_net() {
@@ -104,42 +123,6 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         epoch_count = 0;
     }
 
-    function train() {
-        if (!timer) {
-            console.log("started training");
-            if (obtaining_param) {
-                net.getLayer(1).freeze_weights();
-            } else {
-                net.freezeAllButLayer(1);
-            }
-            timer = d3.timer(train_epoch, 50);
-        }
-    }
-
-    function train_epoch() {
-        var x;
-        for (var j = 0; j < param.train_points.length; j++) {
-            x = new net_lib.Vol([param.train_points[j]]);
-            trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
-        }
-        if (obtaining_param) {
-            for (var j = 0; j < param.validation_points.length; j++) {
-                x = new net_lib.Vol([param.validation_points[j]]);
-                trainer.train(x, [Math.sin(param.validation_points[j]) + param.validation_noise[j]]);
-            }
-        }
-        clear();
-        plot();
-        epoch_count++;
-    }
-
-    function pause_training() {
-        if (timer) {
-            timer.stop();
-            timer = undefined;
-        }
-    }
-
     function plot() {
         plot_line();
         plot_variational_distribution();
@@ -148,7 +131,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
 
     function plot_line() {
         var curve_x = [];
-        for (var i = -6; i < 6; i+=param.step_size) {
+        for (var i = -6; i < 6; i += param.step_size) {
             curve_x.push(i);
         }
         var curve = variational_prediction(curve_x);
@@ -183,7 +166,8 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         var samples = net.getLayer(1).sampled_weights(param.seeds);
         var samples_for_plot = [];
         for (var i = 0; i < samples.length; i++) {
-            samples_for_plot.push({x: samples[i][0], y: samples[i][1]});
+            samples_for_plot.push({x: samples[i][0], y: samples[i][1]
+            });
         }
         train_loss_plotter.plot_points([
             {
@@ -246,6 +230,13 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         plot();
     }
 
+    function pause_training() {
+        if (timer) {
+            timer.stop();
+            timer = undefined;
+        }
+    }
+
     function plot_variational_distribution() {
         var mean = [
             net.getLayer(1).mu[0].w[0],
@@ -289,11 +280,32 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
     }
 
     function initial_plot() {
+        plot_contours();
         plot_MLE();
         plot_train_and_valid_points();
-        plot_train_contour();
-        plot_valid_contour();
         plot();
+    }
+
+    function plot_contours() {
+        var train_contour_data = new Array(param.n * param.m);
+        var valid_contour_data = new Array(param.n * param.m);
+        var dummy_net = make_preset_net();
+        for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
+            for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
+                train_contour_data[k] = compute_training_loss(dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor))
+                valid_contour_data[k] = compute_validation_loss(dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
+            }
+        }
+        var train_contour_color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
+            return d3.interpolateSpectral;
+        });
+        var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 5, 0.1));
+        var valid_contour_color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
+            return d3.interpolateSpectral;
+        });
+        var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 50, 0.5));
+        plot_contour(train_loss_plotter, train_contour_data, train_contour_color, train_contour_scale);
+        plot_contour(valid_loss_plotter, valid_contour_data, valid_contour_color, valid_contour_scale);
     }
 
     function plot_train_and_valid_points() {
@@ -385,33 +397,15 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
             for (var j = 0; j < pred.length; j++) {
                 avg += pred[j][i].y / pred.length;
             }
-            avg_pred.push({x: pred[0][i].x, y: avg});
+            avg_pred.push({x: pred[0][i].x,
+                y: avg
+            });
         }
         return avg_pred;
     }
 
-    function plot_train_contour() {
-        var color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 5, 0.1));
-
-        train_loss_plotter.plot_contour(train_contour_data, {
-            n: param.n,
-            m: param.m,
-            color_scale: color,
-            contour_scale: contours,
-            id: "#fixed"
-        });
-    }
-
-    function plot_valid_contour() {
-        var color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 50, 0.5));
-
-        valid_loss_plotter.plot_contour(valid_contour_data, {
+    function plot_contour(plotter, data, color, contours) {
+        plotter.plot_contour(data, {
             n: param.n,
             m: param.m,
             color_scale: color,
@@ -486,8 +480,8 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         var new_y = d3.event.y;
         d3.select(this).attr("cx", new_x).attr("cy", new_y);
         net.getLayer(1).setMeans([
-            [x_scale_loss_inverse(new_x)],
-            [y_scale_loss_inverse(new_y)]
+            [inv_x_scale(new_x)],
+            [inv_y_scale(new_y)]
         ]);
         clear();
         plot();

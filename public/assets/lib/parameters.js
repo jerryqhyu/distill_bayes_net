@@ -234,5 +234,7 @@ param = {
 };
 
 // scales
-var x_scale_loss_inverse = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
-var y_scale_loss_inverse = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
+var inv_x_scale = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
+inv_x_scale.clamp(true);
+var inv_y_scale = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
+inv_y_scale.clamp(true);

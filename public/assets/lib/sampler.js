@@ -12,8 +12,8 @@ function sampler(curve_div, posterior_div, progress_div) {
     var posterior_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var progress_plotter = Plotter(svg3, param.progress_domain_x, param.progress_domain_y, param.w_progress, param.h_progress);
 
-    var x_scale_loss_inverse = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
-    var y_scale_loss_inverse = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
+    var inv_x_scale = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
+    var inv_y_scale = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
 
     var posterior_data = new Array(param.n * param.m);
     var sampling_interval = new Array(param.n * param.m);
@@ -36,7 +36,7 @@ function sampler(curve_div, posterior_div, progress_div) {
         var log_sum_exp = 0;
         for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
             for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                logprob = get_posterior(dummy_net, x_scale_loss_inverse(w_1 * param.scaling_factor), y_scale_loss_inverse(w_2 * param.scaling_factor));
+                logprob = get_posterior(dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
                 posterior_data[k] = logprob;
                 log_sum_exp += Math.exp(-logprob);
             }
@@ -106,13 +106,13 @@ function sampler(curve_div, posterior_div, progress_div) {
         var n_sampled = i % param.m;
         var m_sampled = (i - n_sampled) / param.n;
         sampled_weights.push({
-            x: x_scale_loss_inverse(n_sampled * param.scaling_factor),
-            y: y_scale_loss_inverse(m_sampled * param.scaling_factor)
+            x: inv_x_scale(n_sampled * param.scaling_factor),
+            y: inv_y_scale(m_sampled * param.scaling_factor)
         });
         sampled_net = make_preset_net();
         sampled_net.getLayer(1).setWeights([
-            [x_scale_loss_inverse(n_sampled * param.scaling_factor)],
-            [y_scale_loss_inverse(m_sampled * param.scaling_factor)]
+            [inv_x_scale(n_sampled * param.scaling_factor)],
+            [inv_y_scale(m_sampled * param.scaling_factor)]
         ]);
         return sampled_net;
     }
