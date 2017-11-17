@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
-<html>
+
 <!-- <script src="https://distill.pub/template.v1.js"></script> -->
 <script src="assets/lib/template.v1.js"></script>
 <script src="assets/lib/d3.v4.min.js"></script>
@@ -12,9 +12,20 @@
 <link rel="stylesheet" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
+<script type="text/front-matter">
+  title: "Bayesian Neural Networks"
+  description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!"
+  authors:
+  - Jerry Qing: http://www.cs.toronto.edu/~jerry/
+  - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
+  affiliations:
+  - University of Toronto
+  - University of Toronto
+</script>
+
 <title>Bayesian Neural Networks</title>
 
-<body>
+
 
     <dt-article class="centered">
         <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -70,6 +81,8 @@
         <p>
             But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how
             well they fit the data.
+
+            Bayesian neural networks were first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>
         </p>
 
         <!-- Exact Inference figures -->
@@ -227,9 +240,18 @@
             var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
         </script>
 
+        <h3>Automatic Differentiation Variational Inference</h3>
+        <p>
+        The reparameterization trick<dt-cite key="kingma2013autoencoding"></dt-cite><dt-cite key="rezende2014stochastic"></dt-cite>
+
+        ADVI<dt-cite key="kucukelbir2016automatic"></dt-cite>
+
+        Bayes by backprop<dt-cite key="blundell2015weight"></dt-cite>
+        </p>
+
         <H3>Connection to Dropout</H3>
         <p>
-            Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
+            Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. <dt-cite key="kingma2015variational"></dt-cite><dt-cite key="gal2016dropout"></dt-cite>
         </p>
 
         <H3>Connection to Ensembles</H3>
@@ -241,35 +263,149 @@
         <p>
             asdf
         </p>
-        <p>
-            <a href="http://proceedings.mlr.press/v48/gal16.html">Gal and Ghahramani, 2016. Dropout as Bayesian approximation: representing model uncertainty in deep learning</a>
-        </p>
-        <p>
-            <a href="http://papers.nips.cc/paper/5666-variational-dropout-and-the-local-reparameterization-trick">Kingma, Salimans, and Welling, 2015. Variational dropout and the local reparameterization trick.</a>
-        </p>
 
-        <H2>References</H2>
         <p>
-            Blundell, Charles, Cornebise, Julien, Kavukcuoglu, Koray, and Wierstra, Daan. Weight uncertainty in neural networks. arXiv preprint arXiv:1505.05424, 2015
-        </p>
-        <p>
-            Kucukelbir, Alp, Ranganath, Rajesh, Gelman, Andrew, and Blei, David. Fully automatic variational inference of differentiable probability models. In NIPS Workshop on Probabilistic Programming, 2014.
-        </p>
-        <p>
-            Ranganath, Rajesh, Gerrish, Sean, and Blei, David M. Black box variational inference. arXiv preprint arXiv:1401.0118, 2013.
-        </p>
-        <p>
-            <a href="http://www.csri.utoronto.ca/~radford/ftp/thesis.pdf">Neal, 1995. Bayesian learning for neural networks.</a>
-        </p>
-        <p>
-            <a href="http://papers.nips.cc/paper/4329-practical-variational-inference-for-neural-networks">Graves, 2011. Practical variational inference for neural networks</a>
-        </p>
-        <p>
-            <a href="http://cs.stanford.edu/people/karpathy/convnetjs/">ConvNetJS by Andrej Karpathy</a>
+            Our implementation is based on <dt-cite key="karpathy2015convnetjs"></dt-cite>
         </p>
     </dt-article>
-    <script>
-        renderMathInElement(document.body);
-    </script>
-</body>
-</html>
+
+<dt-appendix>
+</dt-appendix>
+
+<script>
+    renderMathInElement(document.body);
+</script>
+
+<script type="text/bibliography">
+@inproceedings{graves2011practical,
+  title={Practical variational inference for neural networks},
+  author={Graves, Alex},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={2348--2356},
+  year={2011}
+}
+
+@misc{karpathy2015convnetjs,
+  title={ConvNetJS: Javascript library for deep learning},
+  author={Karpathy, A},
+  year={2015}
+}
+
+@phdthesis{neal1995bayesian,
+  title={Bayesian learning for neural networks},
+  author={Neal, Radford M},
+  year={1995},
+  school={University of Toronto}
+}
+
+@article{kingma2013autoencoding,
+    author    = {Diederik P. Kingma and Max Welling},
+    title     = {Auto-Encoding Variational {B}ayes},
+    journal   = {International Conference on Learning Representations},
+    year      = {2014}
+}
+
+@inproceedings{rezende2014stochastic,
+  title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models},
+  author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan},
+  booktitle={Proceedings of the 31st International Conference on Machine Learning},
+  pages={1278--1286},
+  year={2014}
+}
+
+@article{rumelhart1986learning,
+  title={Learning representations by back-propagating errors},
+  author={Rumelhart, David E and Hinton, Geoffrey E},
+  journal={Nature},
+  volume={323},
+  pages={9},
+  year={1986}
+}
+
+@inproceedings{kingma2015adam,
+  title={{Adam}: A Method for Stochastic Optimization},
+  year={2015},
+  author={Kingma, Diederik and Ba, Jimmy},
+  booktitle={International Conference on Learning Representations},
+}
+
+@article{hoffman2013stochastic,
+  title={Stochastic variational inference},
+  author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John},
+  journal={The Journal of Machine Learning Research},
+  volume={14},
+  number={1},
+  pages={1303--1347},
+  year={2013}
+}
+
+@inproceedings{schulman2015gradient,
+  title={Gradient estimation using stochastic computation graphs},
+  author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={3528--3536},
+  year={2015}
+}
+
+@phdthesis{speelpenning1980compiling,
+  title={Compiling Fast Partial Derivatives of Functions Given by Algorithms},
+  author={Speelpenning, Bert},
+  year={1980},
+  school={University of Illinois at Urbana-Champaign}
+}
+
+@article{rall1981automatic,
+  title={Automatic differentiation: Techniques and applications},
+  author={Rall, Louis B},
+  year={1981},
+  publisher={Springer}
+}
+
+@article{robbins1951stochastic,
+  title={A stochastic approximation method},
+  author={Robbins, Herbert and Monro, Sutton},
+  journal={The annals of mathematical statistics},
+  pages={400--407},
+  year={1951}
+}
+
+@article{kucukelbir2016automatic,
+  title={Automatic Differentiation Variational Inference},
+  author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M},
+  journal={arXiv preprint arXiv:1603.00788},
+  year={2016}
+}
+
+@article{paisley2012variational,
+  title={Variational Bayesian inference with stochastic search},
+  author={Paisley, John and Blei, David and Jordan, Michael},
+  journal={arXiv preprint arXiv:1206.6430},
+  year={2012}
+}
+
+@inproceedings{blundell2015weight,
+  title={Weight Uncertainty in Neural Network},
+  author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan},
+  booktitle={International Conference on Machine Learning},
+  pages={1613--1622},
+  year={2015}
+}
+
+@inproceedings{gal2016dropout,
+  title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning},
+  author={Gal, Yarin and Ghahramani, Zoubin},
+  booktitle={international conference on machine learning},
+  pages={1050--1059},
+  year={2016}
+}
+
+@inproceedings{kingma2015variational,
+  title={Variational dropout and the local reparameterization trick},
+  author={Kingma, Diederik P and Salimans, Tim and Welling, Max},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={2575--2583},
+  year={2015}
+}
+</script>
+
+
