@@ -236,5 +236,17 @@ param = {
 // scales
 var inv_x_scale = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
 inv_x_scale.clamp(true);
+
 var inv_y_scale = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
 inv_y_scale.clamp(true);
+
+var train_contour_color = d3.scaleLinear().domain([-0.05, 2.5]).interpolate(function() {
+    return d3.interpolateSpectral;
+});
+
+var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.05, 2.5, 0.05));
+
+var valid_contour_color = d3.scaleLinear().domain([-0.5, 20]).interpolate(function() {
+    return d3.interpolateSpectral;
+});
+var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.5, 20, 0.5));

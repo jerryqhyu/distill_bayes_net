@@ -165,7 +165,7 @@ function sampler(curve_div, posterior_div, progress_div) {
         points = {};
         predicted_curve = [];
         valid = [];
-        for (var i = -6; i < 6; i += param.step_size) {
+        for (var i = -5; i <= 5; i += param.step_size) {
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             predicted_curve.push({x: i, y: predicted_value.w[0]});
@@ -253,8 +253,8 @@ function sampler(curve_div, posterior_div, progress_div) {
         });
         posterior_plotter.plot_points([
             {
-                x: 0.8533331298828124,
-                y: 0.04666687011718773
+                x: 0.8023331298828124,
+                y: 0.09676687011718773
             }
         ], {
             stroke: "black",
@@ -300,15 +300,11 @@ function sampler(curve_div, posterior_div, progress_div) {
     }
 
     function plot_posterior() {
-        var color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var contours = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 5, 0.1));
         posterior_plotter.plot_contour(posterior_data, {
             n: param.n,
             m: param.m,
-            color_scale: color,
-            contour_scale: contours,
+            color_scale: train_contour_color,
+            contour_scale: train_contour_scale,
             id: "#fixed"
         });
     }

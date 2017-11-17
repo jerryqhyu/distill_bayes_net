@@ -131,7 +131,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
 
     function plot_line() {
         var curve_x = [];
-        for (var i = -6; i < 6; i += param.step_size) {
+        for (var i = -5; i <= 5; i += param.step_size) {
             curve_x.push(i);
         }
         var curve = variational_prediction(curve_x);
@@ -146,7 +146,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
             });
         }
         mean = [];
-        for (var i = -6; i < 6; i += param.step_size) {
+        for (var i = -5; i <= 5; i += param.step_size) {
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             mean.push({x: i, y: predicted_value.w[0]});
@@ -296,14 +296,6 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
                 valid_contour_data[k] = compute_validation_loss(dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
             }
         }
-        var train_contour_color = d3.scaleLinear().domain([-0.1, 2]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 5, 0.1));
-        var valid_contour_color = d3.scaleLinear().domain([0, 12]).interpolate(function() {
-            return d3.interpolateSpectral;
-        });
-        var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(0.1, 50, 0.5));
         plot_contour(train_loss_plotter, train_contour_data, train_contour_color, train_contour_scale);
         plot_contour(valid_loss_plotter, valid_contour_data, valid_contour_color, valid_contour_scale);
     }
