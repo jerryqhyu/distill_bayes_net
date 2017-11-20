@@ -2,8 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
 
-<!-- <script src="https://distill.pub/template.v1.js"></script> -->
-<script src="assets/lib/template.v1.js"></script>
+<script src="assets/lib/template.v2.js"></script>
 <script src="assets/lib/d3.v4.min.js"></script>
 <script src="assets/lib/d3-contour.v1.min.js"></script>
 <script src="assets/lib/d3-scale-chromatic.v1.min.js"></script>
@@ -25,7 +24,7 @@
 
 <title>Bayesian Neural Networks</title>
 
-<dt-article>
+<d-article>
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
@@ -34,10 +33,10 @@
         How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
     </p>
 
-    <dt-byline></dt-byline>
+    <d-byline></d-byline>
 
     <h2>The One Sided Coin</h2>
-    <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and negative log likelihood for classification tasks. However, there are some problems with this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Optimizing a deep neural network is inherently nonconvex, which means there could be certain 'valleys' in the loss space where the set of weight is stuck in. Various learning algorithms and tricks are proposed to overcome this issue, such as ??? (momentum?). However, they are fundamemtally still considering only one point out of many. But this doesn't have to be the case.</p>
+    <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and softmax for classification tasks. However, there are some problems with this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Optimizing a deep neural network is inherently nonconvex, which means there could be certain "valleys" in the loss space where the set of weight is stuck in. Various learning algorithms and tricks are proposed to overcome this issue, such as ???. </p>
 
 <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
@@ -74,13 +73,8 @@
         In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer.
     </p>
 
-    <h2>Defining the Objective</h2>
-    <p>
-        So what do we really want? We want a paradigm such that we could consider all possible weights, and some weight is more important than other, we want a way to weigh them based on importance. If we view learning like descending a valley, we don't want to know where the lowest point in the mountain range are, we want to know the ENTIRE (emphasize) landscape.
-    </p>
 
-    <h2>Two Mindsets</h2>
-    <h3>Exact Inference</h3>
+    <H2>Exact Inference</H2>
     <p>
         There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
         learned.
@@ -90,7 +84,7 @@
         But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how
         well they fit the data.
 
-        Bayesian neural networks were first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>
+        Bayesian neural networks were first developed by <d-cite key="neal1995bayesian"></d-cite> and <d-cite key="graves2011practical"></d-cite>
     </p>
 
     <!-- Exact Inference figures -->
@@ -118,7 +112,7 @@
         We can see that the posterior puts a lot of mass
     </p>
 
-    <h3>What about the prior?</h3>
+    <H3>What about the prior?</H3>
     <p>
         One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. Sometimes, this is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
     </p>
@@ -132,7 +126,7 @@
         Why doesn't everyone use exact Bayesian inference all the time? There are a few problems. First, computing the training likelihood for many possible weights is slow. Second, we have to store how well each set of weights fits the training data.
     </p>
 
-    <h3>Variational Inference</h3>
+    <H2>Variational Inference</H2>
     <p>
         Variational inference means, loosely, fitting a nice, tractable distribution (such as Gaussian) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates the intractable one, we
         can use the tractable distribution to make predictions or measure uncertainty.
@@ -250,16 +244,16 @@
 
     <h3>Automatic Differentiation Variational Inference</h3>
     <p>
-    The reparameterization trick<dt-cite key="kingma2013autoencoding"></dt-cite><dt-cite key="rezende2014stochastic"></dt-cite>
+    The reparameterization trick<d-cite key="kingma2013autoencoding"></d-cite><d-cite key="rezende2014stochastic"></d-cite>
 
-    ADVI<dt-cite key="kucukelbir2016automatic"></dt-cite>
+    ADVI<d-cite key="kucukelbir2016automatic"></d-cite>
 
-    Bayes by backprop<dt-cite key="blundell2015weight"></dt-cite>
+    Bayes by backprop<d-cite key="blundell2015weight"></d-cite>
     </p>
 
     <H3>Connection to Dropout</H3>
     <p>
-        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. <dt-cite key="kingma2015variational"></dt-cite><dt-cite key="gal2016dropout"></dt-cite>
+        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. <d-cite key="kingma2015variational"></d-cite><d-cite key="gal2016dropout"></d-cite>
     </p>
 
     <H3>Connection to Ensembles</H3>
@@ -273,12 +267,12 @@
     </p>
 
     <p>
-        Our implementation is based on <dt-cite key="karpathy2015convnetjs"></dt-cite>
+        Our implementation is based on <d-cite key="karpathy2015convnetjs"></d-cite>
     </p>
-</dt-article>
+</d-article>
 
-<dt-appendix>
-</dt-appendix>
+<d-appendix>
+</d-appendix>
 
 <script>
     renderMathInElement(document.body);
@@ -308,7 +302,7 @@
 
 @article{kingma2013autoencoding,
     author    = {Diederik P. Kingma and Max Welling},
-    title     = {Auto-Encoding Variational Bayes},
+    title     = {Auto-Encoding Variational {B}ayes},
     journal   = {International Conference on Learning Representations},
     year      = {2014}
 }
