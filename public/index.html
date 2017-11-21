@@ -74,9 +74,13 @@
         In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer.
     </p>
 
-    <h2>Defining the Objective</h2>
+    <h3>Sketching the Idea</h3>
     <p>
-        So what do we really want? We want a paradigm such that we could consider all possible weights, and some weight is more important than other, we want a way to weigh them based on importance. If we view learning like descending a valley, we don't want to know where the lowest point in the mountain range are, we want to know the ENTIRE (emphasize) landscape.
+        So what do we really want? We want a model that considers all possible weights. Also, since not all weights produce the same loss, we want a way to weigh them based on importance. If we view learning like descending a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
+    </p>
+
+    <p>
+        This is where probability comes in handy, what if we don't take negative log of the likelihood function? Then the loss space defines a probability distribution of all of the weights. The best part is: we could sample from the space, and the probability of each weight being sampled is automatically correlated with its importance.
     </p>
 
     <h2>Two Mindsets</h2>
