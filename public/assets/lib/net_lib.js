@@ -589,7 +589,7 @@ var net_lib = net_lib || {
         }
         this.sigma = [];
         for (var i = 0; i < this.out_depth; i++) {
-            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.01));
+            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.1));
         }
         this.sampled_epsilon = [];
         for (var i = 0; i < this.out_depth; i++) {

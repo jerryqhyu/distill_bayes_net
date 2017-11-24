@@ -171,8 +171,7 @@ function mlp(div, train_loss_div, valid_loss_div) {
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]
-        ]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var j = 0; j < param.validation_points.length; j++) {
             x_val = new net_lib.Vol([param.validation_points[j]]);
             true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
@@ -186,8 +185,7 @@ function mlp(div, train_loss_div, valid_loss_div) {
         var predicted;
         var true_label;
         var x_val;
-        dummy_net.getLayer(1).setWeights([[w_1], [w_2]
-        ]);
+        dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
         for (var i = 0; i < param.train_points.length; i++) {
             x_val = new net_lib.Vol([param.train_points[i]]);
             true_label = Math.sin(param.train_points[i]) + param.train_noise[i];

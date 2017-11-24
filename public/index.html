@@ -13,19 +13,19 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
 <script type="text/front-matter">
-  title: "Bayesian Neural Networks"
-  description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!"
-  authors:
-  - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
-  - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
-  affiliations:
-  - University of Toronto
-  - University of Toronto
+    title: "Bayesian Neural Networks"
+    description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!"
+    authors:
+    - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
+    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
+    affiliations:
+    - University of Toronto
+    - University of Toronto
 </script>
 
 <title>Bayesian Neural Networks</title>
 
-<dt-article>
+<dt-article class="centered">
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
@@ -37,12 +37,15 @@
     <dt-byline></dt-byline>
 
     <h2>The One Sided Coin</h2>
-    <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and negative log likelihood for classification tasks. However, there are some problems with this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Optimizing a deep neural network is inherently nonconvex, which means there could be certain 'valleys' in the loss space where the set of weight is stuck in. Various learning algorithms and tricks are proposed to overcome this issue, such as ??? (momentum?). However, they are fundamemtally still considering only one point out of many. But this doesn't have to be the case.</p>
+    <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and negative log likelihood for classification tasks. However, there are some problems with
+        this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Optimizing a deep neural network is inherently nonconvex, which means there could be certain 'valleys' in the loss space
+        where the set of weight is stuck in. Various learning algorithms and tricks are proposed to overcome this issue, such as ??? (momentum?). However, they are fundamemtally still considering only one point out of many. But this doesn't have to be
+        the case.</p>
 
-<!-- Regular MLP figure -->
+    <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
         <figcaption id="NN_caption">
-        Neural Network
+            Neural Network
         </figcaption>
         <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <button type="button" onclick="mlp.train()">Train</button>
@@ -56,7 +59,7 @@
         <section class="container">
             <div id="nn_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
                 <figcaption id="nn_loss_train_title" style="">
-                Training Loss
+                    Training Loss
                 </figcaption>
             </div>
             <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
@@ -76,25 +79,57 @@
 
     <h3>Sketching the Idea</h3>
     <p>
-        So what do we really want? We want a model that considers all possible weights. Also, since not all weights produce the same loss, we want a way to weigh them based on importance. If we view learning like descending a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
+        So what do we really want? We want a model that considers all possible weights. Also, since not all weights produce the same loss, we want a way to weigh them based on importance. If we view learning like descending a valley, we want the model to survey
+        the entire landscape, instead of descending the first deep trough it sees.
     </p>
 
     <p>
-        This is where probability comes in handy, what if we don't take negative log of the likelihood function? Then the loss space defines a probability distribution of all of the weights. The best part is: we could sample from the space, and the probability of each weight being sampled is automatically correlated with its importance.
+        What if we don't take negative log of the likelihood function? Then the loss space defines a probability distribution of all of the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
+        confers its importance. We could use Bayes' theorem to express the relationship between the data points and the weights:
+    </p>
+
+    <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{p(x)}$$</div>
+
+    <p>Where $p(x|w)$ is called likelihood, $p(w)$ prior, and $p(w|x)$ posterior.</p>
+
+    <h3>What about the prior?</h3>
+    <p>
+        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. If we assumed the wrong the prior, the model underperforms. However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one. This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution of the parameters.
+    </p>
+    <p>
+        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method. (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights by making them less probable would natually regularize weights.)
+    </p>
+    <p>
+        To show that Bayesian methods aren't necessarily about priors, in this example we will use an uninformative uniform prior. (ALIGN THE EQUATION)
+        \begin{aligned}$$p(w|x) & = \dfrac{p(x|w)p(w)}{p(w)\int_{w}p(x|w)} \\
+         & = \dfrac{p(x|w)}{\int_{w}p(x|w)} $$\end{aligned}
     </p>
 
     <h2>Two Mindsets</h2>
+    <h3>Inference</h3>
+    <p>
+        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about. On one hand - from people who do predictions for a living - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$. On the other hand, from the probability graphical model community, the latent states of the models are more important than the data points, inference is about discovering the distribution of $w$ from $x, y$. In this sense, <b>inference</b> is more like <b>learning</b>.
+    </p>
     <h3>Exact Inference</h3>
+    <p>
+        Notice that Bayes theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution from which you could
+        sample the perfect distribution of w given the data points x. So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
+    </p>
+    <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{\int_{w}p(x|w)p(w)}$$</div>
+    <p>
+        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible. Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov chain monte carlo blahblah.... converges to the exact posterior.....somethingsomething
+    </p>
     <p>
         There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
         learned.
     </p>
     <div id="exacttex">$$p(w|x)\ vs\ q(w|x) \sim \dfrac{1}{\sqrt{(2\pi)^k|\Sigma|}}exp(-\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x-\mu))$$</div>
-    <p>
-        But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how
-        well they fit the data.
 
-        Bayesian neural networks were first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>
+    <p>
+        But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how well
+        they fit the data. Bayesian neural networks were first developed by
+        <dt-cite key="neal1995bayesian"></dt-cite> and
+        <dt-cite key="graves2011practical"></dt-cite>
     </p>
 
     <!-- Exact Inference figures -->
@@ -108,7 +143,7 @@
     <figure style="position:relative; width:984px; height:400px;">
         <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
             <figcaption id="exact_train_loss_title">
-            Training Loss
+                Training Loss
             </figcaption>
         </div>
         <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
@@ -122,24 +157,9 @@
         We can see that the posterior puts a lot of mass
     </p>
 
-    <h3>What about the prior?</h3>
-    <p>
-        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. Sometimes, this is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
-    </p>
-    <p>
-        The important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one.
-    </p>
-    <p>
-        To show that Bayesian methods aren't necessarily about priors, in this example we won't use a prior at all.
-    </p>
-    <p>
-        Why doesn't everyone use exact Bayesian inference all the time? There are a few problems. First, computing the training likelihood for many possible weights is slow. Second, we have to store how well each set of weights fits the training data.
-    </p>
-
     <h3>Variational Inference</h3>
     <p>
-        Variational inference means, loosely, fitting a nice, tractable distribution (such as Gaussian) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates the intractable one, we
-        can use the tractable distribution to make predictions or measure uncertainty.
+        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates the intractable one, we can use the tractable distribution to make predictions or measure uncertainty.
     </p>
 
 
@@ -161,7 +181,7 @@
     <!-- Variational Inference Layer -->
     <figure style="position:relative; width:984px; height:330px;">
         <figcaption id="Var_inf_caption">
-        Variational Inference
+            Variational Inference
         </figcaption>
         <div id="var_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <button type="button" onclick="bnn.train()">Train</button>
@@ -175,12 +195,12 @@
         <section class="container">
             <div id="var_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
                 <figcaption id="var_loss_train_title">
-                Training Loss
+                    Training Loss
                 </figcaption>
             </div>
             <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
                 <figcaption id="var_loss_valid_title">
-                Test Loss
+                    Test Loss
                 </figcaption>
             </div>
         </section>
@@ -254,16 +274,22 @@
 
     <h3>Automatic Differentiation Variational Inference</h3>
     <p>
-    The reparameterization trick<dt-cite key="kingma2013autoencoding"></dt-cite><dt-cite key="rezende2014stochastic"></dt-cite>
+        The reparameterization trick
+        <dt-cite key="kingma2013autoencoding"></dt-cite>
+        <dt-cite key="rezende2014stochastic"></dt-cite>
 
-    ADVI<dt-cite key="kucukelbir2016automatic"></dt-cite>
+        ADVI
+        <dt-cite key="kucukelbir2016automatic"></dt-cite>
 
-    Bayes by backprop<dt-cite key="blundell2015weight"></dt-cite>
+        Bayes by backprop
+        <dt-cite key="blundell2015weight"></dt-cite>
     </p>
 
     <H3>Connection to Dropout</H3>
     <p>
-        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights. <dt-cite key="kingma2015variational"></dt-cite><dt-cite key="gal2016dropout"></dt-cite>
+        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
+        <dt-cite key="kingma2015variational"></dt-cite>
+        <dt-cite key="gal2016dropout"></dt-cite>
     </p>
 
     <H3>Connection to Ensembles</H3>
@@ -277,7 +303,8 @@
     </p>
 
     <p>
-        Our implementation is based on <dt-cite key="karpathy2015convnetjs"></dt-cite>
+        Our implementation is based on
+        <dt-cite key="karpathy2015convnetjs"></dt-cite>
     </p>
 </dt-article>
 
@@ -285,137 +312,37 @@
 </dt-appendix>
 
 <script>
-    renderMathInElement(document.body);
+    renderMathInElement(
+        document.body, {
+            delimiters: [{
+                    left: "$$",
+                    right: "$$",
+                    display: true
+                },
+                {
+                    left: "$",
+                    right: "$",
+                    display: false
+                },
+            ]
+        }
+    );
 </script>
 
 <script type="text/bibliography">
-@inproceedings{graves2011practical,
-  title={Practical variational inference for neural networks},
-  author={Graves, Alex},
-  booktitle={Advances in Neural Information Processing Systems},
-  pages={2348--2356},
-  year={2011}
-}
-
-@misc{karpathy2015convnetjs,
-  title={ConvNetJS: Javascript library for deep learning},
-  author={Karpathy, A},
-  year={2015}
-}
-
-@phdthesis{neal1995bayesian,
-  title={Bayesian learning for neural networks},
-  author={Neal, Radford M},
-  year={1995},
-  school={University of Toronto}
-}
-
-@article{kingma2013autoencoding,
-    author    = {Diederik P. Kingma and Max Welling},
-    title     = {Auto-Encoding Variational Bayes},
-    journal   = {International Conference on Learning Representations},
-    year      = {2014}
-}
-
-@inproceedings{rezende2014stochastic,
-  title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models},
-  author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan},
-  booktitle={Proceedings of the 31st International Conference on Machine Learning},
-  pages={1278--1286},
-  year={2014}
-}
-
-@article{rumelhart1986learning,
-  title={Learning representations by back-propagating errors},
-  author={Rumelhart, David E and Hinton, Geoffrey E},
-  journal={Nature},
-  volume={323},
-  pages={9},
-  year={1986}
-}
-
-@inproceedings{kingma2015adam,
-  title={{Adam}: A Method for Stochastic Optimization},
-  year={2015},
-  author={Kingma, Diederik and Ba, Jimmy},
-  booktitle={International Conference on Learning Representations},
-}
-
-@article{hoffman2013stochastic,
-  title={Stochastic variational inference},
-  author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John},
-  journal={The Journal of Machine Learning Research},
-  volume={14},
-  number={1},
-  pages={1303--1347},
-  year={2013}
-}
-
-@inproceedings{schulman2015gradient,
-  title={Gradient estimation using stochastic computation graphs},
-  author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter},
-  booktitle={Advances in Neural Information Processing Systems},
-  pages={3528--3536},
-  year={2015}
-}
-
-@phdthesis{speelpenning1980compiling,
-  title={Compiling Fast Partial Derivatives of Functions Given by Algorithms},
-  author={Speelpenning, Bert},
-  year={1980},
-  school={University of Illinois at Urbana-Champaign}
-}
-
-@article{rall1981automatic,
-  title={Automatic differentiation: Techniques and applications},
-  author={Rall, Louis B},
-  year={1981},
-  publisher={Springer}
-}
-
-@article{robbins1951stochastic,
-  title={A stochastic approximation method},
-  author={Robbins, Herbert and Monro, Sutton},
-  journal={The annals of mathematical statistics},
-  pages={400--407},
-  year={1951}
-}
-
-@article{kucukelbir2016automatic,
-  title={Automatic Differentiation Variational Inference},
-  author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M},
-  journal={arXiv preprint arXiv:1603.00788},
-  year={2016}
-}
-
-@article{paisley2012variational,
-  title={Variational Bayesian inference with stochastic search},
-  author={Paisley, John and Blei, David and Jordan, Michael},
-  journal={arXiv preprint arXiv:1206.6430},
-  year={2012}
-}
-
-@inproceedings{blundell2015weight,
-  title={Weight Uncertainty in Neural Network},
-  author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan},
-  booktitle={International Conference on Machine Learning},
-  pages={1613--1622},
-  year={2015}
-}
-
-@inproceedings{gal2016dropout,
-  title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning},
-  author={Gal, Yarin and Ghahramani, Zoubin},
-  booktitle={international conference on machine learning},
-  pages={1050--1059},
-  year={2016}
-}
-
-@inproceedings{kingma2015variational,
-  title={Variational dropout and the local reparameterization trick},
-  author={Kingma, Diederik P and Salimans, Tim and Welling, Max},
-  booktitle={Advances in Neural Information Processing Systems},
-  pages={2575--2583},
-  year={2015}
-}
+    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} } @misc{karpathy2015convnetjs, title={ConvNetJS:
+    Javascript library for deep learning}, author={Karpathy, A}, year={2015} } @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} } @article{kingma2013autoencoding,
+    author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} } @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and
+    Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} } @article{rumelhart1986learning,
+    title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} } @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization},
+    year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, } @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang,
+    Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} } @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman,
+    John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} } @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions
+    Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois at Urbana-Champaign} } @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981},
+    publisher={Springer} } @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} } @article{kucukelbir2016automatic,
+    title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} } @article{paisley2012variational,
+    title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} } @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural
+    Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015} } @inproceedings{gal2016dropout, title={Dropout as a Bayesian
+    approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016} } @inproceedings{kingma2015variational, title={Variational
+    dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
 </script>
