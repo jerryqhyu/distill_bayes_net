@@ -1,10 +1,6 @@
 function bnn(div, train_loss_div, valid_loss_div, progress_div) {
 
-    // svg properties
-    var div = div;
-    var train_loss_div = train_loss_div;
-    var valid_loss_div = valid_loss_div;
-    var progress_div = progress_div;
+    // + 20 is hotfix for axis labels
     var svg = div.append("svg");
     var svg2 = train_loss_div.append("svg");
     var svg3 = valid_loss_div.append("svg");

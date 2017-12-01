@@ -31,16 +31,15 @@
     <script src="assets/utils.js"></script>
     <H1>Bayesian Neural Networks</H1>
     <p>
-        How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!
+        How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights.
     </p>
 
     <dt-byline></dt-byline>
 
     <h2>The One Sided Coin</h2>
     <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and negative log likelihood for classification tasks. However, there are some problems with
-        this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Optimizing a deep neural network is inherently nonconvex, which means there could be certain 'valleys' in the loss space
-        where the set of weight is stuck in. Various learning algorithms and tricks are proposed to overcome this issue, such as ??? (momentum?). However, they are fundamemtally still considering only one point out of many. But this doesn't have to be
-        the case.</p>
+        this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Various backprop algorithms such as Adam, and other alg i dont know... and tricks, such as momentum (CITEMANIA) are proposed
+        to overcome this issue. However, they are fundamemtally still considering only one point out of many. But this doesn't have to be the case.</p>
 
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
@@ -51,19 +50,19 @@
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
-            A three-layer neural network fitting a small training set (red dots). The green dots show the test set.
+            A three-layer MLP fitting the red dots. The green dots show the test set.
         </figcaption>
     </figure>
 
     <figure style="position:relative; width:984px; height:330px;">
         <section class="container">
             <div id="nn_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
-                <figcaption id="nn_loss_train_title" style="">
+                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
                     Training Loss
                 </figcaption>
             </div>
             <div id="nn_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
-                <figcaption id="nn_loss_test_title" style="position:relative; text-aligh:center;">
+                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
                     Test Loss
                 </figcaption>
             </div>
@@ -84,7 +83,7 @@
     </p>
 
     <p>
-        What if we don't take negative log of the likelihood function? Then the loss space defines a probability distribution of all of the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
+        What if we used probability for the objective function instead? Then the loss space defines a probability distribution over all the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
         confers its importance. We could use Bayes' theorem to express the relationship between the data points and the weights:
     </p>
 
@@ -92,44 +91,46 @@
 
     <p>Where $p(x|w)$ is called likelihood, $p(w)$ prior, and $p(w|x)$ posterior.</p>
 
+    <p>
+        There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
+        learned. With Bayesian neural network, first developed by
+        <dt-cite key="neal1995bayesian"></dt-cite> and
+        <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.
+    </p>
+
     <h3>What about the prior?</h3>
     <p>
-        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. If we assumed the wrong the prior, the model underperforms. However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact that we make predictions in a way that considers all possibilities and not just one. This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution of the parameters.
+        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. If we assumed the wrong the prior, the model underperforms. However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact
+        that we make predictions in a way that considers all possibilities and not just one. This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution
+        of the parameters.
     </p>
     <p>
-        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method. (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights by making them less probable would natually regularize weights.)
+        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method. (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights
+        by making them less probable would natually regularize weights.)
     </p>
     <p>
         To show that Bayesian methods aren't necessarily about priors, in this example we will use an uninformative uniform prior. (ALIGN THE EQUATION)
-        \begin{aligned}$$p(w|x) & = \dfrac{p(x|w)p(w)}{p(w)\int_{w}p(x|w)} \\
-         & = \dfrac{p(x|w)}{\int_{w}p(x|w)} $$\end{aligned}
+        <!-- \\begin{aligned} p(w|x) & = \dfrac{p(x|w)p(w)}{p(w)\int_{w}p(x|w)} \\ & = \dfrac{p(x|w)}{\int_{w}p(x|w)}\\end{aligned} -->
     </p>
-
+    <div>
+        \begin{matrix} a & b \\ c & d \end{matrix}
+    </div>
     <h2>Two Mindsets</h2>
     <h3>Inference</h3>
     <p>
-        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about. On one hand - from people who do predictions for a living - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$. On the other hand, from the probability graphical model community, the latent states of the models are more important than the data points, inference is about discovering the distribution of $w$ from $x, y$. In this sense, <b>inference</b> is more like <b>learning</b>.
+        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about. On one hand - from people who do predictions for a living
+        - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$. On the other hand, from the probabilistic graphical model community, the latent states of the models are more important than the data
+        points, inference is about discovering the distribution of $w$ from $x, y$. In this sense, <b>inference</b> is more like <b>learning</b>.
     </p>
     <h3>Exact Inference</h3>
     <p>
-        Notice that Bayes theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution from which you could
-        sample the perfect distribution of w given the data points x. So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
+        Notice that Bayes' theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution
+        from which you could sample the perfect distribution of w given the data points x. So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
     </p>
     <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{\int_{w}p(x|w)p(w)}$$</div>
     <p>
-        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible. Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov chain monte carlo blahblah.... converges to the exact posterior.....somethingsomething
-    </p>
-    <p>
-        There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
-        learned.
-    </p>
-    <div id="exacttex">$$p(w|x)\ vs\ q(w|x) \sim \dfrac{1}{\sqrt{(2\pi)^k|\Sigma|}}exp(-\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x-\mu))$$</div>
-
-    <p>
-        But why do we have to choose one particular set of weights? There are usually many different sets of weights that are compatible with the data. Bayesian methods keep around <i>all possible</i> weights, and weight them in proportion to how well
-        they fit the data. Bayesian neural networks were first developed by
-        <dt-cite key="neal1995bayesian"></dt-cite> and
-        <dt-cite key="graves2011practical"></dt-cite>
+        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible. Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov
+        chain monte carlo blahblah.... converges to the exact posterior.....somethingsomething
     </p>
 
     <!-- Exact Inference figures -->
@@ -142,7 +143,7 @@
 
     <figure style="position:relative; width:984px; height:400px;">
         <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
-            <figcaption id="exact_train_loss_title">
+            <figcaption id="exact_train_loss_title" style="position:relative; text-align:center;right:10px">
                 Training Loss
             </figcaption>
         </div>
@@ -159,7 +160,13 @@
 
     <h3>Variational Inference</h3>
     <p>
-        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates the intractable one, we can use the tractable distribution to make predictions or measure uncertainty.
+        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates
+        the intractable one, we can use the tractable distribution to make predictions or measure uncertainty within an tractable time complexity.
+    </p>
+    <p>
+        Lets define $p$ as the true distribution and $q$ to be the million-gaussian we use to approximate $p$. We call it a variational distribution. We want $q$ to be close to $p$, but what does it mean for two probability distributions to be close to each other,
+        in other words, if we define a loss function that describes the closeness of two distributions, what properties are desired? For starters, if $p = q$, the loss should be 0, also if $p$ and $q$ assign a different probability to the same point,
+        we want to punish it by assigning a large loss. Kullback Leibler divergence is such a measure, PUT EQUATION AND HOW ITS ASYMMETRIC HERE.
     </p>
 
 
@@ -173,10 +180,14 @@
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
         </div>
         <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The grey area represents the Kullback Leibler divergence, the orange is Jensen Shannon divergence. Try to minimize the
-            areas. Do these measures agree?
+            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The dark green area represents KL divergence, dark red is reverse KL, orange is Jensen Shannon divergence. Try to minimize
+            the areas. Do these measures agree?
         </figcaption>
     </figure>
+
+    <p>
+        Using a variational method come with other perks as well: with a clearly defined, continuously differentiable objective, we could use gradient-based methods and optimizers off the shelf.
+    </p>
 
     <!-- Variational Inference Layer -->
     <figure style="position:relative; width:984px; height:330px;">
@@ -194,12 +205,12 @@
     <figure style="position:relative; width:984px; height:750px;">
         <section class="container">
             <div id="var_loss_train" style="position:relative; float:left; width: 320px; height: 320px;">
-                <figcaption id="var_loss_train_title">
+                <figcaption id="var_loss_train_title" style="position:relative; text-align:center;right:10px">
                     Training Loss
                 </figcaption>
             </div>
             <div id="var_loss_valid" style="position:relative; margin-left: 684px; width: 320px; height: 320px;">
-                <figcaption id="var_loss_valid_title">
+                <figcaption id="var_loss_valid_title" style="position:relative; text-align:center;right:10px">
                     Test Loss
                 </figcaption>
             </div>
@@ -213,6 +224,65 @@
             What if you sampled from the learned distribution?
         </figcaption>
     </figure>
+    <h3>Expression of Uncertainty</h3>
+    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data, we could see that it is possible for them to have similar fit, but predicts drastically differently.</p>
+
+    <figure style="position:relative; width:984px; height:350px;">
+        <figcaption id="disagree">
+            Two Nets Duking it Out
+        </figcaption>
+        <div id="dis_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <figcaption id="dis_caption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 330px;">
+            Two nets that wants to punch each other in the face.
+        </figcaption>
+    </figure>
+
+    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability. However, that is not the type of uncertainty we are talking about here, what we really want is for the network to be uncertain of itself.</p>
+
+    <figure style="position:relative; width:984px; height:350px;">
+        <figcaption id="disagree">
+            A Change in Perspective
+        </figcaption>
+        <div id="uncertain_mlp" style="position:relative; float:left; width:485px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <div id="uncertain_bnn" style="position:relative; margin-left: 499px; width:485px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <button type="button" name="uncertain_train" onclick="uncertainty.train()">Train</button>
+        <button type="button" name="uncertain_reset" onclick="uncertainty.reset()">Reset</button>
+    </figure>
+
+    <h3>Automatic Differentiation Variational Inference</h3>
+    <p>
+        The reparameterization trick
+        <dt-cite key="kingma2013autoencoding"></dt-cite>
+        <dt-cite key="rezende2014stochastic"></dt-cite>
+
+        ADVI
+        <dt-cite key="kucukelbir2016automatic"></dt-cite>
+
+        Bayes by backprop
+        <dt-cite key="blundell2015weight"></dt-cite>
+    </p>
+
+    <H3>Connection to Dropout</H3>
+    <p>
+        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
+        <dt-cite key="kingma2015variational"></dt-cite>
+        <dt-cite key="gal2016dropout"></dt-cite>
+    </p>
+
+    <H3>Connection to Ensembles</H3>
+    <p>
+        asdf
+    </p>
+
+    <H3>Connection to Gradient Noise</H3>
+    <p>
+        asdf
+    </p>
+
+    <p>
+        Our implementation is based on
+        <dt-cite key="karpathy2015convnetjs"></dt-cite>
+    </p>
 
     <script src="assets/lib/parameters.js"></script>
     <script src="assets/lib/plotter.js"></script>
@@ -220,6 +290,7 @@
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/mlp.js"></script>
     <script src="assets/lib/bnn.js"></script>
+    <script src="assets/lib/uncertainty.js"></script>
     <script src="assets/lib/sampler.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
@@ -270,42 +341,9 @@
 
         // variational inference
         var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
+
+        var uncertainty = uncertainty(d3.select("#dis_full"), d3.select("#uncertain_mlp"), d3.select("#uncertain_bnn"))
     </script>
-
-    <h3>Automatic Differentiation Variational Inference</h3>
-    <p>
-        The reparameterization trick
-        <dt-cite key="kingma2013autoencoding"></dt-cite>
-        <dt-cite key="rezende2014stochastic"></dt-cite>
-
-        ADVI
-        <dt-cite key="kucukelbir2016automatic"></dt-cite>
-
-        Bayes by backprop
-        <dt-cite key="blundell2015weight"></dt-cite>
-    </p>
-
-    <H3>Connection to Dropout</H3>
-    <p>
-        Dropout can be seen as an approximation to stochastic variational inference, where we add weights that can turn off each unit entirely, and integrate out these weights.
-        <dt-cite key="kingma2015variational"></dt-cite>
-        <dt-cite key="gal2016dropout"></dt-cite>
-    </p>
-
-    <H3>Connection to Ensembles</H3>
-    <p>
-        asdf
-    </p>
-
-    <H3>Connection to Gradient Noise</H3>
-    <p>
-        asdf
-    </p>
-
-    <p>
-        Our implementation is based on
-        <dt-cite key="karpathy2015convnetjs"></dt-cite>
-    </p>
 </dt-article>
 
 <dt-appendix>
@@ -322,6 +360,16 @@
                 {
                     left: "$",
                     right: "$",
+                    display: false
+                },
+                {
+                    left: "\\\\",
+                    right: "\\\\",
+                    display: true
+                },
+                {
+                    left: "\\",
+                    right: "\\",
                     display: false
                 },
             ]
