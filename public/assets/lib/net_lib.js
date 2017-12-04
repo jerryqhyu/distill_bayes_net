@@ -658,7 +658,7 @@ var net_lib = net_lib || {
                 for (var d = 0; d < this.num_inputs; d++) {
                     a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
                 }
-                a += this.biases.w[i] + seed[2];
+                a += this.biases.w[i] + seed[seed.length - 1];
                 A.w[i] = a;
             }
             this.out_act = A;
@@ -1274,13 +1274,14 @@ var net_lib = net_lib || {
             for (var i = 0; i < seeds.length; i++) {
                 var act = this.layers[0].forward(V, false);
                 for (var j = 1; j < this.layers.length; j++) {
-                    if (i == 1 && j == 2) {
-                        console.log("");
-                        console.log(act);
-                        console.log("");
-                    }
                     if (this.layers[j].layer_type === 'variational') {
+                        if (i == 1 && j == 1) {
+                            console.log(act);
+                        }
                         act = this.layers[j].specialForward(act, seeds[i]);
+                        if (i == 1 && j == 1) {
+                            console.log(act);
+                        }
                     } else {
                         act = this.layers[j].forward(act, false);
                     }

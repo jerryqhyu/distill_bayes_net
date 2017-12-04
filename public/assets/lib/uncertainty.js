@@ -15,18 +15,30 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
 
     //define a neural network
     var mlp = make_preset_net('mlp');
+    console.log(mlp.getLayer(1).filters);
+    console.log(mlp.getLayer(3).filters);
+    console.log(mlp.getLayer(5).filters);
+    console.log(mlp.getLayer(7).filters);
     var bnn = make_preset_net('bnn');
+    bnn.getLayer(1).setMeans(param.opt_layer1_m);
+    bnn.getLayer(3).setMeans(param.opt_layer3_m);
+    bnn.getLayer(5).setMeans(param.opt_layer5_m);
+    bnn.getLayer(7).setWeights(param.opt_layer7_m);
+    console.log(bnn.getLayer(1).mu);
+    console.log(bnn.getLayer(3).mu);
+    console.log(bnn.getLayer(5).mu);
+    console.log(bnn.getLayer(7).filters);
 
     var mlp_trainer = new net_lib.Trainer(mlp, {
         method: 'sgd',
-        learning_rate: param.learning_rate,
+        learning_rate: param.learning_rate / 10,
         momentum: param.momentum,
         batch_size: param.batch_size
     });
 
     var bnn_trainer = new net_lib.Trainer(bnn, {
         method: 'sgd',
-        learning_rate: param.learning_rate,
+        learning_rate: param.learning_rate / 10,
         momentum: param.momentum,
         batch_size: param.batch_size
     });
@@ -51,7 +63,6 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
         }
         clear();
         plot();
-        epoch_count++;
     }
 
     function setup() {
@@ -83,14 +94,21 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
     }
 
     function reset() {
-        net = make_preset_net();
-        trainer = new net_lib.Trainer(net, {
+        mlp = make_preset_net('mlp');
+        bnn = make_preset_net('bnn');
+        mlp_trainer = new net_lib.Trainer(mlp, {
             method: 'sgd',
-            learning_rate: param.learning_rate,
-            momentum: param.momentum,
+            learning_rate: param.learning_rate / 10,
+            momentum: 0,
             batch_size: param.batch_size
         });
-        avg_loss = [];
+
+        bnn_trainer = new net_lib.Trainer(bnn, {
+            method: 'sgd',
+            learning_rate: param.learning_rate / 10,
+            momentum: 0,
+            batch_size: param.batch_size
+        });
         clear();
         plot();
         pause_training();
@@ -140,8 +158,6 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
                 id: "#float"
             });
         }
-        console.log(mlp_pred);
-        console.log(bnn_pred);
     }
 
     function enum_points() {
@@ -168,12 +184,12 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
         var predicted_values;
         var x_val;
         var pred = [];
-        for (var i = 0; i < param.seeds.length; i++) {
+        for (var i = 0; i < param.seeds_uncertainty.length; i++) {
             pred.push([]);
         }
         for (var i = 0; i < x.length; i++) {
             x_val = new net_lib.Vol([x[i]]);
-            predicted_values = net.variationalForward(x_val, param.seeds);
+            predicted_values = net.variationalForward(x_val, param.seeds_uncertainty);
             for (var j = 0; j < param.seeds.length; j++) {
                 pred[j].push({x: x[i], y: predicted_values[j].w[0]});
             }
@@ -181,16 +197,17 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
         return pred;
     }
 
+    function pause_training() {
+        if (timer) {
+            timer.stop();
+            timer = undefined;
+        }
+    }
 
     function clear() {
         svg1.select("#float").selectAll("*").remove();
         svg2.select("#float").selectAll("*").remove();
         svg3.select("#float").selectAll("*").remove();
-    }
-
-    function on_drag(d) {
-        d3.select(this).raise().classed("active", true);
-        pause_training();
     }
 
     return {train: train, reset: reset};
