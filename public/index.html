@@ -36,10 +36,14 @@
 
     <dt-byline></dt-byline>
 
-    <h2>The One Sided Coin</h2>
-    <p>Current deep learning methods learn one set of weight in a vast weight space, optimized against a loss function, usually squared error for regression tasks and negative log likelihood for classification tasks. However, there are some problems with
-        this approach: as we add nonlinearities to make neural networks much more powerful, the optimization job becomes much harder. Various backprop algorithms such as Adam, and other alg i dont know... and tricks, such as momentum (CITEMANIA) are proposed
-        to overcome this issue. However, they are fundamemtally still considering only one point out of many. But this doesn't have to be the case.</p>
+    <h2>Visualizing Overfitting</h2>
+    <p>Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function.
+        Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set works poorly on the unseen test set, which we call <i>overfitting.</i>
+   </p>
+
+    <p>One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set.
+        Below, we can see this happen when fitting the weights of a neural network.
+   </p>
 
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
@@ -50,7 +54,7 @@
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
-            A three-layer MLP fitting the red dots. The green dots show the test set.
+A three-layer MLP fitting the training set (red dots). Green dots show the test set.
         </figcaption>
     </figure>
 
@@ -73,18 +77,29 @@
     </figure>
 
     <p>
-        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer.
+        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
     </p>
 
-    <h3>Sketching the Idea</h3>
+    <h3>Regularization</h3>
     <p>
-        So what do we really want? We want a model that considers all possible weights. Also, since not all weights produce the same loss, we want a way to weigh them based on importance. If we view learning like descending a valley, we want the model to survey
-        the entire landscape, instead of descending the first deep trough it sees.
+        One approach to avoiding overfitting is to regularize the weights, or choose a small model.
+        This usually helps, but this approach still considers only set of weights when making predictions. But this doesn't have to be the case.
+    </p>
+
+    <h2>Bayesian Inference</h2>
+    <p>
+        Another approach to making predictions would be to considers all possible sets of weights.
+        Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit.
+        If we view learning like descending a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
     </p>
 
     <p>
-        What if we used probability for the objective function instead? Then the loss space defines a probability distribution over all the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
-        confers its importance. We could use Bayes' theorem to express the relationship between the data points and the weights:
+        One way to keep track of the relative importance given to each set of weights 
+        Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead?
+        Then the loss space defines a probability distribution over all the weights.
+        This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
+        confers its importance.
+        We could use Bayes' theorem to express the relationship between the data points and the weights:
     </p>
 
     <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{p(x)}$$</div>
