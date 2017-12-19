@@ -143,14 +143,14 @@ function mlp(div, train_loss_div, valid_loss_div) {
         curve_plotter.plot_points(training_points_data, {
             stroke: "red",
             color: "red",
-            width: 3,
+            size: 4,
             opacity: 1,
             id: "#fixed"
         });
         curve_plotter.plot_points(validation_points_data, {
             stroke: "green",
             color: "green",
-            width: 3,
+            size: 4,
             opacity: 0.5,
             id: "#fixed"
         });
@@ -212,7 +212,7 @@ function mlp(div, train_loss_div, valid_loss_div) {
         }
         curve_plotter.plot_line(pred, {
             color: "darkorange",
-            width: 2,
+            width: 3,
             opacity: 1,
             id: "#float"
         });

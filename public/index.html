@@ -94,7 +94,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
     </p>
 
     <p>
-        One way to keep track of the relative importance given to each set of weights 
+        One way to keep track of the relative importance given to each set of weights
         Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead?
         Then the loss space defines a probability distribution over all the weights.
         This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
@@ -240,17 +240,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
         </figcaption>
     </figure>
     <h3>Expression of Uncertainty</h3>
-    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data, we could see that it is possible for them to have similar fit, but predicts drastically differently.</p>
-
-    <figure style="position:relative; width:984px; height:350px;">
-        <figcaption id="disagree">
-            Two Nets Duking it Out
-        </figcaption>
-        <div id="dis_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
-        <figcaption id="dis_caption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 330px;">
-            Two nets that wants to punch each other in the face.
-        </figcaption>
-    </figure>
+    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle part where training data is not available. We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
 
     <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability. However, that is not the type of uncertainty we are talking about here, what we really want is for the network to be uncertain of itself.</p>
 
@@ -357,7 +347,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
         // variational inference
         var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
 
-        var uncertainty = uncertainty(d3.select("#dis_full"), d3.select("#uncertain_mlp"), d3.select("#uncertain_bnn"))
+        var uncertainty = uncertainty(d3.select("#uncertain_mlp"), d3.select("#uncertain_bnn"))
     </script>
 </dt-article>
 

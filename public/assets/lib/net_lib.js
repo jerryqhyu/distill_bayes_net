@@ -1275,13 +1275,7 @@ var net_lib = net_lib || {
                 var act = this.layers[0].forward(V, false);
                 for (var j = 1; j < this.layers.length; j++) {
                     if (this.layers[j].layer_type === 'variational') {
-                        if (i == 1 && j == 1) {
-                            console.log(act);
-                        }
                         act = this.layers[j].specialForward(act, seeds[i]);
-                        if (i == 1 && j == 1) {
-                            console.log(act);
-                        }
                     } else {
                         act = this.layers[j].forward(act, false);
                     }
