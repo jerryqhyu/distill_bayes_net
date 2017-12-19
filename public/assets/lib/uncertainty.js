@@ -1,29 +1,34 @@
-function uncertainty(disagree_div, mlp_div, bnn_div) {
+function uncertainty(mlp_div, bnn_div) {
 
     // svg properties
-    var svg1 = disagree_div.append("svg");
-    var svg2 = mlp_div.append("svg");
-    var svg3 = bnn_div.append("svg");
-    svg1.attr("width", param.w).attr("height", param.h);
+    var svg1 = mlp_div.append("svg");
+    var svg2 = bnn_div.append("svg");
+    svg1.attr("width", param.w_uncertain + 20).attr("height", param.h_uncertain + 20);
     svg2.attr("width", param.w_uncertain + 20).attr("height", param.h_uncertain + 20);
-    svg3.attr("width", param.w_uncertain + 20).attr("height", param.h_uncertain + 20);
 
     // plotters
-    var disagree_plotter = Plotter(svg1, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
-    var mlp_plotter = Plotter(svg2, param.uncertain_domain_x, param.uncertain_domain_y, param.w_uncertain, param.h_uncertain);
-    var bnn_plotter = Plotter(svg3, param.uncertain_domain_x, param.uncertain_domain_y, param.w_uncertain, param.h_uncertain);
+    var mlp_plotter = Plotter(svg1, param.uncertain_domain_x, param.uncertain_domain_y, param.w_uncertain, param.h_uncertain);
+    var bnn_plotter = Plotter(svg2, param.uncertain_domain_x, param.uncertain_domain_y, param.w_uncertain, param.h_uncertain);
 
     //define a neural network
     var mlp = make_preset_net('mlp');
-    console.log(mlp.getLayer(1).filters);
-    console.log(mlp.getLayer(3).filters);
-    console.log(mlp.getLayer(5).filters);
-    console.log(mlp.getLayer(7).filters);
+    mlp.getLayer(1).setWeights(param.opt_layer1_w);
+    mlp.getLayer(3).setWeights(param.opt_layer3_w);
+    mlp.getLayer(5).setWeights(param.opt_layer5_w);
+    mlp.getLayer(7).setWeights(param.opt_layer7_w);
+    mlp.getLayer(1).setBiases(param.opt_layer1_b);
+    mlp.getLayer(3).setBiases(param.opt_layer3_b);
+    mlp.getLayer(5).setBiases(param.opt_layer5_b);
+    mlp.getLayer(7).setBiases(param.opt_layer7_b);
     var bnn = make_preset_net('bnn');
-    bnn.getLayer(1).setMeans(param.opt_layer1_m);
-    bnn.getLayer(3).setMeans(param.opt_layer3_m);
-    bnn.getLayer(5).setMeans(param.opt_layer5_m);
-    bnn.getLayer(7).setWeights(param.opt_layer7_m);
+    bnn.getLayer(1).setMeans(param.opt_layer1_w);
+    bnn.getLayer(3).setMeans(param.opt_layer3_w);
+    bnn.getLayer(5).setMeans(param.opt_layer5_w);
+    bnn.getLayer(7).setWeights(param.opt_layer7_w);
+    bnn.getLayer(1).setBiases(param.opt_layer1_b);
+    bnn.getLayer(3).setBiases(param.opt_layer3_b);
+    bnn.getLayer(5).setBiases(param.opt_layer5_b);
+    bnn.getLayer(7).setBiases(param.opt_layer7_b);
     console.log(bnn.getLayer(1).mu);
     console.log(bnn.getLayer(3).mu);
     console.log(bnn.getLayer(5).mu);
@@ -31,14 +36,14 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
 
     var mlp_trainer = new net_lib.Trainer(mlp, {
         method: 'sgd',
-        learning_rate: param.learning_rate / 10,
+        learning_rate: param.learning_rate,
         momentum: param.momentum,
         batch_size: param.batch_size
     });
 
     var bnn_trainer = new net_lib.Trainer(bnn, {
         method: 'sgd',
-        learning_rate: param.learning_rate / 10,
+        learning_rate: param.learning_rate,
         momentum: param.momentum,
         batch_size: param.batch_size
     });
@@ -66,10 +71,8 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
     }
 
     function setup() {
-        disagree_plotter.add_group("fixed");
         mlp_plotter.add_group("fixed");
         bnn_plotter.add_group("fixed");
-        disagree_plotter.add_group("float");
         mlp_plotter.add_group("float");
         bnn_plotter.add_group("float");
         bnn.getLayer(1).setBiases([0.922587  ,  0.03994551,  0.56162082, 0.37874806,  0.27763538]);
@@ -84,9 +87,9 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
         layertype = type === 'bnn' ? 'variational' : 'fc';
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: layertype, num_neurons: 5, activation: 'tanh'});
-        layer_defs.push({type: layertype, num_neurons: 5, activation: 'tanh'});
-        layer_defs.push({type: layertype, num_neurons: 5, activation: 'tanh'});
+        layer_defs.push({type: layertype, num_neurons: 2, activation: 'tanh'});
+        layer_defs.push({type: layertype, num_neurons: 4, activation: 'tanh'});
+        layer_defs.push({type: layertype, num_neurons: 4, activation: 'tanh'});
         layer_defs.push({type: 'regression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
@@ -95,7 +98,23 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
 
     function reset() {
         mlp = make_preset_net('mlp');
+        mlp.getLayer(1).setWeights([[-0.3], [-0.3]]);
+        mlp.getLayer(3).setWeights(param.opt_layer3_w);
+        mlp.getLayer(5).setWeights(param.opt_layer5_w);
+        mlp.getLayer(7).setWeights(param.opt_layer7_w);
+        mlp.getLayer(1).setBiases(param.opt_layer1_b);
+        mlp.getLayer(3).setBiases(param.opt_layer3_b);
+        mlp.getLayer(5).setBiases(param.opt_layer5_b);
+        mlp.getLayer(7).setBiases(param.opt_layer7_b);
         bnn = make_preset_net('bnn');
+        bnn.getLayer(1).setMeans(param.opt_layer1_w);
+        bnn.getLayer(3).setMeans(param.opt_layer3_w);
+        bnn.getLayer(5).setMeans(param.opt_layer5_w);
+        bnn.getLayer(7).setWeights(param.opt_layer7_w);
+        bnn.getLayer(1).setBiases(param.opt_layer1_b);
+        bnn.getLayer(3).setBiases(param.opt_layer3_b);
+        bnn.getLayer(5).setBiases(param.opt_layer5_b);
+        bnn.getLayer(7).setBiases(param.opt_layer7_b);
         mlp_trainer = new net_lib.Trainer(mlp, {
             method: 'sgd',
             learning_rate: param.learning_rate / 10,
@@ -158,6 +177,17 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
                 id: "#float"
             });
         }
+        mean = [];
+        for (var i = -7.5; i <= 7.5; i += param.step_size) {
+            x_val = new net_lib.Vol([i]);
+            predicted_value = bnn.forward(x_val);
+            mean.push({x: i, y: predicted_value.w[0]});
+        }
+        bnn_plotter.plot_line(mean, {
+            color: "red",
+            width: 2,
+            id: "#float"
+        });
     }
 
     function enum_points() {
@@ -207,7 +237,6 @@ function uncertainty(disagree_div, mlp_div, bnn_div) {
     function clear() {
         svg1.select("#float").selectAll("*").remove();
         svg2.select("#float").selectAll("*").remove();
-        svg3.select("#float").selectAll("*").remove();
     }
 
     return {train: train, reset: reset};
