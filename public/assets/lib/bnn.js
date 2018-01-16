@@ -245,7 +245,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         var isocontours = [];
         for (var i = 0; i < 5; i++) {
             isocontours.push([]);
-            for (var t = 0; t < 6.3; t += param.step_size) {
+            for (var t = 0; t <= Math.PI * 2; t += param.step_size) {
                 isocontours[i].push({
                     x: mean[0] + i * std[0] * Math.cos(t),
                     y: mean[1] + i * std[1] * Math.sin(t)

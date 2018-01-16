@@ -19,6 +19,8 @@ param = {
     l2_decay: 0,
     momentum: 0.95,
     batch_size: 16,
+    divergence_curve_domain_x: [-12, 12],
+    divergence_curve_domain_y: [-0.15, 0.5],
     curve_domain_x: [
         -5, 5
     ],

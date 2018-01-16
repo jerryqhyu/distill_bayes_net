@@ -13,14 +13,8 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
 <script type="text/front-matter">
-    title: "Bayesian Neural Networks"
-    description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!"
-    authors:
-    - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
-    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
-    affiliations:
-    - University of Toronto
-    - University of Toronto
+    title: "Bayesian Neural Networks" description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!" authors: - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
+    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/ affiliations: - University of Toronto - University of Toronto
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -37,13 +31,12 @@
     <dt-byline></dt-byline>
 
     <h2>Visualizing Overfitting</h2>
-    <p>Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function.
-        Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set works poorly on the unseen test set, which we call <i>overfitting.</i>
-   </p>
+    <p>Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function. Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set
+        works poorly on the unseen test set, which we call <i>overfitting.</i>
+    </p>
 
-    <p>One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set.
-        Below, we can see this happen when fitting the weights of a neural network.
-   </p>
+    <p>One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set. Below, we can see this happen when fitting the weights of a neural network.
+    </p>
 
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
@@ -54,7 +47,7 @@
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
-A three-layer MLP fitting the training set (red dots). Green dots show the test set.
+            A three-layer MLP fitting the training set (red dots). Green dots show the test set.
         </figcaption>
     </figure>
 
@@ -82,24 +75,19 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
 
     <h3>Regularization</h3>
     <p>
-        One approach to avoiding overfitting is to regularize the weights, or choose a small model.
-        This usually helps, but this approach still considers only set of weights when making predictions. But this doesn't have to be the case.
+        One approach to avoiding overfitting is to regularize the weights, or choose a small model. This usually helps, but this approach still considers only set of weights when making predictions. But this doesn't have to be the case.
     </p>
 
     <h2>Bayesian Inference</h2>
     <p>
-        Another approach to making predictions would be to considers all possible sets of weights.
-        Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit.
-        If we view learning like descending a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
+        Another approach to making predictions would be to considers all possible sets of weights. Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit. If we view learning like descending
+        a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
     </p>
 
     <p>
-        One way to keep track of the relative importance given to each set of weights
-        Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead?
-        Then the loss space defines a probability distribution over all the weights.
-        This gives us the ability to sample from the space, and the probability of each weight being sampled automatically
-        confers its importance.
-        We could use Bayes' theorem to express the relationship between the data points and the weights:
+        One way to keep track of the relative importance given to each set of weights Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead? Then the loss space defines a probability
+        distribution over all the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically confers its importance. We could use Bayes' theorem to express the relationship between the data
+        points and the weights:
     </p>
 
     <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{p(x)}$$</div>
@@ -184,10 +172,14 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
         we want to punish it by assigning a large loss. Kullback Leibler divergence is such a measure, PUT EQUATION AND HOW ITS ASYMMETRIC HERE.
     </p>
 
-
     <!-- KL divergence figure -->
-    <figure style="position:relative; width:984px; height:400px;">
-        <div id="curve" style="position:relative; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+    <figure style="position:relative; width:1100px; height:400px;">
+        <div id="curve" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <form style="position:relative; margin-left: 984px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
+            <input type="radio" name="divergence_type" value="KL"> KL<br>
+            <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
+            <input type="radio" name="divergence_type" value="JS"> JS
+        </form>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
         </div>
@@ -240,11 +232,14 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
         </figcaption>
     </figure>
     <h3>Expression of Uncertainty</h3>
-    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle part where training data is not available. We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
+    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle
+        part where training data is not available. We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
 
-    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability. However, that is not the type of uncertainty we are talking about here, what we really want is for the network to be uncertain of itself.</p>
+    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability. However, that is not the type of uncertainty we are talking about here, what we really want
+        is for the network to be uncertain of itself.</p>
 
-    <figure style="position:relative; width:984px; height:350px;">
+    <p> The variance figure is removed for now. </p>
+    <!-- <figure style="position:relative; width:984px; height:350px;">
         <figcaption id="disagree">
             A Change in Perspective
         </figcaption>
@@ -252,7 +247,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
         <div id="uncertain_bnn" style="position:relative; margin-left: 499px; width:485px; height:300px; bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <button type="button" name="uncertain_train" onclick="uncertainty.train()">Train</button>
         <button type="button" name="uncertain_reset" onclick="uncertainty.reset()">Reset</button>
-    </figure>
+    </figure> -->
 
     <h3>Automatic Differentiation Variational Inference</h3>
     <p>
@@ -291,7 +286,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
 
     <script src="assets/lib/parameters.js"></script>
     <script src="assets/lib/plotter.js"></script>
-    <script src="assets/lib/gaussian_curve.js"></script>
+    <script src="assets/lib/divergence.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/mlp.js"></script>
     <script src="assets/lib/bnn.js"></script>
@@ -302,19 +297,19 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
     <script src="assets/iterates.js"></script>
     <script>
         //DIVERGENCES
-        var curve = GaussianCurve(0, 1, d3.select("#curve"));
+        var divergence_curve = divergence(d3.select("#curve"), 0, 1);
         var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
 
         var sliderc = sliderGen([230, 40])
-            .ticks([0, 5, 10, 15, 20])
+            .ticks([0, 3, 6, 9, 12])
             .ticktitles(function(d, i) {
-                return ["-10", "-5", "0", "5", "10"][i]
+                return ["-6", "-3", "0", "3", "6"][i]
             })
             .change(function(i) {
-                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 10).toPrecision(2))
-                curve.update(getmean() - 10, sdScaler(getsd()))
+                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 6).toPrecision(2))
+                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
             })
-            .startxval(10)
+            .startxval(6)
             .cRadius(7)
             .shifty(-12)
             .margins(20, 20)
@@ -325,7 +320,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
             })
             .change(function(i) {
                 d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2))
-                curve.update(getmean() - 10, sdScaler(getsd()))
+                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
             })
             .cRadius(7)
             .shifty(-12)
@@ -334,7 +329,7 @@ A three-layer MLP fitting the training set (red dots). Green dots show the test 
 
         var getmean = sliderc(d3.select("#slider3")).xval
         var getsd = sliderd(d3.select("#slider4")).xval
-        curve.drawLine();
+        divergence_curve.draw_line();
 
         // NN on sine
         var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
