@@ -1,4 +1,8 @@
-function Plotter(svg, domain_x, domain_y, width, height) {
+function Plotter(svg, domain_x, domain_y, width, height, clamp) {
+
+    clamp = typeof(clamp) === 'undefined'
+        ? true
+        : false;
 
     // svg properties
     var svg = svg;
@@ -11,8 +15,8 @@ function Plotter(svg, domain_x, domain_y, width, height) {
     // scales from domain/range to width/height of the svg
     var x_scale = d3.scaleLinear().domain(domain_x).range([0, width]);
     var y_scale = d3.scaleLinear().domain(domain_y).range([height, 0]);
-    x_scale.clamp(true);
-    y_scale.clamp(true);
+    x_scale.clamp(clamp);
+    y_scale.clamp(clamp);
 
     // a line scale
     var line = d3.line().x(function(d) {

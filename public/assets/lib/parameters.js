@@ -368,6 +368,7 @@ param = {
 };
 
 // scales
+
 var inv_x_scale = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
 inv_x_scale.clamp(true);
 

@@ -13,10 +13,16 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
 <script type="text/front-matter">
-    title: "Bayesian Neural Networks" 
-    description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and gives us unceratinty estimates." 
-    authors: - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/ - Elliot Creager: http://www.cs.toronto.edu/~creager/ - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/ 
-    affiliations: - University of Toronto - University of Toronto - University of Toronto
+    title: "Bayesian Neural Networks"
+    description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and gives us unceratinty estimates."
+    authors:
+    - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
+    - Elliot Creager: http://www.cs.toronto.edu/~creager/
+    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
+    affiliations:
+    - University of Toronto
+    - University of Toronto
+    - University of Toronto
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -27,19 +33,19 @@
     <script src="assets/utils.js"></script>
     <H1>Bayesian Neural Networks</H1>
     <p>
-    Bayesian inference allows us to learn a probability distribution over possible neural network models. 
+    Bayesian inference allows us to learn a probability distribution over possible neural network models.
     This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
     </p>
 
     <h2>What's wrong with neural networks?</h2>
     <p>
-    You may have heard deep neural networks described as <i>powerful function approximators</i>. 
-    Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via automatic differentiation (a.k.a. the backpropagation algorithm). 
+    You may have heard deep neural networks described as <i>powerful function approximators</i>.
+    Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via automatic differentiation (a.k.a. the backpropagation algorithm).
     Because they are good at approximating functions (input-output relationships) when data are available, they are well-suited to many artificial intelligence tasks like speech recognition and image classification.
     </p>
 
     <p>
-    But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>. 
+    But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>.
     Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by minimizing its <i>loss function</i>&mdash;that the performance on new examples suffers.
     Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
     Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
@@ -47,15 +53,19 @@
 
     <dt-byline></dt-byline>
     <!-- Regular MLP figure -->
-    <figure style="position:relative; width:984px; height:350px;">
+    <figure style="position:relative; width:1100px; height:350px;">
         <figcaption id="NN_caption">
             Neural Network
         </figcaption>
-        <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <div id="nn_full" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+        <form style="position:relative; margin-left: 984px;" onclick="mlp.update()">
+            <input type="radio" name="net_type" value="nonlinear"> Non-linear<br>
+            <input type="radio" name="net_type" value="linear"> Linear<br>
+        </form>
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
-            A three-layer MLP fitting the training set (red dots). Green dots show the test set.
+            Different models fitting the training set (red dots). Green dots show the test set.
         </figcaption>
     </figure>
 
@@ -94,10 +104,10 @@
    <h2>Bayesian inference to the rescue</h2>
     <p>
     Any machine learning model can potentially suffer from overfitting.
-    Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting. 
-    
+    Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
+
     </p>
- 
+
     <p>
         Another approach to making predictions would be to considers all possible sets of weights.
         Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit.
