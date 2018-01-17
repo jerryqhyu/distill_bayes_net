@@ -13,8 +13,10 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 
 <script type="text/front-matter">
-    title: "Bayesian Neural Networks" description: "How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights!" authors: - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
-    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/ affiliations: - University of Toronto - University of Toronto
+    title: "Bayesian Neural Networks" 
+    description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and gives us unceratinty estimates." 
+    authors: - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/ - Elliot Creager: http://www.cs.toronto.edu/~creager/ - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/ 
+    affiliations: - University of Toronto - University of Toronto - University of Toronto
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -25,12 +27,28 @@
     <script src="assets/utils.js"></script>
     <H1>Bayesian Neural Networks</H1>
     <p>
-How do we prevent neural networks from overfitting? 
-We can avoid trying to choose a single best set of weights, and instead average over all posible weights.
+    By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. 
+    This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
     </p>
 
     <dt-byline></dt-byline>
 
+    <h2>What's wrong with neural networks?</h2>
+    <p>
+    You may have heard deep neural networks described as powerful, general-purpose function approximators. 
+    Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via automatic differentiation (a.k.a. the backpropagation algorithm). 
+    Because they are good at approximating functions (input-output relationships) when data are available, they are well-suited to many artificial intelligence tasks like speech recognition and image classification.
+    </p>
+    <p>
+    But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to overfitting. 
+    Overfitting happens when the learning algorithm does such a good job of tuning the model parameter for performance on the training set that the performance on the test set (and unseen real-world examples) suffers.
+    Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
+    Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
+    </p>
+    <h2>Bayesian inference to the rescue</h2>
+    <p>
+    ...
+    </p>
     <h2>Visualizing Overfitting</h2>
     <p>
     Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function.
