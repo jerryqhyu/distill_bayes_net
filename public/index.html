@@ -25,17 +25,21 @@
     <script src="assets/utils.js"></script>
     <H1>Bayesian Neural Networks</H1>
     <p>
-        How do we prevent neural networks from overfitting? We can avoid trying to choose a single best set of weights, and instead average over all posible weights.
+How do we prevent neural networks from overfitting? 
+We can avoid trying to choose a single best set of weights, and instead average over all posible weights.
     </p>
 
     <dt-byline></dt-byline>
 
     <h2>Visualizing Overfitting</h2>
-    <p>Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function. Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set
-        works poorly on the unseen test set, which we call <i>overfitting.</i>
+    <p>
+    Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function.
+    Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set works poorly on the unseen test set, which we call <i>overfitting.</i>
     </p>
 
-    <p>One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set. Below, we can see this happen when fitting the weights of a neural network.
+    <p>
+    One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set.
+    Below, we can see this happen when fitting the weights of a neural network.
     </p>
 
     <!-- Regular MLP figure -->
@@ -75,18 +79,24 @@
 
     <h3>Regularization</h3>
     <p>
-        One approach to avoiding overfitting is to regularize the weights, or choose a small model. This usually helps, but this approach still considers only set of weights when making predictions. But this doesn't have to be the case.
+        One approach to avoiding overfitting is to regularize the weights, or choose a small model.
+        This usually helps, but this approach still considers only set of weights when making predictions.
+        But this doesn't have to be the case.
     </p>
 
     <h2>Bayesian Inference</h2>
     <p>
-        Another approach to making predictions would be to considers all possible sets of weights. Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit. If we view learning like descending
+        Another approach to making predictions would be to considers all possible sets of weights.
+        Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit.
+        If we view learning like descending
         a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
     </p>
 
     <p>
         One way to keep track of the relative importance given to each set of weights Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead? Then the loss space defines a probability
-        distribution over all the weights. This gives us the ability to sample from the space, and the probability of each weight being sampled automatically confers its importance. We could use Bayes' theorem to express the relationship between the data
+        distribution over all the weights.
+        This gives us the ability to sample from the space, and the probability of each weight being sampled automatically confers its importance.
+        We could use Bayes' theorem to express the relationship between the data
         points and the weights:
     </p>
 
@@ -95,24 +105,28 @@
     <p>Where $p(x|w)$ is called likelihood, $p(w)$ prior, and $p(w|x)$ posterior.</p>
 
     <p>
-        There are many possible strategies to try to avoid overfitting, generally called regularization methods. Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being
-        learned. With Bayesian neural network, first developed by
-        <dt-cite key="neal1995bayesian"></dt-cite> and
-        <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.
+        There are many possible strategies to try to avoid overfitting, generally called regularization methods.
+        Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.
+        With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.
     </p>
 
     <h3>What about the prior?</h3>
     <p>
-        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior. If we assumed the wrong the prior, the model underperforms. However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact
-        that we make predictions in a way that considers all possibilities and not just one. This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution
+        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior.
+        If we assumed the wrong the prior, the model underperforms.
+        However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact
+        that we make predictions in a way that considers all possibilities and not just one.
+        This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution
         of the parameters.
     </p>
     <p>
-        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method. (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights
+        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
+        (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights
         by making them less probable would natually regularize weights.)
     </p>
     <p>
-        To show that Bayesian methods aren't necessarily about priors, in this example we will use an uninformative uniform prior. (ALIGN THE EQUATION)
+        To show that Bayesian methods aren't necessarily about priors, in this example we will use an uninformative uniform prior.
+        (ALIGN THE EQUATION)
         <!-- \\begin{aligned} p(w|x) & = \dfrac{p(x|w)p(w)}{p(w)\int_{w}p(x|w)} \\ & = \dfrac{p(x|w)}{\int_{w}p(x|w)}\\end{aligned} -->
     </p>
     <div>
@@ -121,18 +135,20 @@
     <h2>Two Mindsets</h2>
     <h3>Inference</h3>
     <p>
-        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about. On one hand - from people who do predictions for a living
-        - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$. On the other hand, from the probabilistic graphical model community, the latent states of the models are more important than the data
-        points, inference is about discovering the distribution of $w$ from $x, y$. In this sense, <b>inference</b> is more like <b>learning</b>.
+        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about.
+        On one hand - from people who do predictions for a living - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$.
+        On the other hand, from the probabilistic graphical model community, the latent states of the models are more important than the data points, inference is about discovering the distribution of $w$ from $x, y$.
+        In this sense, <b>inference</b> is more like <b>learning</b>.
     </p>
     <h3>Exact Inference</h3>
     <p>
-        Notice that Bayes' theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution
-        from which you could sample the perfect distribution of w given the data points x. So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
+        Notice that Bayes' theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution from which you could sample the perfect distribution of w given the data points x.
+        So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
     </p>
     <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{\int_{w}p(x|w)p(w)}$$</div>
     <p>
-        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible. Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov
+        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible.i
+        Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov
         chain monte carlo blahblah.... converges to the exact posterior.....somethingsomething
     </p>
 
@@ -152,7 +168,8 @@
         </div>
         <div id="progress" style="position:relative; margin-left: 334px; width:650px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <figcaption id="exact_caption" style="position:absolute; width: 470px; height: 60px; left: 510px; top: 310px;">
-            The black line shows the validation loss of the average. Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
+            The black line shows the validation loss of the average.
+            Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
         </figcaption>
         <button type="button" onclick="sampler.sample_train()">Sample</button>
         <button type="button" onclick="sampler.reset()">Clear</button>
@@ -163,13 +180,17 @@
 
     <h3>Variational Inference</h3>
     <p>
-        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior. Once we find a nice tractable distribution that approximates
+        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior.
+        Once we find a nice tractable distribution that approximates
         the intractable one, we can use the tractable distribution to make predictions or measure uncertainty within an tractable time complexity.
     </p>
     <p>
-        Lets define $p$ as the true distribution and $q$ to be the million-gaussian we use to approximate $p$. We call it a variational distribution. We want $q$ to be close to $p$, but what does it mean for two probability distributions to be close to each other,
+        Lets define $p$ as the true distribution and $q$ to be the million-gaussian we use to approximate $p$.
+        We call it a variational distribution.
+        We want $q$ to be close to $p$, but what does it mean for two probability distributions to be close to each other,
         in other words, if we define a loss function that describes the closeness of two distributions, what properties are desired? For starters, if $p = q$, the loss should be 0, also if $p$ and $q$ assign a different probability to the same point,
-        we want to punish it by assigning a large loss. Kullback Leibler divergence is such a measure, PUT EQUATION AND HOW ITS ASYMMETRIC HERE.
+        we want to punish it by assigning a large loss.
+        Kullback Leibler divergence is such a measure, PUT EQUATION AND HOW ITS ASYMMETRIC HERE.
     </p>
 
     <!-- KL divergence figure -->
@@ -232,10 +253,13 @@
         </figcaption>
     </figure>
     <h3>Expression of Uncertainty</h3>
-    <p>Normal neural nets doesn't have a good way of expressing uncertainty. For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle
-        part where training data is not available. We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
+    <p>Normal neural nets doesn't have a good way of expressing uncertainty.
+    For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle
+        part where training data is not available.
+        We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
 
-    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability. However, that is not the type of uncertainty we are talking about here, what we really want
+    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability.
+    However, that is not the type of uncertainty we are talking about here, what we really want
         is for the network to be uncertain of itself.</p>
 
     <p> The variance figure is removed for now. </p>
