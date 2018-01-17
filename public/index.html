@@ -27,38 +27,25 @@
     <script src="assets/utils.js"></script>
     <H1>Bayesian Neural Networks</H1>
     <p>
-    By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. 
+    Bayesian inference allows us to learn a probability distribution over possible neural network models. 
     This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
     </p>
 
-    <dt-byline></dt-byline>
-
     <h2>What's wrong with neural networks?</h2>
     <p>
-    You may have heard deep neural networks described as powerful, general-purpose function approximators. 
+    You may have heard deep neural networks described as <i>powerful function approximators</i>. 
     Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via automatic differentiation (a.k.a. the backpropagation algorithm). 
     Because they are good at approximating functions (input-output relationships) when data are available, they are well-suited to many artificial intelligence tasks like speech recognition and image classification.
     </p>
 
     <p>
-    But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to overfitting. 
-    Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set that the performance on the test set (and unseen real-world examples) suffers.
+    But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>. 
+    Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by minimizing its <i>loss function</i>&mdash;that the performance on new examples suffers.
     Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
     Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
     </p>
 
-    <p>
-    With toy examples it's often easy to notice when the neural net has overfit.
-    The learning algorithm seeks to minimize the so-called <i>loss</i> of the model on the training data, so eventually the learned function warps drastically so that it can approach the training data (and thus achieve low loss).
-    Current deep learning methods learn one set of weight in a vast weight space, chosen to minimize a loss function.
-    Gradient-based optimization lets us tune millions of parameters, but sometimes the set of weights that works best on the training set works poorly on the unseen test set, which we call <i>overfitting.</i>
-    </p>
-
-    <p>
-    One way to understand overfitting is that the optimum of the loss function on the training set might be in a different place than the optimum on the test set.
-    Below, we can see this happen when fitting the weights of a neural network.
-    </p>
-
+    <dt-byline></dt-byline>
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:984px; height:350px;">
         <figcaption id="NN_caption">
@@ -90,17 +77,21 @@
         </figcaption>
     </figure>
 
+
     <p>
-        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
+    With toy examples it's often easy to notice when the neural net has overfit.
+    As training proceeds, the learned function warps drastically as it increases its proximity to the training examples.
+    This happens because the learning algorithm is minimizing the value of the loss function, which is a smooth function of the parameters.
+    But the loss function also depends on the data, and its surface will have different contours depending on whether we evaluate it using the training data or test data; a local optimum in the training loss surface might not be optimal in the test loss surface; if the two surfaces look really different there is a danger of overfitting.
     </p>
 
-    <h3>Regularization</h3>
     <p>
-        One approach to avoiding overfitting is to regularize the weights, or choose a small model.
-        This usually helps, but this approach still considers only set of weights when making predictions.
-        But this doesn't have to be the case.
+    One key insight from deep learning is that the more capacity (read: depth) a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit.
+    You can play with the above demo to convince yourself of this.
+    In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
     </p>
-    <h2>Bayesian inference to the rescue</h2>
+
+   <h2>Bayesian inference to the rescue</h2>
     <p>
     Any machine learning model can potentially suffer from overfitting.
     Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting. 
