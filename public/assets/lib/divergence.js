@@ -34,14 +34,14 @@ function divergence(div, mean, sd) {
                 m = v * (Math.log(v) - Math.log(f))
             } else if (state === "JS") {
                 midpoint = (v + f) / 2
-                m = 0.5 * v * (Math.log(v) - Math.log(midpoint)) + 0.5 * f * (Math.log(f) - Math.log(midpoint))
+                m = v * (Math.log(v) - Math.log(midpoint)) + 0.5 * f * (Math.log(f) - Math.log(midpoint))
             } else {
                 m = 0;
             }
             if (isNaN(m)) {
                 m = 0;
             }
-            
+
             variable.push({x: i, y: v});
             fixed.push({x: i, y: f});
             divergence.push({x: i, y: m})
@@ -64,13 +64,25 @@ function divergence(div, mean, sd) {
 
     function draw_line() {
         data = getGaussianFunctionPoints();
-        divergence_curve_plotter.plot_line(data.variable);
-        divergence_curve_plotter.plot_line(data.fixed);
-        divergence_curve_plotter.plot_line(data.divergence, {
+        divergence_curve_plotter.plot_line(data.variable, {
+            color: "darkred",
+            width: 2,
+            opacity: 0.5,
+        });
+        divergence_curve_plotter.plot_line(data.fixed, {
             color: "black",
-            width: 1,
-            opacity: 0.35,
-            fill: "darkorange",
+            width: 2,
+            opacity: 0.5,
+        });
+        var negsum = 0;
+        for (var i = 0; i < data.divergence.length; i++) {
+            negsum -= data.divergence[i].y;
+        }
+        divergence_curve_plotter.plot_line(data.divergence, {
+            color: "darkgrey",
+            width: 0,
+            opacity: 0.5,
+            fill: divergence_fill_color(negsum),
         });
     }
 

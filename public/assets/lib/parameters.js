@@ -375,6 +375,10 @@ inv_x_scale.clamp(true);
 var inv_y_scale = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
 inv_y_scale.clamp(true);
 
+var divergence_fill_color = d3.scaleLinear().domain([-20, 0]).interpolate(function() {
+    return d3.interpolateRdYlGn;
+});
+
 var train_contour_color = d3.scaleLinear().domain([-0.05, 2.5]).interpolate(function() {
     return d3.interpolateSpectral;
 });
