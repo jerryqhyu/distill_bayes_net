@@ -101,80 +101,29 @@
     In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
     </p>
 
-   <h2>Bayesian inference to the rescue</h2>
+   <h2>Bayes to the rescue</h2>
     <p>
     Any machine learning model can potentially suffer from overfitting.
-    Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
-    </p> <!- end ec edit 2017-jan-17->
-
+    Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.  </p>
+    
     <p>
-        Another approach to making predictions would be to considers all possible sets of weights.
-        Since not all sets of weights fit the data equally well, we can weight their predictions proportional to how well they fit.
-        If we view learning like descending
-        a valley, we want the model to survey the entire landscape, instead of descending the first deep trough it sees.
+    This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters.
+    Before we used the training data $x$ plus a gradient-based optimizer to tune the values of the network parameters $\theta$ by minimizing the loss $\ell(\theta, x)$.
+    In Bayesian inference, instead of learning the parameter values, we compute $p(\theta|x)$ a conditional distribution over the parameter values given the training data.
+    $p(\theta|x)$ is called the <i>posterior distribution</i>, or simply the <i>posterior</i>.
     </p>
 
+    <h3>Exact Bayesian inference</h3>
     <p>
-        One way to keep track of the relative importance given to each set of weights Bayes' rule gives is a simple and coherent method for assigning measuring the What if we used probability for the objective function instead? Then the loss space defines a probability
-        distribution over all the weights.
-        This gives us the ability to sample from the space, and the probability of each weight being sampled automatically confers its importance.
-        We could use Bayes' theorem to express the relationship between the data
-        points and the weights:
-    </p>
-
-    <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{p(x)}$$</div>
-
-    <p>Where $p(x|w)$ is called likelihood, $p(w)$ prior, and $p(w|x)$ posterior.</p>
-
-    <p>
-        There are many possible strategies to try to avoid overfitting, generally called regularization methods.
-        Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.
-        With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.
-    </p>
-
-    <h3>What about the prior?</h3>
-    <p>
-        One difficulty with Bayesian methods is that we're sometimes forced to choose a prior.
-        If we assumed the wrong the prior, the model underperforms.
-        However, the important difference between Bayesian and non-Bayesian methods isn't the prior, it's the fact
-        that we make predictions in a way that considers all possibilities and not just one.
-        This is why MAP estimate is <i>not</i> a Bayesian method - despite its seemingly innocent use of Bayes' theorem - since it doesn't infer a distribution
-        of the parameters.
+    Exact Bayesian inference tells us how to compute the posterior; it's API is called Bayes' rule, which says
+    <div id="exacttex">$$p(\theta|x) = \dfrac{p(x|\theta)p(\theta)}{p(x)} = \dfrac{p(x|\theta)p(\theta)}{\int_{\theta'} p(x|\theta')p(\theta')}.$$</div>
     </p>
     <p>
-        Sometimes, incorporating a priopr is sold as a benefit, since it lets us incorporate knowledge about our problem into our method.
-        (It also allows us to tweak the inference process, for example, using a standard Gaussian prior that punishes large weights
-        by making them less probable would natually regularize weights.)
-    </p>
-    <p>
-        To show that Bayesian methods aren't necessarily about priors, in this example we will use an uninformative uniform prior.
-        (ALIGN THE EQUATION)
-        <!-- \\begin{aligned} p(w|x) & = \dfrac{p(x|w)p(w)}{p(w)\int_{w}p(x|w)} \\ & = \dfrac{p(x|w)}{\int_{w}p(x|w)}\\end{aligned} -->
-    </p>
-    <div>
-        \begin{matrix} a & b \\ c & d \end{matrix}
-    </div>
-    <h2>Two Mindsets</h2>
-    <h3>Inference</h3>
-    <p>
-        The term inference have a dual meaning in the community, in a general sense, it means make predictions about some hidden values, the difference lies in what is the unknown value we care about.
-        On one hand - from people who do predictions for a living - we mainly care about the value of $y$ given a particular $x$, so natually we are inferencing $y$ from $x, w$.
-        On the other hand, from the probabilistic graphical model community, the latent states of the models are more important than the data points, inference is about discovering the distribution of $w$ from $x, y$.
-        In this sense, <b>inference</b> is more like <b>learning</b>.
-    </p>
-    <h3>Exact Inference</h3>
-    <p>
-        Notice that Bayes' theorem gives us the exact probability distribution of $w$ given $x$, so we can just assume a prior, compute the posterior and sample weights from it, right? Yes, from a theoretical perspective this is all you need, a closed form solution from which you could sample the perfect distribution of w given the data points x.
-        So why doesn't everyone use exact Bayesian inference all the time? Expand the denominator,
-    </p>
-    <div id="exacttex">$$p(w|x) = \dfrac{p(x|w)p(w)}{\int_{w}p(x|w)p(w)}$$</div>
-    <p>
-        Even if we discretize w, computing the integral takes exponential number in the number of weights, so it is not computationally feasible.i
-        Second, we have to store how well each set of weights fits the training data, which takes up too much space. Markov
-        chain monte carlo blahblah.... converges to the exact posterior.....somethingsomething
-    </p>
-
-    <!-- Exact Inference figures -->
+    It takes two inputs, the <i>prior</i> $p(\theta)$, and the <i>likelihood</i> $p(x|\theta)$, and returns the posterior $p(\theta|x)$.
+   Computing the output from the two inputs is easy to express, but expensive to compute due to the pesky integral, which generally doesn't admit a closed-form solution, and would require exponential computation in the support of $\theta$ to approximate.
+   When $\theta$ represents all the weights and biases of a deep neural network, this simply isn't practical.
+   For small networks however, we can use exact Bayesian inference; take a look at the demo below to build some intuitions around what's going on here.
+     <!-- Exact Inference figures -->
     <figure style="position:relative; width:984px; height:330px;">
         <div id="exact_train" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 10px; left: 540px; top: 20px;">
@@ -196,11 +145,20 @@
         <button type="button" onclick="sampler.sample_train()">Sample</button>
         <button type="button" onclick="sampler.reset()">Clear</button>
     </figure>
+   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p> 
+    <h3>Variational inference</h3>
     <p>
-        We can see that the posterior puts a lot of mass
+    We can scale up inference by settling for an approximate solution via <i>variational inference</i>.
+    The API requires one additional argument, $q(\theta)$, called the <i>variational distribution</i>, and returns the <i>approximate posterior</i> $q^*(\theta)$ according to
+    <div id="exacttex">$$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$</div>
+    The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
+    We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
     </p>
 
-    <h3>Variational Inference</h3>
+    <!- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...->
+    <!-- <p> There are many possible strategies to try to avoid overfitting, generally called regularization methods.  Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.  With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.  </p> -->
+
+   <h3>Variational Inference (old)</h3>
     <p>
         Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior.
         Once we find a nice tractable distribution that approximates
@@ -275,17 +233,11 @@
         </figcaption>
     </figure>
     <h3>Expression of Uncertainty</h3>
-    <p>Normal neural nets doesn't have a good way of expressing uncertainty.
-    For example, if we fit two neural networks on the following data set, it is possible for them to have similar fit, but predicts drastically differently, especially in the middle
-        part where training data is not available.
-        We want a model that could say 'I\'m not really sure, these 4 fits could all be possible.'</p>
-
-    <p>Some would argue that the network is indeed uncertain about if the datapoints in the middle belongs to a particular class by assigning it a low probability.
-    However, that is not the type of uncertainty we are talking about here, what we really want
-        is for the network to be uncertain of itself.</p>
-
-    <p> The variance figure is removed for now. </p>
-    <!-- <figure style="position:relative; width:984px; height:350px;">
+    <p>
+    TODO: discuss the uncercatinty estimates you get for free by modeling the posterior.
+    </p>
+    <!-- VARIANCE FIGURE
+        <figure style="position:relative; width:984px; height:350px;">
         <figcaption id="disagree">
             A Change in Perspective
         </figcaption>
@@ -295,6 +247,8 @@
         <button type="button" name="uncertain_reset" onclick="uncertainty.reset()">Reset</button>
     </figure> -->
 
+    <!--
+        HERE ARE SOME IDEAS FOR EXTRA STUFF TO TALK ABOUT, SPACE PERMITTING
     <h3>Automatic Differentiation Variational Inference</h3>
     <p>
         The reparameterization trick
@@ -324,10 +278,10 @@
     <p>
         asdf
     </p>
-
+    -->
     <p>
-        Our implementation is based on
-        <dt-cite key="karpathy2015convnetjs"></dt-cite>
+        <!- ELLIOT Q: CAN WE FORMAT THIS LIKE A \citet IN LATEX? ->
+        Our implementation is based on Karpathy 2015 <dt-cite key="karpathy2015convnetjs"></dt-cite>.
     </p>
 
     <script src="assets/lib/parameters.js"></script>
