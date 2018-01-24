@@ -10,12 +10,21 @@ function mlp(div, train_loss_div, valid_loss_div) {
 
     var linear_train_contour_data = new Array(param.n * param.m);
     var linear_valid_contour_data = new Array(param.n * param.m);
-    var nonlinear_train_contour_data = new Array(param.n * param.m);
-    var nonlinear_valid_contour_data = new Array(param.n * param.m);
+    var shallow_train_contour_data = new Array(param.n * param.m);
+    var shallow_valid_contour_data = new Array(param.n * param.m);
+    var deep_train_contour_data = new Array(param.n * param.m);
+    var deep_valid_contour_data = new Array(param.n * param.m);
 
     //define a neural network
-    var nonlinear_net = make_preset_net();
-    var nonlinear_trainer = new net_lib.Trainer(nonlinear_net, {
+    var deep_net = make_deep_net();
+    var deep_trainer = new net_lib.Trainer(deep_net, {
+        method: 'sgd',
+        learning_rate: param.learning_rate,
+        momentum: param.momentum,
+        batch_size: param.batch_size
+    });
+    var shallow_net = make_shallow_net();
+    var shallow_trainer = new net_lib.Trainer(shallow_net, {
         method: 'sgd',
         learning_rate: param.learning_rate,
         momentum: param.momentum,
@@ -28,8 +37,8 @@ function mlp(div, train_loss_div, valid_loss_div) {
         momentum: param.momentum,
         batch_size: param.batch_size
     });
-    var net = nonlinear_net;
-    var trainer = nonlinear_trainer;
+    var net = deep_net;
+    var trainer = deep_trainer;
 
     //interval controller
     var timer;
@@ -72,8 +81,8 @@ function mlp(div, train_loss_div, valid_loss_div) {
     }
 
     function reset() {
-        nonlinear_net = make_preset_net();
-        nonlinear_trainer = new net_lib.Trainer(nonlinear_net, {
+        deep_net = make_deep_net();
+        deep_trainer = new net_lib.Trainer(deep_net, {
             method: 'sgd',
             learning_rate: param.learning_rate,
             momentum: param.momentum,
@@ -86,12 +95,22 @@ function mlp(div, train_loss_div, valid_loss_div) {
             momentum: param.momentum,
             batch_size: param.batch_size
         });
-        if (radio_button_state() === 'linear') {
+        shallow_net = make_shallow_net();
+        shallow_trainer = new net_lib.Trainer(shallow_net, {
+            method: 'sgd',
+            learning_rate: param.learning_rate,
+            momentum: param.momentum,
+            batch_size: param.batch_size
+        });
+        if (radio_button_state() === 'Linear') {
             net = linear_net;
             trainer = linear_trainer;
+        } else if (radio_button_state() === 'Deep') {
+            net = deep_net;
+            trainer = deep_trainer;
         } else {
-            net = nonlinear_net;
-            trainer = nonlinear_trainer;
+            net = shallow_net;
+            trainer = shallow_trainer;
         }
         clear();
         plot();
@@ -103,16 +122,21 @@ function mlp(div, train_loss_div, valid_loss_div) {
         pause_training();
         svg2.select("#contour").selectAll("*").remove();
         svg3.select("#contour").selectAll("*").remove();
-        if (radio_button_state() === 'linear') {
+        if (radio_button_state() === 'Linear') {
             net = linear_net;
             trainer = linear_trainer;
             plot_contour(train_loss_plotter, linear_train_contour_data, train_contour_color, train_contour_scale);
             plot_contour(valid_loss_plotter, linear_valid_contour_data, valid_contour_color, valid_contour_scale);
+        } else if (radio_button_state() === 'Deep') {
+            net = deep_net;
+            trainer = deep_trainer;
+            plot_contour(train_loss_plotter, deep_train_contour_data, train_contour_color, train_contour_scale);
+            plot_contour(valid_loss_plotter, deep_valid_contour_data, valid_contour_color, valid_contour_scale);
         } else {
-            net = nonlinear_net;
-            trainer = nonlinear_trainer;
-            plot_contour(train_loss_plotter, nonlinear_train_contour_data, train_contour_color, train_contour_scale);
-            plot_contour(valid_loss_plotter, nonlinear_valid_contour_data, valid_contour_color, valid_contour_scale);
+            net = shallow_net;
+            trainer = shallow_trainer;
+            plot_contour(train_loss_plotter, shallow_train_contour_data, train_contour_color, train_contour_scale);
+            plot_contour(valid_loss_plotter, shallow_valid_contour_data, valid_contour_color, valid_contour_scale);
         }
         clear();
         plot();
@@ -141,7 +165,7 @@ function mlp(div, train_loss_div, valid_loss_div) {
         initial_plot();
     }
 
-    function make_preset_net() {
+    function make_deep_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
         layer_defs.push({type: 'fc', num_neurons: 2, activation: 'tanh'});
@@ -163,6 +187,20 @@ function mlp(div, train_loss_div, valid_loss_div) {
         return new_net;
     }
 
+    function make_shallow_net() {
+        var layer_defs = [];
+        layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
+        layer_defs.push({type: 'fc', num_neurons: 2, activation: 'tanh'});
+        layer_defs.push({type: 'regression', num_neurons: 1});
+        var new_net = new net_lib.Net();
+        new_net.makeLayers(layer_defs);
+        new_net.getLayer(1).setWeights([[-0.2], [-0.2]]);
+        new_net.getLayer(1).setBiases([0, 0]);
+        new_net.getLayer(3).setWeights([[0.2637135, 0.51581102]]);
+        new_net.getLayer(3).setBiases([0.1]);
+        return new_net;
+    }
+
     function make_linear_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
@@ -178,25 +216,28 @@ function mlp(div, train_loss_div, valid_loss_div) {
     }
 
     function initial_plot() {
-        var nonlinear_dummy_net = make_preset_net();
+        var deep_dummy_net = make_deep_net();
+        var shallow_dummy_net = make_shallow_net();
         var linear_dummy_net = make_linear_net();
         for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
             for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                nonlinear_train_contour_data[k] = compute_training_loss(nonlinear_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor))
-                nonlinear_valid_contour_data[k] = compute_validation_loss(nonlinear_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
-                linear_train_contour_data[k] = compute_training_loss(linear_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor))
+                deep_train_contour_data[k] = compute_training_loss(deep_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
+                deep_valid_contour_data[k] = compute_validation_loss(deep_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
+                shallow_train_contour_data[k] = compute_training_loss(shallow_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
+                shallow_valid_contour_data[k] = compute_validation_loss(shallow_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
+                linear_train_contour_data[k] = compute_training_loss(linear_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
                 linear_valid_contour_data[k] = compute_validation_loss(linear_dummy_net, inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor));
             }
         }
-        plot_contour(train_loss_plotter, nonlinear_train_contour_data, train_contour_color, train_contour_scale);
-        plot_contour(valid_loss_plotter, nonlinear_valid_contour_data, valid_contour_color, valid_contour_scale);
+        plot_contour(train_loss_plotter, deep_train_contour_data, train_contour_color, train_contour_scale);
+        plot_contour(valid_loss_plotter, deep_valid_contour_data, valid_contour_color, valid_contour_scale);
         plot_train_and_valid_points();
     }
 
     function plot_train_and_valid_points() {
-        //individual training and validation points
+        // individual training and validation points
         training_points_data = [];
-        //training data points
+        // training data points
         for (var i = 0; i < param.train_points.length; i++) {
             training_points_data.push({
                 x: param.train_points[i],
@@ -204,7 +245,7 @@ function mlp(div, train_loss_div, valid_loss_div) {
             });
         }
         validation_points_data = [];
-        //training data points
+        // training data points
         for (var i = 0; i < param.validation_points.length; i++) {
             validation_points_data.push({
                 x: param.validation_points[i],

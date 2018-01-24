@@ -84,6 +84,14 @@ function divergence(div, mean, sd) {
             opacity: 0.5,
             fill: divergence_fill_color(negsum),
         });
+        var size_scale = d3.scaleLinear().domain([-150, 10]).range([50, 5]);
+        size_scale.clamp(true);
+        divergence_curve_plotter.plot_points([{x: -9.5, y: 0.25}], {
+            stroke: "black",
+            size: size_scale(negsum),
+            opacity: 1,
+            color: divergence_fill_color(negsum),
+        });
     }
 
     function redraw_line(mean, sd) {

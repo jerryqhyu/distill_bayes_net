@@ -59,8 +59,9 @@
         </figcaption>
         <div id="nn_full" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <form style="position:relative; margin-left: 984px;" onclick="mlp.update()">
-            <input type="radio" name="net_type" value="nonlinear"> Non-linear<br>
-            <input type="radio" name="net_type" value="linear"> Linear<br>
+            <input type="radio" name="net_type" value="Deep" checked> Deep<br>
+            <input type="radio" name="net_type" value="Shallow"> Shallow<br>
+            <input type="radio" name="net_type" value="Linear"> Linear<br>
         </form>
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
@@ -219,7 +220,7 @@
     <figure style="position:relative; width:1100px; height:400px;">
         <div id="curve" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <form style="position:relative; margin-left: 984px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="KL"> KL<br>
+            <input type="radio" name="divergence_type" value="KL" checked> KL<br>
             <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
             <input type="radio" name="divergence_type" value="JS"> JS
         </form>
