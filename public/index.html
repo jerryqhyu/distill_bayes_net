@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
 
+
 <!-- <script src="https://distill.pub/template.v1.js"></script> -->
 <script src="assets/lib/template.v1.js"></script>
 <script src="assets/lib/d3.v4.min.js"></script>
@@ -9,8 +10,10 @@
 <script src="assets/lib/d3-scale-chromatic.v1.min.js"></script>
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
+<script src="assets/lib/pseudocode.min.js"></script>
 <link rel="stylesheet" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
+<link rel="stylesheet" href="assets/lib/pseudocode.min.css">
 
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
@@ -55,7 +58,7 @@
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:1100px; height:350px;">
         <figcaption id="NN_caption">
-            Neural Networks are function approximators.
+            Neural networks are flexible function approximators.
         </figcaption>
         <div id="nn_full" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <form style="position:relative; margin-left: 984px;" onclick="mlp.update()">
@@ -158,6 +161,13 @@
 
     <!- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...->
     <!-- <p> There are many possible strategies to try to avoid overfitting, generally called regularization methods.  Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.  With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.  </p> -->
+
+        <pre id="hello-world-code" style="display:hidden;">
+        \begin{algorithmc}
+        \PRINT \texttt{'hello world'}
+        \end{algorithmc}
+        </pre>
+
 
    <h3>Variational Inference (old)</h3>
     <p>
@@ -342,6 +352,15 @@
 
         // variational inference
         var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
+
+        // SGD algo box
+       var code = document.getElementById("hello-world-code").textContent;
+       var parentEl = document.body;
+       var options = {
+            lineNumber: true
+        };
+        pseudocode.render(code, parentEl, options);
+ 
     </script>
 </dt-article>
 
