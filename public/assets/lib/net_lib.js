@@ -668,7 +668,6 @@ var net_lib = net_lib || {
             var V = this.in_act;
             V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
 
-            // compute gradient wrt weights and data
             for (var i = 0; i < this.out_depth; i++) {
                 var tfi = this.sampled_w[i];
                 var chain_grad = this.out_act.dw[i];
@@ -677,7 +676,6 @@ var net_lib = net_lib || {
                     tfi.dw[d] = V.w[d] * chain_grad; // grad wrt params
                 }
             }
-            // fix the gradient
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];

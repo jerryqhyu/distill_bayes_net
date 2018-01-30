@@ -379,13 +379,13 @@ var divergence_fill_color = d3.scaleLinear().domain([-50, 0]).interpolate(functi
     return d3.interpolateRdYlGn;
 });
 
-var train_contour_color = d3.scaleLinear().domain([-0.05, 2.5]).interpolate(function() {
+var train_contour_color = d3.scaleLinear().domain([-2.5, 0.05]).interpolate(function() {
     return d3.interpolateSpectral;
 });
 
 var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.05, 2.5, 0.05));
 
-var valid_contour_color = d3.scaleLinear().domain([-0.5, 20]).interpolate(function() {
+var valid_contour_color = d3.scaleLinear().domain([-20, 0.5]).interpolate(function() {
     return d3.interpolateSpectral;
 });
 var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.5, 20, 0.5));

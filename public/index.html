@@ -31,11 +31,19 @@
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
+
+    <figure style="position:relative; width:100%; height:0px;">
+        <div id="full_bnn" style="position:relative; width:100%; height:0px;"></div>
+        </figcaption>
+    </figure>
+
     <H1>Bayesian Neural Networks</H1>
     <p>
     Bayesian inference allows us to learn a probability distribution over possible neural networks.
     This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
     </p>
+
+    <dt-byline></dt-byline>
 
     <h2>What's wrong with neural networks?</h2>
     <p>
@@ -51,7 +59,6 @@
     Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
     </p>
 
-    <dt-byline></dt-byline>
     <!-- Regular MLP figure -->
     <figure style="position:relative; width:1100px; height:350px;">
         <figcaption id="NN_caption">
@@ -106,7 +113,7 @@
     <p>
     Any machine learning model can potentially suffer from overfitting.
     Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.  </p>
-    
+
     <p>
     This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters.
     Before we used the training data $x$ plus a gradient-based optimizer to tune the values of the network parameters $\theta$ by minimizing the loss $\ell(\theta, x)$.
@@ -146,12 +153,12 @@
         <button type="button" onclick="sampler.sample_train()">Sample</button>
         <button type="button" onclick="sampler.reset()">Clear</button>
     </figure>
-   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p> 
+   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p>
     <h3>Variational inference</h3>
     <p>
     We can scale up inference by settling for an approximate solution via <i>variational inference</i>.
     The API requires one additional argument, $q(\theta)$, called the <i>variational distribution</i>, and returns the <i>approximate posterior</i> $q^*(\theta)$ according to
-    <div id="exacttex">$$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$</div>
+    $$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$
     The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
     We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
     </p>
@@ -291,6 +298,7 @@
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/mlp.js"></script>
     <script src="assets/lib/bnn.js"></script>
+    <script src="assets/lib/full_bnn.js"></script>
     <script src="assets/lib/uncertainty.js"></script>
     <script src="assets/lib/sampler.js"></script>
     <script src="assets/lib/net_lib.js"></script>
@@ -342,6 +350,10 @@
 
         // variational inference
         var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
+
+        // variational inference
+        var full_bnn = full_bnn_view(d3.select("#full_bnn"));
+        // full_bnn.train();
     </script>
 </dt-article>
 

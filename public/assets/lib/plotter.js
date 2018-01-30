@@ -121,12 +121,12 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
         if (id) {
             size_multiplier = width / n;
             svg.select(id).selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("fill", function(d) {
-                return color_scale(d.value);
+                return color_scale(-d.value);
             }).attr("opacity", opacity).attr("stroke", stroke);
         } else {
             size_multiplier = width / n;
             svg.selectAll("path").data(contour_scale(data)).enter().append("path").attr("d", d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr("fill", function(d) {
-                return color_scale(d.value);
+                return color_scale(-d.value);
             }).attr("opacity", opacity);
         }
     }
