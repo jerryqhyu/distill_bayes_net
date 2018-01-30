@@ -159,22 +159,34 @@
     The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
     We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
 
-    <p id="pseudocode"></p>
+   </p>
+   
+    <p id="svi-algo-box"></p>
     <pre id="hello-world-code">
     \begin{algorithmic}
-    \PROCEDURE{Randofunc}{$x, y, z$}
-        \PRINT \texttt{'hello world'}
-        \PRINT \texttt{'hello world again'}
-        \PRINT \texttt{'hello world the third time'}
-        \FOR {$i$ from 1 to 10}
-            \STATE do this and that
-        \ENDFOR
+    \PROCEDURE{SGD}{$x, y, w$}
+        \WHILE {training not converged}
+            \STATE $g = \text{BACKPROP}(x, y, w)$
+            \STATE $w = w + \alpha g$
+        \ENDWHILE
         \ENDPROCEDURE
     \end{algorithmic}
     </pre>
-    </p>
+    <!--TODO: FORMAT SIDE BY SIDE-->
+    <pre id="hello-world-code2">
+    \begin{algorithmic}
+    \PROCEDURE{SVI}{$x, y, w$}
+        \WHILE {training not converged}
+            \STATE ${\color{blue} \epsilon \sim \mathcal{N}(0, I)}$
+            \STATE $g = \text{BACKPROP}(x, y, {\color{blue} w+\epsilon\sigma})$
+            \STATE $w = w + \alpha g$
+            \STATE ${\color{blue}\sigma = \sigma + \alpha\epsilon g}$
+        \ENDWHILE
+        \ENDPROCEDURE
+    \end{algorithmic}
+    </pre>
 
-    <!- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...->
+     <!- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...->
     <!-- <p> There are many possible strategies to try to avoid overfitting, generally called regularization methods.  Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.  With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.  </p> -->
 
 
@@ -366,11 +378,13 @@
 
         // SGD algo box
        var code = document.getElementById("hello-world-code").textContent;
-       var parent = document.getElementById("pseudocode");
+       var code2 = document.getElementById("hello-world-code2").textContent;
+       var parent = document.getElementById("svi-algo-box");
        var options = {
             lineNumber: true
         };
         pseudocode.render(code, parent, options);
+        pseudocode.render(code2, parent, options);
 
     </script>
 </dt-article>
