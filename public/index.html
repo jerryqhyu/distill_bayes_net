@@ -11,9 +11,10 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<link rel="stylesheet" href="assets/lib/katex.min.css">
+<link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
-<link rel="stylesheet" href="assets/lib/pseudocode.min.css">
+<link rel="stylesheet" type="text/css" href="assets/lib/pseudocode.min.css">
 
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
@@ -30,7 +31,7 @@
 
 <title>Bayesian Neural Networks</title>
 
-<dt-article class="centered">
+<dt-article id="article" class="centered">
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
@@ -109,7 +110,7 @@
     <p>
     Any machine learning model can potentially suffer from overfitting.
     Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.  </p>
-    
+
     <p>
     This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters.
     Before we used the training data $x$ plus a gradient-based optimizer to tune the values of the network parameters $\theta$ by minimizing the loss $\ell(\theta, x)$.
@@ -120,7 +121,7 @@
     <h3>Exact Bayesian inference</h3>
     <p>
     Exact Bayesian inference tells us how to compute the posterior; it's API is called Bayes' rule, which says
-    <div id="exacttex">$$p(\theta|x) = \dfrac{p(x|\theta)p(\theta)}{p(x)} = \dfrac{p(x|\theta)p(\theta)}{\int_{\theta'} p(x|\theta')p(\theta')}.$$</div>
+    $p(\theta|x) = \dfrac{p(x|\theta)p(\theta)}{p(x)} = \dfrac{p(x|\theta)p(\theta)}{\int_{\theta'} p(x|\theta')p(\theta')}.$
     </p>
     <p>
     It takes two inputs, the <i>prior</i> $p(\theta)$, and the <i>likelihood</i> $p(x|\theta)$, and returns the posterior $p(\theta|x)$.
@@ -149,24 +150,34 @@
         <button type="button" onclick="sampler.sample_train()">Sample</button>
         <button type="button" onclick="sampler.reset()">Clear</button>
     </figure>
-   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p> 
+   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p>
     <h3>Variational inference</h3>
     <p>
     We can scale up inference by settling for an approximate solution via <i>variational inference</i>.
     The API requires one additional argument, $q(\theta)$, called the <i>variational distribution</i>, and returns the <i>approximate posterior</i> $q^*(\theta)$ according to
-    <div id="exacttex">$$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$</div>
+    $$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$
     The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
     We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
+
+    <p id="pseudocode"></p>
+    <pre id="hello-world-code">
+    \begin{algorithmic}
+    \PROCEDURE{Randofunc}{$x, y, z$}
+        \PRINT \texttt{'hello world'}
+        \PRINT \texttt{'hello world again'}
+        \PRINT \texttt{'hello world the third time'}
+        \FOR {$i$ from 1 to 10}
+            \STATE do this and that
+        \ENDFOR
+        \ENDPROCEDURE
+    \end{algorithmic}
+    </pre>
     </p>
 
     <!- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...->
     <!-- <p> There are many possible strategies to try to avoid overfitting, generally called regularization methods.  Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.  With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.  </p> -->
 
-        <pre id="hello-world-code" style="display:hidden;">
-        \begin{algorithmc}
-        \PRINT \texttt{'hello world'}
-        \end{algorithmc}
-        </pre>
+
 
 
    <h3>Variational Inference (old)</h3>
@@ -355,12 +366,12 @@
 
         // SGD algo box
        var code = document.getElementById("hello-world-code").textContent;
-       var parentEl = document.body;
+       var parent = document.getElementById("pseudocode");
        var options = {
             lineNumber: true
         };
-        pseudocode.render(code, parentEl, options);
- 
+        pseudocode.render(code, parent, options);
+
     </script>
 </dt-article>
 
