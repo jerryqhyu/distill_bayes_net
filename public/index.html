@@ -36,9 +36,10 @@
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
 
-    <figure style="position:relative; width:100%; height:0px;">
-        <div id="full_bnn" style="position:relative; width:100%; height:0px;"></div>
-        </figcaption>
+    <figure style="position:relative; width:100%; height:500px;">
+        <div id="full_bnn" style="position:relative; width:100%; height:500px;"></div>
+        <button type="button" onclick="full_bnn.train()">Train</button>
+        <button type="button" onclick="full_bnn.reset()">Reset</button>
     </figure>
 
     <H1>Bayesian Neural Networks</H1>
@@ -68,12 +69,17 @@
         <figcaption id="NN_caption">
             Neural networks are flexible function approximators.
         </figcaption>
-        <div id="nn_full" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
-        <form style="position:relative; margin-left: 984px;" onclick="mlp.update()">
+        <figure style="position:relative; width:1100px; height:550px;">
+            <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+            <form style="position:relative; margin-left: 684px;" onclick="mlp.update()">
             <input type="radio" name="net_type" value="Deep" checked> Deep<br>
             <input type="radio" name="net_type" value="Shallow"> Shallow<br>
             <input type="radio" name="net_type" value="Linear"> Linear<br>
         </form>
+        <figcaption id="NN_caption">
+            Neural Networks are function approximators.
+        </figcaption>
+        <div id="nn_full" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
         <button type="button" onclick="mlp.train()">Train</button>
         <button type="button" onclick="mlp.reset()">Reset</button>
         <figcaption id="Overfitcaption" style="position:absolute; width: 420px; height: 10px; left: 540px; top: 340px;">
@@ -374,7 +380,7 @@
         divergence_curve.draw_line();
 
         // NN on sine
-        var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
+        var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
         mlp.plot();
 
         // exact inference

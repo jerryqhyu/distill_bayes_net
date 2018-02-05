@@ -42,6 +42,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
                 net.getLayer(1).freeze_weights();
             } else {
                 net.freezeAllButLayer(1);
+                net.getLayer(1).freeze_biases();
             }
             timer = d3.timer(train_epoch, 50);
         }
@@ -93,6 +94,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         new_net.makeLayers(layer_defs);
         if (!obtaining_param) {
             //set the params for later layers
+            new_net.getLayer(1).setMeans([[2],[2]]);
             new_net.getLayer(3).setWeights(param.opt_layer3_w);
             new_net.getLayer(5).setWeights(param.opt_layer5_w);
             new_net.getLayer(7).setWeights(param.opt_layer7_w);

@@ -2,23 +2,23 @@ function full_bnn_view(div) {
 
     // + 20 is hotfix for axis labels
     var svg = div.append("svg");
-    svg.attr("width", 1960).attr("height", 600);
+    svg.attr("width", 1960).attr("height", 500);
 
     // plotters
-    var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, 1960, 600);
+    var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, 1960, 500);
 
     var avg_loss = [];
 
     //define a neural network
-    var obtaining_param = 0;
+    var obtaining_param = true;
     var epoch_count = 0;
     var net = make_preset_net();
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: param.learning_rate * 10,
-        momentum: param.momentum,
-        batch_size: param.batch_size
+        learning_rate: param.learning_rate * 2,
+        momentum: 0,
+        batch_size: 64
     });
 
     //interval controller
@@ -39,9 +39,9 @@ function full_bnn_view(div) {
             trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
         }
         if (obtaining_param) {
-            for (var j = 0; j < param.validation_points.length; j++) {
-                x = new net_lib.Vol([param.validation_points[j]]);
-                trainer.train(x, [Math.sin(param.validation_points[j]) + param.validation_noise[j]]);
+            for (var j = 0; j < param.validation_points.length * 2; j++) {
+                x = new net_lib.Vol([param.validation_points[j % param.validation_points.length]]);
+                trainer.train(x, [Math.sin(param.validation_points[j % param.validation_points.length]) + param.validation_noise[j % param.validation_points.length]]);
             }
         }
         clear();
@@ -64,17 +64,14 @@ function full_bnn_view(div) {
         layer_defs.push({type: 'regression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
-        if (!obtaining_param) {
-            console.log(new_net.getLayer(7));
-            new_net.getLayer(1).setMeans(param.opt_layer1_w);
-            new_net.getLayer(3).setMeans(param.opt_layer3_w);
-            new_net.getLayer(5).setMeans(param.opt_layer5_w);
-            new_net.getLayer(7).setWeights(param.opt_layer7_w);
-            new_net.getLayer(1).setBiases(param.opt_layer1_b);
-            new_net.getLayer(3).setBiases(param.opt_layer3_b);
-            new_net.getLayer(5).setBiases(param.opt_layer5_b);
-            new_net.getLayer(7).setBiases(param.opt_layer7_b);
-        }
+        new_net.getLayer(1).setMeans([[0.2], [0.2]]);
+        new_net.getLayer(3).setMeans(param.opt_layer3_m.copyWithin());
+        new_net.getLayer(5).setMeans(param.opt_layer5_m.copyWithin());
+        new_net.getLayer(7).setWeights(param.opt_layer7_m.copyWithin());
+        new_net.getLayer(1).setBiases(param.opt_layer1_vb.copyWithin());
+        new_net.getLayer(3).setBiases(param.opt_layer3_vb.copyWithin());
+        new_net.getLayer(5).setBiases(param.opt_layer5_vb.copyWithin());
+        new_net.getLayer(7).setBiases(param.opt_layer7_vb.copyWithin());
         return new_net;
     }
 
@@ -82,9 +79,9 @@ function full_bnn_view(div) {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
-            learning_rate: param.learning_rate * 10,
-            momentum: param.momentum,
-            batch_size: param.batch_size
+            learning_rate: param.learning_rate * 2,
+            momentum: 0,
+            batch_size: 64
         });
         avg_loss = [];
         clear();
@@ -100,12 +97,10 @@ function full_bnn_view(div) {
 
     function plot_line() {
         var curve_x = [];
-        for (var i = -5; i <= 5; i += param.step_size) {
+        for (var i = -5; i <= 5; i += param.step_size/5) {
             curve_x.push(i);
         }
         var curve = variational_prediction(curve_x);
-        var valid = variational_prediction(param.validation_points);
-        console.log(curve);
         for (var i = 0; i < param.seeds_uncertainty.length; i++) {
             curve_plotter.plot_line(curve[i], {
                 color: "orange",

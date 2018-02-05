@@ -583,9 +583,8 @@ var net_lib = net_lib || {
 
         // initializations
         this.mu = [];
-
         for (var i = 0; i < this.out_depth; i++) {
-            this.mu.push(new Vol(1, 1, this.num_inputs, 2));
+            this.mu.push(new Vol(1, 1, this.num_inputs));
         }
         this.sigma = [];
         for (var i = 0; i < this.out_depth; i++) {
@@ -639,9 +638,7 @@ var net_lib = net_lib || {
             }
         },
         specialForward: function(V, seed) {
-            this.in_act = V;
             var A = new Vol(1, 1, this.out_depth, 0.0);
-
             var sample = [];
             for (var i = 0; i < this.out_depth; i++) {
                 sample.push(new Vol(1, 1, this.num_inputs));
@@ -661,8 +658,7 @@ var net_lib = net_lib || {
                 a += this.biases.w[i] + seed[seed.length - 1];
                 A.w[i] = a;
             }
-            this.out_act = A;
-            return this.out_act;
+            return A;
         },
         backward: function() {
             var V = this.in_act;
@@ -675,11 +671,12 @@ var net_lib = net_lib || {
                     V.dw[d] += tfi.w[d] * chain_grad; // grad wrt input data
                     tfi.dw[d] = V.w[d] * chain_grad; // grad wrt params
                 }
+                this.biases.dw[i] += chain_grad;
             }
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += -2e-2 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+                    this.sigma[j].dw[k] += -1e-1 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
@@ -711,6 +708,9 @@ var net_lib = net_lib || {
             }
             for (var j = 0; j < this.out_depth; j++) {
                 response.push({params: this.sigma[j].w, grads: this.sigma[j].dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
+            }
+            if (!this.biases_frozen) {
+                response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
             }
             return response;
         },
@@ -1308,17 +1308,6 @@ var net_lib = net_lib || {
             }
             return response;
         },
-        sampleNet(seed) {
-            var random_func = new Math.seedrandom(seed);
-            var new_net = new Net();
-            new_net.fromJSON(this.toJSON());
-            for (var i = 0; i < new_net.layers.length; i++) {
-                if (new_net.layers[i].layer_type === 'variational') {
-                    new_net.layers[i].mutate(random_func);
-                }
-            }
-            return new_net;
-        },
         getPrediction: function() {
             // this is a convenience function for returning the argmax
             // prediction, assuming the last layer of the net is a softmax
@@ -1494,7 +1483,8 @@ var net_lib = net_lib || {
                     for (var j = 0; j < plen; j++) {
                         l2_decay_loss += l2_decay * p[j] * p[j] / 2; // accumulate weight decay loss
                         l1_decay_loss += l1_decay * Math.abs(p[j]);
-                        var l1grad = l1_decay * (p[j] > 0
+                        var l1grad = l1_decay * (
+                            p[j] > 0
                             ? 1
                             : -1);
                         var l2grad = l2_decay * (p[j]);
@@ -1814,7 +1804,8 @@ var net_lib = net_lib || {
                     var l = this.labels[fold.test_ix[q]];
                     net.forward(x);
                     var yhat = net.getPrediction();
-                    v += (yhat === l
+                    v += (
+                        yhat === l
                         ? 1.0
                         : 0.0); // 0 1 loss
                 }
