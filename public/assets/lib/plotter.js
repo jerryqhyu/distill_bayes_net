@@ -131,6 +131,52 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
         }
     }
 
+    function plot_neural_net(net, id) {
+        num_layers = net.layers.length;
+        points = [{x: 1/num_layers, y:1/2}];
+        var last_idx = 1;
+        net.layers.forEach((layer, i) => {
+            layer_width = layer.out_depth;
+            if (layer.layer_type === "fc") {
+                layer.filters.forEach((out, j) => {
+                    points.push({x: (i + 2)/ (num_layers + 2), y: (j + 1) / (layer_width + 1)});
+                    out.w.forEach((weight, k) => {
+                        svg.select(id).append('line')
+                        .attr("x1", x_scale(last_idx / (num_layers + 2)))
+                        .attr("y1", y_scale((k + 1) / (layer.num_inputs + 1)))
+                        .attr("x2", x_scale((i + 2)/ (num_layers + 2)))
+                        .attr("y2", y_scale((j + 1) / (layer_width + 1)))
+                        .attr('stroke-width', 2)
+                        .attr("stroke", connection_strength_color(weight))
+                    });
+                });
+                last_idx = i + 2;
+            } else if (layer.layer_type === "variational") {
+                layer.mu.forEach((out, j) => {
+                    points.push({x: (i + 2)/ (num_layers + 2), y: (j + 1) / (layer_width + 1)});
+                    out.w.forEach((weight, k) => {
+                        svg.select(id).append('line')
+                        .attr("x1", x_scale(last_idx / (num_layers + 2)))
+                        .attr("y1", y_scale((k + 1) / (layer.num_inputs + 1)))
+                        .attr("x2", x_scale((i + 2)/ (num_layers + 2)))
+                        .attr("y2", y_scale((j + 1) / (layer_width + 1)))
+                        .attr('stroke-width', connection_variation_scale(layer.sigma[j].w[k]))
+                        .attr("stroke", connection_strength_color(weight))
+                    });
+                });
+                last_idx = i + 2;
+            }
+        });
+
+        plot_points(points, {
+            stroke: "black",
+            color: "white",
+            size: 10,
+            opacity: 1,
+            id: id
+        });
+    }
+
     function add_group(name) {
         svg.append("g").attr("id", name);
     }
@@ -151,6 +197,7 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
         plot_line: plot_line,
         plot_points: plot_points,
         plot_contour: plot_contour,
+        plot_neural_net: plot_neural_net,
         add_group: add_group,
         add_x_axis_label: add_x_axis_label,
         add_y_axis_label: add_y_axis_label

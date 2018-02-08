@@ -383,6 +383,13 @@ var divergence_fill_color = d3.scaleLinear().domain([-50, 0]).interpolate(functi
     return d3.interpolateRdYlGn;
 });
 
+var connection_strength_color = d3.scaleLinear().domain([-2.5, 2.5]).interpolate(function() {
+    return d3.interpolateYlOrBr;
+});
+
+var connection_variation_scale = d3.scaleLinear().domain([0, 1]).range([0.1,15]);
+connection_variation_scale.clamp(true);
+
 var train_contour_color = d3.scaleLinear().domain([-2.5, 0.05]).interpolate(function() {
     return d3.interpolateSpectral;
 });

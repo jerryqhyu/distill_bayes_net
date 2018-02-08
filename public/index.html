@@ -36,17 +36,19 @@
     <!-- <script src="assets/lib/lib.js"></script> -->
     <script src="assets/utils.js"></script>
 
-    <figure style="position:relative; width:100%; height:500px;">
-        <div id="full_bnn" style="position:relative; width:100%; height:500px;"></div>
-        <button type="button" onclick="full_bnn.train()">Train</button>
-        <button type="button" onclick="full_bnn.reset()">Reset</button>
-    </figure>
+    <div id="full_bnn" style="position:relative; width:100%; height:500px;"></div>
 
     <H1>Bayesian Neural Networks</H1>
     <p>
     Bayesian inference allows us to learn a probability distribution over possible neural networks.
     This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
     </p>
+
+    <figure>
+        <div id="bnn_graph" style="position:relative; width:650px; height:200px;"></div>
+        <button type="button" onclick="full_bnn.train()">Train</button>
+        <button type="button" onclick="full_bnn.reset()">Reset</button>
+    </figure>
 
     <dt-byline></dt-byline>
 
@@ -70,7 +72,7 @@
             Neural networks are flexible function approximators.
         </figcaption>
         <figure style="position:relative; width:1100px; height:550px;">
-            <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px; border: 1px solid rgba(0, 0, 0, 0.1);"></div>
+            <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px;"></div>
             <form style="position:relative; margin-left: 684px;" onclick="mlp.update()">
             <input type="radio" name="net_type" value="Deep" checked> Deep<br>
             <input type="radio" name="net_type" value="Shallow"> Shallow<br>
@@ -174,7 +176,8 @@
 
    </p>
 
-    <p id="svi-algo-box"></p>
+    <p id="svi-algo-box-left" style="position:relative; float:left; width: 320px;"></p>
+    <p id="svi-algo-box-right" style="position:relative; margin-left: 500px; margin-top: 35px"></p>
     <pre id="hello-world-code">
     \begin{algorithmic}
     \PROCEDURE{SGD}{$x, y, w$}
@@ -344,6 +347,14 @@
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
     <script>
+        // NN on sine
+        var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
+        mlp.plot();
+
+        // exact inference
+        var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
+        sampler.plot();
+
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), 0, 1);
         var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
@@ -379,30 +390,23 @@
         var getsd = sliderd(d3.select("#slider4")).xval
         divergence_curve.draw_line();
 
-        // NN on sine
-        var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
-        mlp.plot();
-
-        // exact inference
-        var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
-        sampler.plot();
-
         // variational inference
         var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"));
 
         // variational inference
-        var full_bnn = full_bnn_view(d3.select("#full_bnn"));
+        var full_bnn = full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
         // full_bnn.train();
 
         // SGD algo box
        var code = document.getElementById("hello-world-code").textContent;
        var code2 = document.getElementById("hello-world-code2").textContent;
-       var parent = document.getElementById("svi-algo-box");
+       var parent_left = document.getElementById("svi-algo-box-left");
+       var parent_right = document.getElementById("svi-algo-box-right");
        var options = {
             lineNumber: true
         };
-        pseudocode.render(code, parent, options);
-        pseudocode.render(code2, parent, options);
+        pseudocode.render(code, parent_left, options);
+        pseudocode.render(code2, parent_right, options);
     </script>
 </dt-article>
 

@@ -663,7 +663,6 @@ var net_lib = net_lib || {
         backward: function() {
             var V = this.in_act;
             V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
-
             for (var i = 0; i < this.out_depth; i++) {
                 var tfi = this.sampled_w[i];
                 var chain_grad = this.out_act.dw[i];
@@ -676,7 +675,7 @@ var net_lib = net_lib || {
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += -1e-1 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+                    this.sigma[j].dw[k] += -1e-2 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
@@ -1191,6 +1190,12 @@ var net_lib = net_lib || {
                         new_defs.push({type: 'fc', num_neurons: def.num_neurons});
                     }
 
+                    if (def.type === 'vregression') {
+                        // add an fc layer here, there is no reason the user should
+                        // have to worry about this and we almost always want to
+                        new_defs.push({type: 'variational', num_neurons: def.num_neurons});
+                    }
+
                     if ((def.type === 'fc' || def.type === 'conv') && typeof(def.bias_pref) === 'undefined') {
                         def.bias_pref = 0.0;
                         if (typeof def.activation !== 'undefined' && def.activation === 'relu') {
@@ -1238,6 +1243,9 @@ var net_lib = net_lib || {
                         this.layers.push(new global.SoftmaxLayer(def));
                         break;
                     case 'regression':
+                        this.layers.push(new global.RegressionLayer(def));
+                        break;
+                    case 'vregression':
                         this.layers.push(new global.RegressionLayer(def));
                         break;
                     case 'variational':

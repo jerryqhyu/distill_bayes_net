@@ -3,12 +3,13 @@ function mlp(div, train_loss_div, valid_loss_div, nn_div) {
     var svg = div.append("svg").attr("width", param.w).attr("height", param.h);
     var svg2 = train_loss_div.append("svg").attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     var svg3 = valid_loss_div.append("svg").attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
-    var svg4 = nn_div.append("svg").attr("width", param.w_progress).attr("height", param.w_progress);
+    var svg4 = nn_div.append("svg").attr("width", param.w_progress).attr("height", 200);
 
 
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h, false);
     var train_loss_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
+    var graph_plotter = Plotter(svg4, [0,1], [0,1], 650, 200);
 
     var linear_train_contour_data = new Array(param.n * param.m);
     var linear_valid_contour_data = new Array(param.n * param.m);
@@ -52,7 +53,7 @@ function mlp(div, train_loss_div, valid_loss_div, nn_div) {
     function plot() {
         plot_line();
         plot_weight();
-        // plot_neural_net();
+        graph_plotter.plot_neural_net(net, "#float");
     }
 
     function train() {
@@ -161,6 +162,7 @@ function mlp(div, train_loss_div, valid_loss_div, nn_div) {
         curve_plotter.add_group("float")
         train_loss_plotter.add_group("float");
         valid_loss_plotter.add_group("float");
+        graph_plotter.add_group("float");
         train_loss_plotter.add_x_axis_label("w1");
         train_loss_plotter.add_y_axis_label("w2");
         valid_loss_plotter.add_x_axis_label("w1");
@@ -366,36 +368,11 @@ function mlp(div, train_loss_div, valid_loss_div, nn_div) {
         });
     }
 
-    function plot_neural_net() {
-        graph_plotter = Plotter(svg4, param.progress_domain_x, param.progress_domain_x, param.w_progress, param.h_progress);
-        points = []
-        num_layers = net.layers.length;
-        console.log(num_layers);
-        for (var layer in net.layers) {
-            if (layer.layer_type != 'tanh') {
-                layer_width = layer.filters[0].length;
-                console.log(layer_width);
-                for (var i = 0; i < num_layers.length; i++) {
-                    for (var j = 0; j < layer_width.length; j++) {
-                        points.push({x: i/num_layers, y: j/layer_width});
-                    }
-                }
-            }
-        }
-        console.log(points);
-        console.log(num_layers);
-        graph_plotter.plot_points(points, {
-            stroke: "black",
-            color: "darkslategray",
-            size: 5,
-            opacity: 1,
-        });
-    }
-
     function clear() {
         svg.select("#float").selectAll("*").remove();
         svg2.select("#float").selectAll("*").remove();
         svg3.select("#float").selectAll("*").remove();
+        svg4.select("#float").selectAll("*").remove();
     }
 
     function on_drag(d) {

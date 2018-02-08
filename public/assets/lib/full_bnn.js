@@ -1,11 +1,12 @@
-function full_bnn_view(div) {
-
-    // + 20 is hotfix for axis labels
+function full_bnn_view(div, graph_div) {
     var svg = div.append("svg");
     svg.attr("width", 1960).attr("height", 500);
+    var svg2 = graph_div.append("svg");
+    svg2.attr("width", 650).attr("height", 200);
 
     // plotters
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, 1960, 500);
+    var graph_plotter = Plotter(svg2, [0,1], [0,1], 650, 200);
 
     var avg_loss = [];
 
@@ -16,7 +17,7 @@ function full_bnn_view(div) {
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: param.learning_rate * 2,
+        learning_rate: param.learning_rate,
         momentum: 0,
         batch_size: 64
     });
@@ -52,26 +53,29 @@ function full_bnn_view(div) {
     function setup() {
         curve_plotter.add_group("fixed");
         curve_plotter.add_group("float");
+        graph_plotter.add_group("fixed");
+        graph_plotter.add_group("float");
         initial_plot();
     }
 
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 2, activation: 'tanh'});
         layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
         layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
-        layer_defs.push({type: 'regression', num_neurons: 1});
+        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
+        layer_defs.push({type: 'vregression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
-        new_net.getLayer(1).setMeans([[0.2], [0.2]]);
-        new_net.getLayer(3).setMeans(param.opt_layer3_m.copyWithin());
-        new_net.getLayer(5).setMeans(param.opt_layer5_m.copyWithin());
-        new_net.getLayer(7).setWeights(param.opt_layer7_m.copyWithin());
-        new_net.getLayer(1).setBiases(param.opt_layer1_vb.copyWithin());
-        new_net.getLayer(3).setBiases(param.opt_layer3_vb.copyWithin());
-        new_net.getLayer(5).setBiases(param.opt_layer5_vb.copyWithin());
-        new_net.getLayer(7).setBiases(param.opt_layer7_vb.copyWithin());
+        // new_net.getLayer(1).setMeans([[0.2], [0.2]]);
+        // new_net.getLayer(3).setMeans(param.opt_layer3_m.copyWithin());
+        // new_net.getLayer(5).setMeans(param.opt_layer5_m.copyWithin());
+        // new_net.getLayer(7).setWeights(param.opt_layer7_m.copyWithin());
+        // new_net.getLayer(1).setBiases(param.opt_layer1_vb.copyWithin());
+        // new_net.getLayer(3).setBiases(param.opt_layer3_vb.copyWithin());
+        // new_net.getLayer(5).setBiases(param.opt_layer5_vb.copyWithin());
+        // new_net.getLayer(7).setBiases(param.opt_layer7_vb.copyWithin());
         return new_net;
     }
 
@@ -79,7 +83,7 @@ function full_bnn_view(div) {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
-            learning_rate: param.learning_rate * 2,
+            learning_rate: param.learning_rate,
             momentum: 0,
             batch_size: 64
         });
@@ -93,6 +97,7 @@ function full_bnn_view(div) {
     function plot() {
         plot_line();
         plot_variational_distribution();
+        graph_plotter.plot_neural_net(net, "#float");
     }
 
     function plot_line() {
@@ -110,7 +115,7 @@ function full_bnn_view(div) {
             });
         }
         mean = [];
-        for (var i = -5; i <= 5; i += param.step_size) {
+        for (var i = -5; i <= 5; i += param.step_size/5) {
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             mean.push({x: i, y: predicted_value.w[0]});
@@ -139,6 +144,7 @@ function full_bnn_view(div) {
 
     function clear() {
         svg.select("#float").selectAll("*").remove();
+        svg2.select("#float").selectAll("*").remove();
     }
 
     function initial_plot() {
