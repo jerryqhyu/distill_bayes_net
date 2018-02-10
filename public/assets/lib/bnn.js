@@ -1,20 +1,23 @@
-function bnn(div, train_loss_div, valid_loss_div, progress_div) {
+function bnn(div, train_loss_div, valid_loss_div, progress_div, graph_div) {
 
     // + 20 is hotfix for axis labels
     var svg = div.append("svg");
     var svg2 = train_loss_div.append("svg");
     var svg3 = valid_loss_div.append("svg");
     var svg4 = progress_div.append("svg");
+    var svg5 = graph_div.append("svg");
     svg.attr("width", param.w).attr("height", param.h);
     svg2.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
     svg3.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
-    svg4.attr("width", param.w + 20).attr("height", param.h_loss);
+    svg4.attr("width", 384).attr("height", 200);
+    svg5.attr("width", 600).attr("height", 200);
 
     // plotters
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
     var train_loss_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
-    var progress_plotter = Plotter(svg4, param.progress_domain_x, param.progress_domain_y, param.w, param.h_progress);
+    var progress_plotter = Plotter(svg4, param.progress_domain_x, param.progress_domain_y, 384, 200);
+    var graph_plotter = Plotter(svg5, [0,1], [0,1], 600, 200);
 
     var var_dist_data = new Array(param.var_n * param.var_m);
     var avg_loss = [];
@@ -74,12 +77,12 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         train_loss_plotter.add_group("float");
         valid_loss_plotter.add_group("float");
         progress_plotter.add_group("float");
+        graph_plotter.add_group("float");
 
         train_loss_plotter.add_x_axis_label("w1");
         train_loss_plotter.add_y_axis_label("w2");
         valid_loss_plotter.add_x_axis_label("w1");
         valid_loss_plotter.add_y_axis_label("w2");
-        progress_plotter.add_y_axis_label("Average Loss");
         initial_plot();
     }
 
@@ -125,6 +128,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         plot_line();
         plot_variational_distribution();
         plot_weight();
+        graph_plotter.plot_neural_net(net, "#float");
     }
 
     function plot_line() {
@@ -275,6 +279,7 @@ function bnn(div, train_loss_div, valid_loss_div, progress_div) {
         svg2.select("#float").selectAll("*").remove();
         svg3.select("#float").selectAll("*").remove();
         svg4.select("#float").selectAll("*").remove();
+        svg5.select("#float").selectAll("*").remove();
     }
 
     function initial_plot() {

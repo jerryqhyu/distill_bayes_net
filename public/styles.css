@@ -1,3 +1,9 @@
 pre {
     display: none;
 }
+
+.container {
+    position:relative;
+    display: table;
+    width: 984px;
+}

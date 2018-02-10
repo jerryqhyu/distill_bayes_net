@@ -1,11 +1,11 @@
 function full_bnn_view(div, graph_div) {
     var svg = div.append("svg");
-    svg.attr("width", 1960).attr("height", 500);
+    svg.attr("width", 2480).attr("height", 500);
     var svg2 = graph_div.append("svg");
     svg2.attr("width", 650).attr("height", 200);
 
     // plotters
-    var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, 1960, 500);
+    var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, 2480, 500);
     var graph_plotter = Plotter(svg2, [0,1], [0,1], 650, 200);
 
     var avg_loss = [];
@@ -61,10 +61,10 @@ function full_bnn_view(div, graph_div) {
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
-        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
-        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
-        layer_defs.push({type: 'variational', num_neurons: 4, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 3, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 3, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 3, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 3, activation: 'tanh'});
         layer_defs.push({type: 'vregression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);

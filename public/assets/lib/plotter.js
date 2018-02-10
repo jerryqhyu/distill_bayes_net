@@ -132,39 +132,40 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
     }
 
     function plot_neural_net(net, id) {
-        num_layers = net.layers.length;
-        points = [{x: 1/num_layers, y:1/2}];
+        num_layers = net.layers.filter(x => x.layer_type == 'fc' || x.layer_type == 'variational').length;
+        num_slots = num_layers + 2;
+        points = [{x: 1/num_slots, y:1/2}];
         var last_idx = 1;
         net.layers.forEach((layer, i) => {
             layer_width = layer.out_depth;
             if (layer.layer_type === "fc") {
-                layer.filters.forEach((out, j) => {
-                    points.push({x: (i + 2)/ (num_layers + 2), y: (j + 1) / (layer_width + 1)});
-                    out.w.forEach((weight, k) => {
+                layer.filters.forEach((column, j) => {
+                    points.push({x: (last_idx + 1) / num_slots, y: (j + 1) / (layer_width + 1)});
+                    column.w.forEach((weight, k) => {
                         svg.select(id).append('line')
-                        .attr("x1", x_scale(last_idx / (num_layers + 2)))
+                        .attr("x1", x_scale(last_idx / num_slots))
                         .attr("y1", y_scale((k + 1) / (layer.num_inputs + 1)))
-                        .attr("x2", x_scale((i + 2)/ (num_layers + 2)))
+                        .attr("x2", x_scale((last_idx + 1) / num_slots))
                         .attr("y2", y_scale((j + 1) / (layer_width + 1)))
                         .attr('stroke-width', 2)
                         .attr("stroke", connection_strength_color(weight))
                     });
                 });
-                last_idx = i + 2;
+                last_idx++;
             } else if (layer.layer_type === "variational") {
-                layer.mu.forEach((out, j) => {
-                    points.push({x: (i + 2)/ (num_layers + 2), y: (j + 1) / (layer_width + 1)});
-                    out.w.forEach((weight, k) => {
+                layer.mu.forEach((column, j) => {
+                    points.push({x: (last_idx + 1)/ num_slots, y: (j + 1) / (layer_width + 1)});
+                    column.w.forEach((weight, k) => {
                         svg.select(id).append('line')
-                        .attr("x1", x_scale(last_idx / (num_layers + 2)))
+                        .attr("x1", x_scale(last_idx / num_slots))
                         .attr("y1", y_scale((k + 1) / (layer.num_inputs + 1)))
-                        .attr("x2", x_scale((i + 2)/ (num_layers + 2)))
+                        .attr("x2", x_scale((last_idx + 1) / num_slots))
                         .attr("y2", y_scale((j + 1) / (layer_width + 1)))
                         .attr('stroke-width', connection_variation_scale(layer.sigma[j].w[k]))
                         .attr("stroke", connection_strength_color(weight))
                     });
                 });
-                last_idx = i + 2;
+                last_idx++;
             }
         });
 
