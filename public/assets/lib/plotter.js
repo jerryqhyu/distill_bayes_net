@@ -133,9 +133,10 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
 
     function plot_neural_net(net, id) {
         num_layers = net.layers.filter(x => x.layer_type == 'fc' || x.layer_type == 'variational').length;
+        points = [];
+        texts = [];
         num_slots = num_layers + 2;
-        points = [{x: 1/num_slots, y:1/2}];
-        var last_idx = 1;
+        var last_idx = 0;
         net.layers.forEach((layer, i) => {
             layer_width = layer.out_depth;
             if (layer.layer_type === "fc") {
@@ -166,6 +167,16 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
                     });
                 });
                 last_idx++;
+            } else if (layer.layer_type === "tanh") {
+                for (var j = 0; j < layer_width; j++) {
+                    // 0.02 is an adjustment to make it look better
+                    texts.push({x: x_scale((last_idx) / num_slots), y: y_scale((j + 1) / (layer_width + 1) - 0.02)});
+                }
+            } else if (layer.layer_type === "input") {
+                for (var j = 0; j < layer_width; j++) {
+                    points.push({x: (last_idx + 1) / num_slots, y: (j + 1) / (layer_width + 1)});
+                }
+                last_idx++;
             }
         });
 
@@ -175,6 +186,14 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
             size: 10,
             opacity: 1,
             id: id
+        });
+
+        texts.forEach( t => {
+            svg.select(id).append("text")
+            .attr("transform", "translate(" + t.x + " ," + t.y + ")")
+            .attr("color", "black")
+            .style("text-anchor", "middle")
+            .attr("opacity", 0.5).text("~");
         });
     }
 
