@@ -24,8 +24,8 @@
     - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
     affiliations:
     - University of Toronto
-    - University of Toronto
-    - University of Toronto
+    - University of Toronto, Vector Institute
+    - University of Toronto, Vector Institute
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -56,14 +56,31 @@
     <p>
         You may have heard deep neural networks described as <i>powerful function approximators</i>.
         Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via gradient-based optimization.
-        Because they are good at approximating functions (input-output relationships) when data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
+        Because they are good at approximating functions (input-output relationships) when lots of data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
     </p>
 
     <p>
         But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>.
         Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by minimizing its <i>loss function</i>&mdash;that the performance on new examples suffers.
         Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
-        Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
+        The flexibility of neural networks during training time actually makes them brittle at test time.
+        This might sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
+    </p>
+
+    <p>
+    First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of intput-output pairs.
+    Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output pairs.
+    Then neural network training corresponds to the following optimization problem: 
+    </p>
+    <p>
+    $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
+    </p>
+    <p> with
+    $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(y|x, w) \right]$
+    </p>
+    <p>
+        $\log p(y| x, w)$ represents the log likelihood of a particular output $y$ given the input $x$, which we want to be high on average, across all of the training examples.
+        <dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to saying outputs are categorically distributed.</dt-fn>
     </p>
 
     <!-- Regular MLP figure -->
@@ -105,6 +122,7 @@
 
 
     <p>
+    $\mathcal{L}_{train} = \mathbb{E}_{x, y \sim D_{train}} [ \log p(y|x, w) ]$
         With toy examples it's often easy to notice when the neural net has overfit.
         As training proceeds, the learned function warps drastically as it increases its proximity to the training examples.
         This happens because the learning algorithm is minimizing the value of the loss function, which is a smooth function of the parameters.
@@ -119,8 +137,8 @@
 
     <h2>Bayes to the rescue</h2>
     <p>
-        Any machine learning model can potentially suffer from overfitting.
-        Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
+        Overfitting can happen to any expressive model.
+        Because the flexibility of neural networks makes them particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
     </p>
 
     <p>
@@ -422,7 +440,16 @@
 </dt-article>
 
 <dt-appendix>
+  <h3>Acknowledgments</h3>
+  <p>
+    We will have to come up with some acknowledgements.
+  </p>
 
+  <h3>Author contribution</h3>
+
+  <p>
+    We will have to list the author contributions.
+  </p>
 </dt-appendix>
 
 <script>
