@@ -170,7 +170,7 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
             } else if (layer.layer_type === "tanh") {
                 for (var j = 0; j < layer_width; j++) {
                     // 0.02 is an adjustment to make it look better
-                    texts.push({x: x_scale((last_idx) / num_slots), y: y_scale((j + 1) / (layer_width + 1) - 0.02)});
+                    texts.push({x: x_scale((last_idx) / num_slots), y: y_scale((j + 1) / (layer_width + 1) - 0.04)});
                 }
             } else if (layer.layer_type === "input") {
                 for (var j = 0; j < layer_width; j++) {
@@ -193,6 +193,7 @@ function Plotter(svg, domain_x, domain_y, width, height, clamp) {
             .attr("transform", "translate(" + t.x + " ," + t.y + ")")
             .attr("color", "black")
             .style("text-anchor", "middle")
+            .style("font-size", 30)
             .attr("opacity", 0.5).text("~");
         });
     }

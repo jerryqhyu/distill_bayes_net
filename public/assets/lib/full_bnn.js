@@ -17,7 +17,7 @@ function full_bnn_view(div, graph_div) {
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
-        learning_rate: param.learning_rate,
+        learning_rate: param.learning_rate * 5,
         momentum: 0,
         batch_size: 64
     });
