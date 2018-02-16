@@ -15,6 +15,9 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 <link rel="stylesheet" type="text/css" href="assets/lib/pseudocode.min.css">
 
+
+
+
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
     description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and gives us unceratinty estimates."
@@ -61,11 +64,37 @@
 
     <p>
         But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>.
-        Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by minimizing its <i>loss function</i>&mdash;that the performance on new examples suffers.
+        Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by optimizing its <i>objective function</i>&mdash;that the performance on new examples suffers.
         Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
         The flexibility of neural networks during training time actually makes them brittle at test time.
         This might sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
     </p>
+
+    <!-- Regular MLP objective surfaces -->
+    <figure style="position:relative; width:984px; height:330px;">
+        <div class="container">
+            <div id="nn_loss_train" style="display: table-cell; width: 320px; height: 320px;">
+                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
+                    Training likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                </figcaption>
+            </div>
+            <div style="display: table-cell; width: 320px; height: 300px;">
+                <figcaption id="NNLosscaption" style="position: relative; width: 250px; left:25px; right: 25px; top: 10px;">
+                    The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
+                    Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of the weights in a two-weight network (bluer is better).
+                    Use your mouse to change the weight values and see how the neural network predictions changes below, where red are training data and green are test data.
+                </figcaption>
+            </div>
+            <div id="nn_loss_valid" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
+                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
+                    Test likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                </figcaption>
+            </div>
+        </div>
+    </figure>
+
+    <!-- Regular MLP regression -->
+    <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
 
     <p>
     First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of intput-output pairs.
@@ -75,15 +104,22 @@
     <p>
     $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
     </p>
-    <p> with
-    $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(y|x, w) \right]$
+    <p> where $\mathcal{L}_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
     </p>
     <p>
-        $\log p(y| x, w)$ represents the log likelihood of a particular output $y$ given the input $x$, which we want to be high on average, across all of the training examples.
-        <dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to saying outputs are categorically distributed.</dt-fn>
+    $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(y|x, w) \right]$
+    .
+    </p>
+    <p>
+        Here $\log p(y| x, w)$ represents the log likelihood of a particular output $y$ given the input $x$, which we want to be high on average<dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. 
+        In classification, using cross entropy loss is equivalent to saying outputs are categorically distributed.</dt-fn> across all of the training examples.
+    We can optimize $\mathcal{L}_{\text{train}}(w)$ using the training data, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
+    In the demo above, we plot these functions side-by-side as a function of two weights.
+    We see that optimizing $w$ with respect to $\mathcal{L}_{\text{train}}$ yields suboptimal $\mathcal{L}_{\text{train}}$.
+    This indicates overfitting, and is exaggerated in high dimensions where  $\mathcal{L}_{\text{train}}(w)$ and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar.
     </p>
 
-    <!-- Regular MLP figure -->
+    <!-- Regular MLP network diagram -->
     <figure style="position:relative; width:1100px; height:200px;">
         <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px;"></div>
         <form style="position:relative; margin-left: 684px; width:150px;" onclick="mlp.update()">
@@ -98,38 +134,12 @@
         </figcaption>
     </figure>
 
-    <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-
-    <figure style="position:relative; width:984px; height:330px;">
-        <div class="container">
-            <div id="nn_loss_train" style="display: table-cell; width: 320px; height: 320px;">
-                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
-                    Training Loss
-                </figcaption>
-            </div>
-            <div style="display: table-cell; width: 320px; height: 300px;">
-                <figcaption id="NNLosscaption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
-                    The loss surface of the neural network. The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
-                </figcaption>
-            </div>
-            <div id="nn_loss_valid" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
-                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
-                    Test Loss
-                </figcaption>
-            </div>
-        </div>
-    </figure>
-
-
     <p>
-    $\mathcal{L}_{train} = \mathbb{E}_{x, y \sim D_{train}} [ \log p(y|x, w) ]$
         With toy examples it's often easy to notice when the neural net has overfit.
         As training proceeds, the learned function warps drastically as it increases its proximity to the training examples.
         This happens because the learning algorithm is minimizing the value of the loss function, which is a smooth function of the parameters.
         But the loss function also depends on the data, and its surface will have different contours depending on whether we evaluate it using the training data or test data; a local optimum in the training loss surface might not be optimal in the test loss surface; if the two surfaces look really different there is a danger of overfitting.
-    </p>
-
-    <p>
+   <p>
         One key insight from deep learning is that the more capacity (read: depth) a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit.
         You can play with the above demo to convince yourself of this.
         In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
