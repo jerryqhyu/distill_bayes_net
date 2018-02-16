@@ -15,6 +15,9 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 <link rel="stylesheet" type="text/css" href="assets/lib/pseudocode.min.css">
 
+
+
+
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
     description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possbile models. This simple modification to standard neural network tools mitigates overfitting, enables learning from small datasets, and gives us unceratinty estimates."
@@ -24,8 +27,8 @@
     - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
     affiliations:
     - University of Toronto
-    - University of Toronto
-    - University of Toronto
+    - University of Toronto, Vector Institute
+    - University of Toronto, Vector Institute
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -56,17 +59,47 @@
     <p>
         You may have heard deep neural networks described as <i>powerful function approximators</i>.
         Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via gradient-based optimization.
-        Because they are good at approximating functions (input-output relationships) when data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
+        Because they are good at approximating functions (input-output relationships) when lots of data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
     </p>
 
     <p>
         But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>.
-        Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by minimizing its <i>loss function</i>&mdash;that the performance on new examples suffers.
+        Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by optimizing its <i>objective function</i>&mdash;that the performance on new examples suffers.
         Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
-        Perhaps surprisingly, the flexibility of neural networks during training time actually makes them brittle during test time.
+        The flexibility of neural networks during training time actually makes them brittle at test time.
+        This might sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
     </p>
 
-    <!-- Regular MLP figure -->
+    <!-- Regular MLP objective surfaces -->
+    <figure style="position:relative; width:984px; height:330px;">
+        <div class="container">
+            <div id="nn_loss_train" style="display: table-cell; width: 320px; height: 320px;">
+                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
+                    Training likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                </figcaption>
+            </div>
+            <div style="display: table-cell; width: 320px; height: 300px;">
+                <figcaption id="NNLosscaption" style="position: relative; width: 250px; left:25px; right: 25px; top: 10px;">
+                    The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
+                    Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to pre-trained values.
+                    Bluer is better.
+                    Use your mouse to change the values of the weights for these neurons. 
+                    Notice how they affect both the training and test objectives (left, right) and the network predictions changes below, where red are training data and green are test data.
+                </figcaption>
+            </div>
+            <div id="nn_loss_valid" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
+                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
+                    Test likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                </figcaption>
+            </div>
+        </div>
+    </figure>
+
+    <!-- Regular MLP regression -->
+    <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
+
+
+    <!-- Regular MLP network diagram -->
     <figure style="position:relative; width:1100px; height:200px;">
         <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px;"></div>
         <form style="position:relative; margin-left: 684px; width:150px;" onclick="mlp.update()">
@@ -81,46 +114,47 @@
         </figcaption>
     </figure>
 
-    <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-
-    <figure style="position:relative; width:984px; height:330px;">
-        <div class="container">
-            <div id="nn_loss_train" style="display: table-cell; width: 320px; height: 320px;">
-                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
-                    Training Loss
-                </figcaption>
-            </div>
-            <div style="display: table-cell; width: 320px; height: 300px;">
-                <figcaption id="NNLosscaption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
-                    The loss surface of the neural network. The training loss (the negative log-likeihood) is plotted on the left, and the test-set loss is plotted on the right.
-                </figcaption>
-            </div>
-            <div id="nn_loss_valid" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
-                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
-                    Test Loss
-                </figcaption>
-            </div>
-        </div>
-    </figure>
-
-
     <p>
-        With toy examples it's often easy to notice when the neural net has overfit.
-        As training proceeds, the learned function warps drastically as it increases its proximity to the training examples.
-        This happens because the learning algorithm is minimizing the value of the loss function, which is a smooth function of the parameters.
-        But the loss function also depends on the data, and its surface will have different contours depending on whether we evaluate it using the training data or test data; a local optimum in the training loss surface might not be optimal in the test loss surface; if the two surfaces look really different there is a danger of overfitting.
+    First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of intput-output pairs.
+    Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output pairs.
+    Then neural network training corresponds to the following optimization problem: 
     </p>
-
     <p>
-        One key insight from deep learning is that the more capacity (read: depth) a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit.
-        You can play with the above demo to convince yourself of this.
+    $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
+    </p>
+    <p> where $\mathcal{L}_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
+    </p>
+    <p>
+    $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(y|x, w) \right]$
+    .
+    </p>
+    <p>
+    Here $\log p(y| x, w)$ represents the log likelihood<dt-fn>
+        Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
+    </dt-fn>  of a particular output $y$ given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
+        We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. 
+        In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
+    </dt-fn>.
+    During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
+    In the demo above, we plot these functions side-by-side as a function of two weights.
+    <dt-fn>
         In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
+    </dt-fn>
+    Notice that the optimial weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yields a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$.
+    This indicates overfitting, which manifests as the neural net realizing a function that hugs closely to the training training at the expense of not generlizing to the test data.
+
+    Scaling up to networks with millions of weights amplifies the severity of overfitting, since $\mathcal{L}_{\text{train}}(w)$ and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions.
+    Indeed, one key insight from deep learning is that the more capacity<dt-fn>
+    Very often "capacity" is shorthand for "depth"
+    </dt-fn>
+    a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit.
+    Our demo illustrates the contrapositive: if we restrict the network to have only one hidden layer ("shallow") or no activations ("linear") we see that $\mathcal{L}_{\text{train}}$ looks similar to $\mathcal{L}_{\text{test}}$, so there's little danger of overfitting.
     </p>
 
     <h2>Bayes to the rescue</h2>
     <p>
-        Any machine learning model can potentially suffer from overfitting.
-        Because neural networks are particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
+        The problem of overfitting is certainly not unique to neural networks.
+        But because the flexibility of neural networks makes them particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting.
     </p>
 
     <p>
@@ -422,7 +456,16 @@
 </dt-article>
 
 <dt-appendix>
+  -<h3>Acknowledgments</h3>
+  <p>
+    We will have to come up with some acknowledgements.
+  </p>
 
+  <h3>Author contribution</h3>
+
+  <p>
+    We will have to list the author contributions.
+  </p>
 </dt-appendix>
 
 <script>
@@ -454,19 +497,22 @@
 </script>
 
 <script type="text/bibliography">
-    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} } @misc{karpathy2015convnetjs, title={ConvNetJS:
-    Javascript library for deep learning}, author={Karpathy, A}, year={2015} } @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} } @article{kingma2013autoencoding,
-    author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} } @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and
-    Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} } @article{rumelhart1986learning,
-    title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} } @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization},
-    year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, } @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang,
-    Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} } @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman,
-    John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} } @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions
-    Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois at Urbana-Champaign} } @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981},
-    publisher={Springer} } @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} } @article{kucukelbir2016automatic,
-    title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} } @article{paisley2012variational,
-    title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} } @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural
-    Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015} } @inproceedings{gal2016dropout, title={Dropout as a Bayesian
-    approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016} } @inproceedings{kingma2015variational, title={Variational
-    dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
+<!-- ARTICLES -->
+    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
+    @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012} }
+    @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
+    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015} } 
+    @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} }
+    @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
+    @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
+    @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} }
+    @article{rumelhart1986learning, title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} }
+    @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} }
+    @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois at Urbana-Champaign} }
+    @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} }
+    @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} }
+    @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
+    @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
+    @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015} }
+    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016} } @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
 </script>

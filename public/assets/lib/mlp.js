@@ -9,7 +9,8 @@ function mlp(div, train_loss_div, valid_loss_div, nn_div) {
     var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h, false);
     var train_loss_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
     var valid_loss_plotter = Plotter(svg3, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
-    var graph_plotter = Plotter(svg4, [0,1], [0,1], 650, 200);
+    // var graph_plotter = Plotter(svg4, [0,1], [0,1], 650, 200);
+    var graph_plotter = Plotter(svg4, [0,1], [0,1], 350, 200);
 
     var linear_train_contour_data = new Array(param.n * param.m);
     var linear_valid_contour_data = new Array(param.n * param.m);
