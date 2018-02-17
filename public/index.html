@@ -95,23 +95,30 @@
         </div>
     </figure>
 
-    <!-- Regular MLP regression -->
-    <div id="nn_full" style="position:relative; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-
-
-    <!-- Regular MLP network diagram -->
-    <figure style="position:relative; width:1100px; height:200px;">
-        <div id="nn_graph" style="position:relative; float:left; width:650px; height:200px;"></div>
-        <form style="position:relative; margin-left: 684px; width:150px;" onclick="mlp.update()">
-            <input type="radio" name="net_type" value="Deep" checked> Deep<br>
-            <input type="radio" name="net_type" value="Shallow"> Shallow<br>
-            <input type="radio" name="net_type" value="Linear"> Linear<br>
-        </form>
-        <button type="button" onclick="mlp.train()">Train</button>
-        <button type="button" onclick="mlp.reset()">Reset</button>
-        <figcaption id="Overfitcaption" style="position:relative; width: 450px; height: 10px; top: 20px; margin-left: 650px;">
-            Neural Networks are function approximators. Here, different models fitting the training set (red dots). Green dots show the test set.
-        </figcaption>
+    <!-- Regular MLP funtion and graph -->
+    <figure style="position:relative; width:984px; height:330px;">
+        <div class="container">
+            <div id="nn_full" style="display: table-cell; width:"+param.w+"px; height: 320px;">
+                <figcaption id="nn_full_title" style="position:relative; text-align:center;right:10px">
+                    Neural net prediction function $\hat y_w(x)$. Red dots are training data, green are test.
+                </figcaption>
+            </div>
+            <div style="display: table-cell; width: 320px; height: 300px;">
+                <form onclick="mlp.update()">
+                    <input type="radio" name="net_type" value="Deep" checked> Deep<br>
+                    <input type="radio" name="net_type" value="Shallow"> Shallow<br>
+                    <input type="radio" name="net_type" value="Linear"> Linear<br>
+                </form>
+                <button type="button" onclick="mlp.train()">Train</button>
+                <button type="button" onclick="mlp.reset()">Reset</button>
+            </div>
+            <div id="nn_graph" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
+                <figcaption id="nn_graph_title" style="position:relative; text-align:center;right:10px">
+                    Neural net architecture 
+                    <!-- Notice how the choice of architecture affects the contours of the $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
+                </figcaption>
+            </div>
+        </div>
     </figure>
 
     <p>
@@ -133,15 +140,14 @@
         Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
     </dt-fn>  of a particular output $y$ given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
         We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. 
-        In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
+        In classification, using cross entropy loss is equivalent to modeling output predictions according to a categorical (i.e., multinomial) distribution
     </dt-fn>.
     During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
-    In the demo above, we plot these functions side-by-side as a function of two weights.
-    <dt-fn>
-        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call weight 1 and weight 2.
-    </dt-fn>
-    Notice that the optimial weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yields a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$.
-    This indicates overfitting, which manifests as the neural net realizing a function that hugs closely to the training training at the expense of not generlizing to the test data.
+    In the demo above, we plot these functions side-by-side as a function of two weights<dt-fn>
+        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call $w_1$ and $w_2$.
+    </dt-fn>.
+    Notice that the optimial weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yield a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$.
+    This indicates overfitting, which manifests as the neural net realizing a prediction function $\hat y_w(s)$ that hugs closely to the training training at the expense of not generlizing to the test data.
 
     Scaling up to networks with millions of weights amplifies the severity of overfitting, since $\mathcal{L}_{\text{train}}(w)$ and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions.
     Indeed, one key insight from deep learning is that the more capacity<dt-fn>
@@ -210,6 +216,38 @@
         We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
    </p>
 
+   <!-- KL divergence figure -->
+    <figure style="position:relative; width:1100px; height:400px;">
+        <div id="curve" style="position:relative; float:left; width:784px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
+        <form style="position:relative; margin-left: 784px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
+            <input type="radio" name="divergence_type" value="KL" checked> KL<br>
+            <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
+            <input type="radio" name="divergence_type" value="JS"> JS
+        </form>
+        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
+        </div>
+        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
+        </div>
+        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The dark green area represents KL divergence, dark red is reverse KL, orange is Jensen Shannon divergence. Try to minimize
+            the areas. Do these measures agree?
+        </figcaption>
+    </figure>
+
+
+    <p style="color:red;">
+    TODO: We should say something about the role of the KL-divergence here and reference the figure.
+    It would be nice to figure out how to put a legend in the KL interactive figure to clarify things.
+    </p>
+
+
+    <h2>Optimizing with gradients</h2>
+    <p style="color:red;">
+    TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side.
+    </p>
+    
    <figure style="position:relative; width:800px; height:200px;">
        <div class="container" style="width: 800px;">
            <div id="svi-algo-box-left" style="display: table-cell;"></div>
@@ -240,49 +278,6 @@
         \ENDPROCEDURE
     \end{algorithmic}
     </pre>
-
-    <!-- end ec edit 2017-jan-21; i know this section is getting overly pedantic, but i'm not sure how best to introduce these concepts...-->
-
-    <!-- <p> There are many possible strategies to try to avoid overfitting, generally called regularization methods.  Instead of choosing the weights that best fit to the training data, these methods try to balance data fit with the complexity of the function being learned.  With Bayesian neural network, first developed by <dt-cite key="neal1995bayesian"></dt-cite> and <dt-cite key="graves2011practical"></dt-cite>, which combines the power of a neural network with the flexibility of bayesian methods, we can fit the best set of weights and regularize at the same time.  </p> -->
-
-
-
-
-   <h3>Variational Inference (old)</h3>
-    <p>
-        Variational inference means, loosely, fitting a nice, tractable distribution (such as a Gaussian, or a million Gaussians) to be as close as possible to the complicated, intractable posterior.
-        Once we find a nice tractable distribution that approximates
-        the intractable one, we can use the tractable distribution to make predictions or measure uncertainty within an tractable time complexity.
-    </p>
-
-    <p>
-        Lets define $p$ as the true distribution and $q$ to be the million-gaussian we use to approximate $p$.
-        We call it a variational distribution.
-        We want $q$ to be close to $p$, but what does it mean for two probability distributions to be close to each other,
-        in other words, if we define a loss function that describes the closeness of two distributions, what properties are desired? For starters, if $p = q$, the loss should be 0, also if $p$ and $q$ assign a different probability to the same point,
-        we want to punish it by assigning a large loss.
-        Kullback Leibler divergence is such a measure, PUT EQUATION AND HOW ITS ASYMMETRIC HERE.
-    </p>
-
-    <!-- KL divergence figure -->
-    <figure style="position:relative; width:1100px; height:400px;">
-        <div id="curve" style="position:relative; float:left; width:984px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-        <form style="position:relative; margin-left: 984px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="KL" checked> KL<br>
-            <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
-            <input type="radio" name="divergence_type" value="JS"> JS
-        </form>
-        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
-        </div>
-        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;">
-            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
-        </div>
-        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            If we were to optimize, we must know the objective. Here, the objective is a measure of differences in two probability distributions. The dark green area represents KL divergence, dark red is reverse KL, orange is Jensen Shannon divergence. Try to minimize
-            the areas. Do these measures agree?
-        </figcaption>
-    </figure>
 
     <p>
         Using a variational method come with other perks as well: with a clearly defined, continuously differentiable objective, we could use gradient-based methods and optimizers off the shelf.
@@ -327,8 +322,8 @@
             </div>
         </div>
     </figure>
-    <h3>Expression of Uncertainty</h3>
-    <p>
+    <h3>Modeling Uncertainty</h3>
+    <p style="color:red;">
     TODO: discuss the uncercatinty estimates you get for free by modeling the posterior.
     </p>
     <!-- VARIANCE FIGURE
