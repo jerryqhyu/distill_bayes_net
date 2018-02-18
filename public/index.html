@@ -83,7 +83,7 @@
                     The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
                     Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to pre-trained values.
                     Bluer is better.
-                    Use your mouse to change the values of the weights for these neurons. 
+                    Use your mouse to change the values of the weights for these neurons.
                     Notice how they affect both the training and test objectives (left, right) and the network predictions changes below, where red are training data and green are test data.
                 </figcaption>
             </div>
@@ -117,7 +117,7 @@
     <p>
     First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of intput-output pairs.
     Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output pairs.
-    Then neural network training corresponds to the following optimization problem: 
+    Then neural network training corresponds to the following optimization problem:
     </p>
     <p>
     $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
@@ -132,7 +132,7 @@
     Here $\log p(y| x, w)$ represents the log likelihood<dt-fn>
         Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
     </dt-fn>  of a particular output $y$ given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
-        We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. 
+        We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood.
         In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
     </dt-fn>.
     During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
@@ -501,7 +501,7 @@
     @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
     @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012} }
     @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
-    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015} } 
+    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015} }
     @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} }
     @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
     @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
