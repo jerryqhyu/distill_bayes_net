@@ -1,16 +1,8 @@
 function sampler(curve_div, posterior_div, progress_div) {
 
-    // svg properties
-    var svg = curve_div.append("svg");
-    var svg2 = posterior_div.append("svg");
-    var svg3 = progress_div.append("svg");
-    svg.attr("width", param.w).attr("height", param.h);
-    svg2.attr("width", param.w_loss + 20).attr("height", param.h_loss + 20);
-    svg3.attr("width", param.w_progress + 20).attr("height", param.h_progress);
-
-    var curve_plotter = Plotter(svg, param.curve_domain_x, param.curve_domain_y, param.w, param.h);
-    var posterior_plotter = Plotter(svg2, param.loss_domain_x, param.loss_domain_y, param.w_loss, param.h_loss);
-    var progress_plotter = Plotter(svg3, param.progress_domain_x, param.progress_domain_y, param.w_progress, param.h_progress);
+    var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
+    var posterior_plotter = Plotter(posterior_div, param.loss_domain_x, param.loss_domain_y, true, true);
+    var progress_plotter = Plotter(progress_div, param.progress_domain_x, param.progress_domain_y, false, false);
 
     var inv_x_scale = d3.scaleLinear().domain([0, param.w_loss]).range(param.loss_domain_x);
     var inv_y_scale = d3.scaleLinear().domain([param.h_loss, 0]).range(param.loss_domain_y);
@@ -70,15 +62,15 @@ function sampler(curve_div, posterior_div, progress_div) {
         avg_curve_points = [];
         avg_prediction = [];
         test_loss_for_avg_prediction = [];
-        svg.selectAll("path").remove();
+        curve_plotter.svg.selectAll("path").remove();
         clear();
         plot();
     }
 
     function clear() {
-        svg.select("#float").selectAll("*").remove();
-        svg2.select("#float").selectAll("*").remove();
-        svg3.select("#float").selectAll("*").remove();
+        curve_plotter.svg.select("#float").selectAll("*").remove();
+        progress_plotter.svg.select("#float").selectAll("*").remove();
+        posterior_plotter.svg.select("#float").selectAll("*").remove();
     }
 
     function sample_train() {

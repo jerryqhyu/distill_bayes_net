@@ -37,8 +37,8 @@
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <script src="assets/utils.js"></script>
     <!-- <script src="assets/lib/lib.js"></script> -->
-    <figure style="width:100%; height:200px;">
-            <div id="full_bnn"></div>
+    <figure style="width:100%; height:400px;">
+            <div id="full_bnn" style="width:100%; height:400px;"></div>
     </figure>
 
     <H1>Bayesian Neural Networks</H1>
@@ -71,55 +71,62 @@
     </p>
 
     <!-- Regular MLP objective surfaces -->
-    <figure style="position:relative; width:984px; height:330px;">
+    <figure style="position:relative; width:984px;">
         <div class="container">
-            <div id="nn_loss_train" style="display: table-cell; width: 320px; height: 320px;">
-                <figcaption id="nn_loss_train_title" style="position:relative; text-align:center;right:10px">
-                    Training likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
-                </figcaption>
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="nn_loss_train_title" class='little_caption'>
+                        Training likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                    </figcaption>
+                    <div id="nn_loss_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
+                        The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
+                        Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to pre-trained values.
+                        Bluer is better.
+                        Use your mouse to change the values of the weights for these neurons.
+                        Notice how they affect both the training and test objectives (left, right) and the network predictions changes below, where red are training data and green are test data.
+                    </figcaption>
+                </div>
+                <div class="table-cell-wrap">
+                    <figcaption id="nn_loss_test_title" class='little_caption'>
+                        Test likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                    </figcaption>
+                    <div id="nn_loss_valid" class='contour'> </div>
+                </div>
             </div>
-            <div style="display: table-cell; width: 320px; height: 300px;">
-                <figcaption id="NNLosscaption" style="position: relative; width: 250px; left:25px; right: 25px; top: 10px;">
-                    The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
-                    Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to pre-trained values.
-                    Bluer is better.
-                    Use your mouse to change the values of the weights for these neurons.
-                    Notice how they affect both the training and test objectives (left, right) and the network predictions changes below, where red are training data and green are test data.
-                </figcaption>
-            </div>
-            <div id="nn_loss_valid" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
-                <figcaption id="nn_loss_test_title" style="position:relative; text-align:center;right:10px">
-                    Test likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
-                </figcaption>
+        </div>
+
+        <div class="container" style="height: 230px; top: 40px;">
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="nn_full_title" class='little_caption'>
+                        Prediction function $\hat y_w(x)$. Red dots are training data, green are test.
+                    </figcaption>
+                    <div id="nn_full" style="width:440px; height: 200px;"></div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="nn_graph_title" class='little_caption'>
+                        Neural net architecture
+                        <!-- Notice how the choice of architecture affects the contours of the $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
+                    </figcaption>
+                    <div id="nn_graph" style="width:440px; height: 200px;"></div>
+                </div>
+                <div class='table-cell-wrap' style="width: 100px;">
+                    <form onclick="mlp.update()" style="top: 50px;">
+                        <input type="radio" name="net_type" value="Deep" checked> Deep<br>
+                        <input type="radio" name="net_type" value="Shallow"> Shallow<br>
+                        <input type="radio" name="net_type" value="Linear"> Linear<br>
+                    </form>
+                    <button type="button" onclick="mlp.train()">Train</button>
+                    <button type="button" onclick="mlp.reset()">Reset</button>
+                </div>
             </div>
         </div>
     </figure>
 
-    <!-- Regular MLP funtion and graph -->
-    <figure style="position:relative; width:984px; height:330px;">
-        <div class="container">
-            <div id="nn_full" style="display: table-cell; width:"+param.w+"px; height: 320px;">
-                <figcaption id="nn_full_title" style="position:relative; text-align:center;right:10px">
-                    Neural net prediction function $\hat y_w(x)$. Red dots are training data, green are test.
-                </figcaption>
-            </div>
-            <div style="display: table-cell; width: 320px; height: 300px;">
-                <form onclick="mlp.update()">
-                    <input type="radio" name="net_type" value="Deep" checked> Deep<br>
-                    <input type="radio" name="net_type" value="Shallow"> Shallow<br>
-                    <input type="radio" name="net_type" value="Linear"> Linear<br>
-                </form>
-                <button type="button" onclick="mlp.train()">Train</button>
-                <button type="button" onclick="mlp.reset()">Reset</button>
-            </div>
-            <div id="nn_graph" style="display: table-cell; width: 320px; height: 320px; left: 75px;">
-                <figcaption id="nn_graph_title" style="position:relative; text-align:center;right:10px">
-                    Neural net architecture 
-                    <!-- Notice how the choice of architecture affects the contours of the $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
-                </figcaption>
-            </div>
-        </div>
-    </figure>
+
 
     <p>
     First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of intput-output pairs.
@@ -139,13 +146,8 @@
     Here $\log p(y| x, w)$ represents the log likelihood<dt-fn>
         Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
     </dt-fn>  of a particular output $y$ given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
-<<<<<<< HEAD
         We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood.
         In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
-=======
-        We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. 
-        In classification, using cross entropy loss is equivalent to modeling output predictions according to a categorical (i.e., multinomial) distribution
->>>>>>> d648f3a844f89389d8818a9fa99bdeb7de8d4670
     </dt-fn>.
     During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
     In the demo above, we plot these functions side-by-side as a function of two weights<dt-fn>
@@ -198,7 +200,7 @@
 
     <figure style="position:relative; width:984px; height:400px;">
         <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
-            <figcaption id="exact_train_loss_title" style="position:relative; text-align:center;right:10px">
+            <figcaption id="exact_train_loss_title" class='little_caption'>
                 Training Loss
             </figcaption>
         </div>
@@ -222,9 +224,9 @@
    </p>
 
    <!-- KL divergence figure -->
-    <figure style="position:relative; width:1100px; height:400px;">
-        <div id="curve" style="position:relative; float:left; width:784px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-        <form style="position:relative; margin-left: 784px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
+    <figure style="position:relative; width:984px; height:400px;">
+        <div id="curve" style="position:relative; float:left; width:834px; height:300px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
+        <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
             <input type="radio" name="divergence_type" value="KL" checked> KL<br>
             <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
             <input type="radio" name="divergence_type" value="JS"> JS
@@ -252,7 +254,7 @@
     <p style="color:red;">
     TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side.
     </p>
-    
+
    <figure style="position:relative; width:800px; height:200px;">
        <div class="container" style="width: 800px;">
            <div id="svi-algo-box-left" style="display: table-cell;"></div>
@@ -309,21 +311,25 @@
             <div id="var_graph" style="display: table-cell; width:600px; height:200px;"></div>
         </div>
 
-        <div class="container" style="margin-top: 20px;">
-            <div id="var_loss_train" style="display: table-cell; width: 320px; height: 350px;">
-                <figcaption id="var_loss_train_title" style="position:relative; text-align:center;right:10px">
-                    Training Loss
-                </figcaption>
-            </div>
-            <div style="display: table-cell; width: 320px; height: 350px;">
-                <figcaption id="var_loss_caption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
-                    The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
-                </figcaption>
-            </div>
-            <div id="var_loss_valid" style="display: table-cell; width: 320px; height: 350px;">
-                <figcaption id="var_loss_valid_title" style="position:relative; text-align:center;right:10px">
-                    Test Loss
-                </figcaption>
+        <div class='container'>
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_train_title" class='little_caption'>
+                        Training Loss
+                    </figcaption>
+                    <div id="var_loss_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_caption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
+                        The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
+                    </figcaption>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_valid_title" class='little_caption'>
+                        Test Loss
+                    </figcaption>
+                    <div id="var_loss_valid" class='contour'> </div>
+                </div>
             </div>
         </div>
     </figure>
@@ -386,7 +392,6 @@
     <script src="assets/lib/mlp.js"></script>
     <script src="assets/lib/bnn.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
-    <script src="assets/lib/uncertainty.js"></script>
     <script src="assets/lib/sampler.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>

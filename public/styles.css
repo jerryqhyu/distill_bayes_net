@@ -4,6 +4,28 @@ pre {
 
 .container {
     position:relative;
-    display: table;
+    display: inline-block;
     width: 984px;
+    height: 320px;
+}
+
+.table-cell-wrap {
+    display: table-cell;
+    width: 320px;
+    height: inherit;
+}
+
+.contour {
+    width: 320px;
+    height:320px;
+}
+
+.little_caption {
+    position:relative;
+    text-align:center;
+    right:10px;
+}
+
+.bordered {
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
