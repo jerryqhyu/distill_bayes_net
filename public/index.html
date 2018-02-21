@@ -136,7 +136,7 @@
     <p>
         $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
     </p>
-    <p> 
+    <p>
         where $\mathcal{L}_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
     </p>
     <p>
@@ -146,7 +146,7 @@
     <p>
         Here $\log p(\hat y(x) = y| w)$ represents the log likelihood<dt-fn>
             Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
-            </dt-fn> 
+            </dt-fn>
         of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
         We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood.
         In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
@@ -200,7 +200,7 @@
     <p>
         So we will need to address this computational issue, which we do in the next section.
         In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|\mathcal{D})$ instead of the estimate $w^*$ from standard neural network training.
-        In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$, 
+        In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
     </p>
     <p>
     $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{w \sim p(w|\mathcal{D})}[p(\hat y(x)|w)]$, <!-- why not p(w| \mathcal{D}, x) here...-->
@@ -210,7 +210,7 @@
         Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|\mathcal{D})$.
         This yields a nice interpretation of the predictive distribution as an <i>infinite emsemble</i> of networks, with each network's contribution to the overall prediction weigted by the posterior likelihood of its weights given the training data<dt-cite key="blundell2015weight"></dt-cite>.
         Also, it implies that we can approximate this infinite ensemble using a finite number of Monte Carlo samples from the posterior.
-        Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single neural network $\hat y(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior. 
+        Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single neural network $\hat y(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
     <p>
         The demo below illustrates the predictive distribution as well as its approximation using Monte Carlo samples of networks from the posterior.
@@ -247,9 +247,9 @@
         <button type="button" onclick="exact_inference_view.reset()">Clear</button>
     </figure>
 
-   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> 
+   <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO->
    </p>
-  
+
    <h3>Variational inference</h3>
     <p>
         We can scale up inference by settling for an approximate solution via <i>variational inference</i>.
@@ -289,7 +289,7 @@
     <h2>Optimizing with gradients</h2>
     <p style="color:red;">
     TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side.
-    We should also cite relevant papers, e.g., 
+    We should also cite relevant papers, e.g.,
     </p>
 
    <figure style="position:relative; width:800px; height:200px;">
@@ -539,8 +539,8 @@
 </script>
 
 <script type="text/bibliography">
-@inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015} url={https://arxiv.org/abs/1505.05424}}
-    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016}} 
+@inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015}, url={https://arxiv.org/abs/1505.05424}}
+    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016}}
     @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
     @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} }
     @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
