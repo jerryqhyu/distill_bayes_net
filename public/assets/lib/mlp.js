@@ -301,23 +301,18 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	function plot_train_and_valid_points() {
-		// individual training and validation points
-		training_points_data = [];
-		// training data points
-		for (var i = 0; i < param.train_points.length; i++) {
-			training_points_data.push({
-				x: param.train_points[i],
-				y: Math.sin(param.train_points[i]) + param.train_noise[i]
-			});
-		}
-		validation_points_data = [];
-		// training data points
-		for (var i = 0; i < param.validation_points.length; i++) {
-			validation_points_data.push({
-				x: param.validation_points[i],
-				y: Math.sin(param.validation_points[i]) + param.validation_noise[i]
-			});
-		}
+		training_points_data = param.train_points.map((p, i) => {
+			return {
+				x: p,
+				y: Math.sin(p) + param.train_noise[i]
+			};
+		});
+		validation_points_data = param.validation_points.map((p, i) => {
+			return {
+				x: p,
+				y: Math.sin(p) + param.validation_noise[i]
+			};
+		});
 		curve_plotter.plot_points(training_points_data, {
 			stroke: "red",
 			color: "red",

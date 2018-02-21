@@ -1,4 +1,4 @@
-function sampler(curve_div, posterior_div, progress_div) {
+function exact_inference_view(curve_div, posterior_div, progress_div) {
 
     var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
     var posterior_plotter = Plotter(posterior_div, param.loss_domain_x, param.loss_domain_y, true, true);
@@ -38,6 +38,7 @@ function sampler(curve_div, posterior_div, progress_div) {
         for (var i = 1; i < sampling_interval.length; i++) {
             sampling_interval[i] = sampling_interval[i - 1] + Math.exp(-posterior_data[i] - log_sum_exp);
         }
+
         curve_plotter.add_group("fixed");
         posterior_plotter.add_group("fixed");
         progress_plotter.add_group("fixed");
@@ -52,7 +53,7 @@ function sampler(curve_div, posterior_div, progress_div) {
     function initial_plot() {
         plot_datapoints();
         plot_posterior();
-        plot_MLE();
+        plot_mle_loss();
         plot_sample_dist();
     }
 
@@ -101,21 +102,26 @@ function sampler(curve_div, posterior_div, progress_div) {
                 return x.forward(x_val).w[0];
             })
 
-            single_point_pred.sort((a,b) => {return a-b;});
+            single_point_pred.sort((a, b) => {
+                return a - b;
+            });
             for (var j = 0; j < percentiles.length; j++) {
-                percentiles[j].push({x: i, y: single_point_pred[Math.floor(0.01 * j * sample_size)]});
+                percentiles[j].push({
+                    x: i,
+                    y: single_point_pred[Math.floor(0.01 * j * sample_size)]
+                });
             }
         }
 
         // plot the percentile of the samples
         for (var i = 0; i < percentiles.length / 2; i++) {
             curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse()), {
-				color: "red",
-				fill: "red",
-				width: 1,
-				opacity: 1 / (percentiles.length - i),
-				id: "#fixed"
-			});
+                color: "red",
+                fill: "red",
+                width: 1,
+                opacity: 1 / (percentiles.length - i),
+                id: "#fixed"
+            });
         }
     }
 
@@ -177,6 +183,7 @@ function sampler(curve_div, posterior_div, progress_div) {
             true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
             total_loss += 0.5 * (true_label - avg_prediction[j].y) * (true_label - avg_prediction[j].y);
         }
+
         return total_loss;
     }
 
@@ -202,19 +209,19 @@ function sampler(curve_div, posterior_div, progress_div) {
     function predicted_points(net) {
         points = {};
         predicted_curve = [];
-        valid = [];
         for (var i = -5; i <= 5; i += param.step_size) {
             x_val = new net_lib.Vol([i]);
             predicted_value = net.forward(x_val);
             predicted_curve.push({x: i, y: predicted_value.w[0]});
         }
-        for (var j = 0; j < param.validation_points.length; j++) {
-            x_val = new net_lib.Vol([param.validation_points[j]]);
-            predicted_value = net.forward(x_val);
-            valid.push({x: param.validation_points[j], y: predicted_value.w[0]});
-        }
+
+        points.valid = param.validation_points.map(point => {
+            return {
+                x: point,
+                y: net.forward(new net_lib.Vol([point])).w[0]
+            };
+        })
         points.curve = predicted_curve;
-        points.valid = valid;
         return points;
     }
 
@@ -224,13 +231,13 @@ function sampler(curve_div, posterior_div, progress_div) {
     }
 
     function plot_avg() {
-        var avg_loss_data = [];
-        for (var i = 0; i < test_loss_for_avg_prediction.length; i++) {
-            avg_loss_data.push({
+        var avg_loss_data = test_loss_for_avg_prediction.map((avg, i) => {
+            return {
                 x: (i + 1) / (test_loss_for_avg_prediction.length + 1),
-                y: test_loss_for_avg_prediction[i]
-            });
-        }
+                y: avg
+            }
+        });
+
         progress_plotter.plot_line(avg_loss_data, {
             color: "black",
             width: 3,
@@ -258,69 +265,32 @@ function sampler(curve_div, posterior_div, progress_div) {
         });
     }
 
-    function plot_MLE() {
+    function plot_mle_loss() {
         MLE = [];
-        overfit = [];
         for (var i = 0; i < 1; i += param.step_size) {
             MLE.push({x: i, y: 2.7963}); //MLE validation loss
-            overfit.push({x: i, y: 3.1934}); //MLE validation loss
         }
-        progress_plotter.plot_line(overfit, {
-            color: "darkred",
-            width: 2,
-            opacity: 0.5,
-            id: "#fixed"
-        });
         progress_plotter.plot_line(MLE, {
             color: "darkgreen",
             width: 2,
             opacity: 0.5,
             id: "#fixed"
         });
-        posterior_plotter.plot_points([
-            {
-                x: 0.8133331298828126,
-                y: 1.4501043701171876
-            }
-        ], {
-            stroke: "black",
-            color: "darkgreen",
-            size: 5,
-            opacity: 1,
-            id: "#fixed"
-        });
-        posterior_plotter.plot_points([
-            {
-                x: 0.8023331298828124,
-                y: 0.09676687011718773
-            }
-        ], {
-            stroke: "black",
-            color: "darkred",
-            size: 5,
-            opacity: 1,
-            id: "#fixed"
-        });
     }
 
     function plot_datapoints() {
-        //individual training and validation points
-        training_points_data = [];
-        //training data points
-        for (var i = 0; i < param.train_points.length; i++) {
-            training_points_data.push({
-                x: param.train_points[i],
-                y: Math.sin(param.train_points[i]) + param.train_noise[i]
-            });
-        }
-        validation_points_data = [];
-        //training data points
-        for (var i = 0; i < param.validation_points.length; i++) {
-            validation_points_data.push({
-                x: param.validation_points[i],
-                y: Math.sin(param.validation_points[i]) + param.validation_noise[i]
-            });
-        }
+        training_points_data = param.train_points.map((p, i) => {
+            return {
+                x: p,
+                y: Math.sin(p) + param.train_noise[i]
+            }
+        });
+        validation_points_data = param.validation_points.map((p, i) => {
+            return {
+                x: p,
+                y: Math.sin(p) + param.validation_noise[i]
+            }
+        })
         curve_plotter.plot_points(training_points_data, {
             stroke: "red",
             color: "red",

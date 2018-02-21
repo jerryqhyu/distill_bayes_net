@@ -212,12 +212,12 @@
 
             </div>
         </div>
-        <figcaption id="exact_caption" style="position:absolute; width: 470px; height: 60px; left: 510px; top: 310px;">
+        <figcaption id="exact_caption" style="position:absolute; width: 420px; height: 60px; left: 560px; top: 310px;">
             The black line shows the validation loss of the average.
-            Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green and the local minimum in dark red.
+            Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green.
         </figcaption>
-        <button type="button" onclick="sampler.sample_train()">Sample</button>
-        <button type="button" onclick="sampler.reset()">Clear</button>
+        <button type="button" onclick="exact_inference_view.sample_train()">Sample</button>
+        <button type="button" onclick="exact_inference_view.reset()">Clear</button>
     </figure>
 
    <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO-> </p>
@@ -399,7 +399,7 @@
     <script src="assets/lib/mlp.js"></script>
     <script src="assets/lib/bnn.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
-    <script src="assets/lib/sampler.js"></script>
+    <script src="assets/lib/exact_inference.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
@@ -409,8 +409,8 @@
         mlp.plot();
 
         // exact inference
-        var sampler = sampler(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
-        sampler.plot();
+        var exact_inference_view = exact_inference_view(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
+        exact_inference_view.plot();
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), 0, 1);
