@@ -47,13 +47,13 @@ function sampler(curve_div, posterior_div, progress_div) {
 
         posterior_plotter.add_x_axis_label("w1");
         posterior_plotter.add_y_axis_label("w2");
-        progress_plotter.add_y_axis_label("Average Loss");
     }
 
     function initial_plot() {
         plot_datapoints();
         plot_posterior();
         plot_MLE();
+        plot_sample_dist();
     }
 
     function reset() {
@@ -62,15 +62,61 @@ function sampler(curve_div, posterior_div, progress_div) {
         avg_curve_points = [];
         avg_prediction = [];
         test_loss_for_avg_prediction = [];
-        curve_plotter.svg.selectAll("path").remove();
+        curve_plotter.svg.select("#float").selectAll("*").remove();
         clear();
         plot();
     }
 
     function clear() {
-        curve_plotter.svg.select("#float").selectAll("*").remove();
         progress_plotter.svg.select("#float").selectAll("*").remove();
         posterior_plotter.svg.select("#float").selectAll("*").remove();
+    }
+
+    function plot_sample_dist() {
+        var random = new Math.seedrandom("Vector");
+        var sample_size = 500;
+        var sampled_nets = [];
+        var percentiles = []; // 10, 25, 45, 55, 75, 90
+        for (var i = 0; i < 100; i++) {
+            percentiles.push([]);
+        }
+        // sample 100 nets
+        for (var net_idx = 0; net_idx < sample_size; net_idx++) {
+            var seed = random();
+            for (var i = 0; seed > sampling_interval[i]; i++) {}
+            var n_sampled = i % param.m;
+            var m_sampled = (i - n_sampled) / param.n;
+            sampled_net = make_preset_net();
+            sampled_net.getLayer(1).setWeights([
+                [inv_x_scale(n_sampled * param.scaling_factor)],
+                [inv_y_scale(m_sampled * param.scaling_factor)]
+            ]);
+            sampled_nets.push(sampled_net);
+        }
+
+        // collect percentile for each point
+        for (var i = -5; i <= 5; i += param.step_size) {
+            x_val = new net_lib.Vol([i]);
+            single_point_pred = sampled_nets.map(x => {
+                return x.forward(x_val).w[0];
+            })
+
+            single_point_pred.sort((a,b) => {return a-b;});
+            for (var j = 0; j < percentiles.length; j++) {
+                percentiles[j].push({x: i, y: single_point_pred[Math.floor(0.01 * j * sample_size)]});
+            }
+        }
+
+        // plot the percentile of the samples
+        for (var i = 0; i < percentiles.length / 2; i++) {
+            curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse()), {
+				color: "red",
+				fill: "red",
+				width: 1,
+				opacity: 1 / (percentiles.length - i),
+				id: "#fixed"
+			});
+        }
     }
 
     function sample_train() {
@@ -79,10 +125,10 @@ function sampler(curve_div, posterior_div, progress_div) {
         predictions = predicted_points(sampled_net);
 
         curve_plotter.plot_line(predictions.curve, {
-            color: "orange",
+            color: "darkblue",
             width: 1,
             opacity: 0.3,
-            id: "#fixed"
+            id: "#float"
         });
 
         online_update_average(predictions);
@@ -192,12 +238,12 @@ function sampler(curve_div, posterior_div, progress_div) {
             id: "#float"
         });
         // Also plot the average over sampled nets from training posterior
-        curve_plotter.plot_line(avg_curve_points, {
-            color: "red",
-            width: 3,
-            opacity: 1,
-            id: "#float"
-        });
+        // curve_plotter.plot_line(avg_curve_points, {
+        //     color: "red",
+        //     width: 3,
+        //     opacity: 1,
+        //     id: "#float"
+        // });
     }
 
     function plot_weight() {
