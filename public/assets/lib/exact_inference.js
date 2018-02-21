@@ -97,14 +97,12 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
 
         // collect percentile for each point
         for (var i = -5; i <= 5; i += param.step_size) {
-            x_val = new net_lib.Vol([i]);
             single_point_pred = sampled_nets.map(x => {
-                return x.forward(x_val).w[0];
-            })
-
-            single_point_pred.sort((a, b) => {
+                return x.forward(new net_lib.Vol([i])).w[0];
+            }).sort((a, b) => {
                 return a - b;
             });
+
             for (var j = 0; j < percentiles.length; j++) {
                 percentiles[j].push({
                     x: i,
@@ -119,7 +117,7 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
                 color: "red",
                 fill: "red",
                 width: 1,
-                opacity: 1 / (percentiles.length - i),
+                opacity: 1 / (percentiles.length - 10 - i * 1.5),
                 id: "#fixed"
             });
         }
