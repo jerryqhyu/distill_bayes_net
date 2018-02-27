@@ -122,8 +122,8 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	function update() {
 		pause_training();
-		svg2.select("#contour").selectAll("*").remove();
-		svg3.select("#contour").selectAll("*").remove();
+		train_loss_plotter.svg.select("#contour").selectAll("*").remove();
+		valid_loss_plotter.svg.select("#contour").selectAll("*").remove();
 		if (radio_button_state() === 'Linear') {
 			net = linear_net;
 			trainer = linear_trainer;

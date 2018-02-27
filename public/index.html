@@ -218,34 +218,15 @@
    </p>
 
      <!-- Exact Inference figures -->
-    <figure style="position:relative; width:984px; height:310px;">
+    <figure style="position:relative; width:984px; height:350px;">
         <div id="exact_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 10px; left: 540px; top: 10px;">
             The predictive distribution $p(\hat y(x)|\mathcal{D}_{\text{train}})$ is shown in red.
             Press the 'sample' below to draw sampled networks $\hat y_w(x)$ with $w \sim p(w|\mathcal{D}_{\text{train}})$.
         </figcaption>
-    </figure>
 
-    <figure style="position:relative; width:984px; height:400px;">
-        <div id="exact_train_contour" style="position:relative; float:left; width: 320px; height: 320px;">
-            <figcaption id="exact_train_loss_title" class='little_caption'>
-                Training Loss
-            </figcaption>
-        </div>
-        <div>
-            <figcaption id="progress_label" class='little_caption'>
-                Average Test Loss
-            </figcaption>
-            <div id="progress" class='bordered' style="position:relative; margin-left: 334px; width:650px; height:280px;">
-
-            </div>
-        </div>
-        <figcaption id="exact_caption" style="position:absolute; width: 420px; height: 60px; left: 560px; top: 310px;">
-            The black line shows the validation loss of the average.
-            Observe how validation loss decreases as one sample more and eventually becomes lower than MLE estimate in dark green.
-        </figcaption>
-        <button type="button" onclick="exact_inference_view.sample_train()">Sample</button>
-        <button type="button" onclick="exact_inference_view.reset()">Clear</button>
+        <button type="button" onclick="metropolis.start()">Sample</button>
+        <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
     </figure>
 
    <!- SAY SOMETHING ABOUT THE INTERPRETATION OF THE PRIOR AND LIKELIHOOD HERE, AND ADD SOME ANALYSIS TO THE DEMO->
@@ -431,6 +412,7 @@
     <script src="assets/lib/bnn.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
     <script src="assets/lib/exact_inference.js"></script>
+    <script src="assets/lib/metropolis.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
@@ -439,9 +421,7 @@
         var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
         mlp.plot();
 
-        // exact inference
-        var exact_inference_view = exact_inference_view(d3.select("#exact_train"), d3.select("#exact_train_contour"), d3.select("#progress"));
-        exact_inference_view.plot();
+        var metropolis = metropolis_view(d3.select("#exact_train"));
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), 0, 1);

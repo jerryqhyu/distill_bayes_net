@@ -76,11 +76,7 @@ function full_bnn_view(curve_div, graph_div) {
 			num_neurons: 3,
 			activation: 'tanh'
 		});
-		layer_defs.push({
-			type: 'variational',
-			num_neurons: 3,
-			activation: 'tanh'
-		});
+
 		layer_defs.push({
 			type: 'vregression',
 			num_neurons: 1
