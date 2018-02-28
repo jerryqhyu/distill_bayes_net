@@ -118,6 +118,7 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             batch_size: param.batch_size
         });
         avg_loss = [];
+		last_10_samples = [];
         clear();
         plot();
         pause_training();
