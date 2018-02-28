@@ -22,6 +22,21 @@ var net_lib = net_lib || {
         return_v = true;
         return u * c;
     }
+    var seededGaussian = function(rng) {
+        if (return_v) {
+            return_v = false;
+            return v_val;
+        }
+        var u = 2 * rng() - 1;
+        var v = 2 * rng() - 1;
+        var r = u * u + v * v;
+        if (r == 0 || r > 1)
+            return seededGaussian(rng);
+        var c = Math.sqrt(-2 * Math.log(r) / r);
+        v_val = v * c; // cache this
+        return_v = true;
+        return u * c;
+    }
     var randf = function(a, b) {
         return Math.random() * (b - a) + a;
     }
@@ -161,6 +176,7 @@ var net_lib = net_lib || {
     global.randi = randi;
     global.randn = randn;
     global.zeros = zeros;
+    global.seededGaussian = seededGaussian;
     global.maxmin = maxmin;
     global.randperm = randperm;
     global.weightedSample = weightedSample;
