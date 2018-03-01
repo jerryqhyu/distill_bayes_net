@@ -16,7 +16,6 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     var last_10_samples = [];
 
     //define a neural network
-    var obtaining_param = 0;
     var epoch_count = 0;
     var net = make_preset_net();
 
@@ -34,12 +33,8 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     function train() {
         if (!timer) {
             console.log("started training");
-            if (obtaining_param) {
-                net.getLayer(1).freeze_weights();
-            } else {
-                net.freezeAllButLayer(1);
-                net.getLayer(1).freeze_biases();
-            }
+            net.freezeAllButLayer(1);
+            net.getLayer(1).freeze_biases();
             timer = d3.timer(train_epoch, 50);
         }
     }
@@ -49,12 +44,6 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         for (var j = 0; j < param.train_points.length; j++) {
             x = new net_lib.Vol([param.train_points[j]]);
             trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
-        }
-        if (obtaining_param) {
-            for (var j = 0; j < param.validation_points.length; j++) {
-                x = new net_lib.Vol([param.validation_points[j]]);
-                trainer.train(x, [Math.sin(param.validation_points[j]) + param.validation_noise[j]]);
-            }
         }
 
         if (last_10_samples.length === 10) {
@@ -95,19 +84,22 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         layer_defs.push({type: 'regression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
-        if (!obtaining_param) {
-            //set the params for later layers
-            new_net.getLayer(1).setMeans([[2], [2]]);
-            new_net.getLayer(3).setWeights(param.opt_layer3_w);
-            new_net.getLayer(5).setWeights(param.opt_layer5_w);
-            new_net.getLayer(7).setWeights(param.opt_layer7_w);
-            new_net.getLayer(1).setBiases(param.opt_layer1_b);
-            new_net.getLayer(3).setBiases(param.opt_layer3_b);
-            new_net.getLayer(5).setBiases(param.opt_layer5_b);
-            new_net.getLayer(7).setBiases(param.opt_layer7_b);
-        }
+
+        // set the params for later layers
+        new_net.getLayer(1).setMeans([[2], [2]]);
+        new_net.getLayer(3).setWeights(param.opt_layer3_w);
+        new_net.getLayer(5).setWeights(param.opt_layer5_w);
+        new_net.getLayer(7).setWeights(param.opt_layer7_w);
+        new_net.getLayer(1).setBiases(param.opt_layer1_b);
+        new_net.getLayer(3).setBiases(param.opt_layer3_b);
+        new_net.getLayer(5).setBiases(param.opt_layer5_b);
+        new_net.getLayer(7).setBiases(param.opt_layer7_b);
         return new_net;
     }
+
+	function stop() {
+		pause_training();
+	}
 
     function reset() {
         net = make_preset_net();
@@ -511,5 +503,5 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         d3.select(this).attr("r", 5);
     }
 
-    return {train: train, plot: plot, reset: reset, sample: sample_weight};
+    return {train: train, plot: plot, reset: reset, stop: stop, sample: sample_weight};
 }

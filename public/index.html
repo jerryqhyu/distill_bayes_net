@@ -212,15 +212,15 @@
         Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
      <!-- Exact Inference figures -->
-    <figure style="position:relative; width:984px; height:350px;">
+    <figure style="position:relative; width:984px; height:470px;">
         <div id="exact_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <figcaption id="exact_caption" style="position:relative; width: 420px; height: 10px; left: 540px; top: 10px;">
-            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$. 
-            Once sampling begins, the running-average of the Monte Carlo approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red. 
+        <button type="button" onclick="metropolis.start()">Sample</button>
+        <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
+            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$.
+            Once sampling begins, the running-average of the Monte Carlo approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red.
             Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
         </figcaption>
 
-        <button type="button" onclick="metropolis.start()">Sample</button>
         <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
     </figure>
    </p>
@@ -232,7 +232,7 @@
     <p>
     But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i> $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$.
     An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
-    This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data, which typically have high uncertainty when data is scarce. 
+    This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data, which typically have high uncertainty when data is scarce.
     In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
    </p>
 
@@ -248,8 +248,8 @@
     </p>
 
     <p>
-        Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost. 
-        As network and dataset size grow, however, the cost of sampling also grows. 
+        Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost.
+        As network and dataset size grow, however, the cost of sampling also grows.
         In these cases we can instead solve a related but distinct inference problem that admits a learning algorithm very similar algorithm to what we used for standard training; we'll pose the problem now and discuss the learning algorithm in the next section.
         <p>
             <i>Variational methods</i> use a parameterized <i>approximate posterior</i> $q_\phi(w)$ as a stand-in for the true posterior $p(w|\mathcal{D})$.
@@ -257,10 +257,10 @@
         <p>
             $\underset{\phi}{\text{minimize}} \quad D_{KL}(q_\phi(w)||p(w|\mathcal{D})$,
         </p>
-        
+
         <p>
-            where $D_{KL}$ captures our notion of dissimilarity between two distributions. 
-            It is called the <i>Kullback-Liebler diverence</i> (or KL divergence), and is defined as 
+            where $D_{KL}$ captures our notion of dissimilarity between two distributions.
+            It is called the <i>Kullback-Liebler diverence</i> (or KL divergence), and is defined as
         </p>
         <p>
         $\quad D_{KL}(q_\phi(w)||p(w|\mathcal{D}) \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})]$
@@ -290,7 +290,7 @@
     </figure>
 
         <p>
-            Why should we be content with $D_{KL}$ as our notion of dissimilarity? 
+            Why should we be content with $D_{KL}$ as our notion of dissimilarity?
             We might notice, for example, by definition it is not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance.
             In short, we will show the KL-divergence is a sensible choice of objective because minimizing it equivalently improves a lower bound on the expected log likelihood, which is what we originally set out to maximize.
             As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$ <dt-cite key="shlens2014notes"></dt-cite>.
@@ -298,7 +298,7 @@
             You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$
         </p>
     <p style="color:red;">
-        TODO: derive the ELBO from the KL perspective 
+        TODO: derive the ELBO from the KL perspective
         The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify.
         $$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$
         The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
@@ -369,7 +369,7 @@
         <div id="var_full" class='bordered' style="position:relative; width:984px; height:300px;"></div>
         <button type="button" onclick="bnn.train()">Train</button>
         <button type="button" onclick="bnn.sample()">Sample</button>
-        <button type="button" onclick="bnn.reset()">Reset</button>
+        <button type="button" onclick="bnn.stop()">Pause</button>
 
         <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
             What if you sampled from the learned distribution?
