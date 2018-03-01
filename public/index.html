@@ -185,15 +185,13 @@
 
     <h3>Exact Bayesian inference</h3>
     <p>
-        Exact Bayesian inference tells us how to compute the posterior.
-        Its API is called Bayes' rule, which says
-    </p>
-    <p>
-        $p(w | \mathcal{D}) = \dfrac{p(\mathcal{D}|w)p(w)}{p(\mathcal{D})} = \dfrac{p(\mathcal{D}|w)p(w)}{\int_{w'} p(\mathcal{D}|w')p(w') dw'}$
+        Bayes' rule tells us how to compute the posterior:
+        $$
+        p(w | \mathcal{D}) = \dfrac{p(\mathcal{D}|w)p(w)}{p(\mathcal{D})} = \dfrac{p(\mathcal{D}|w)p(w)}{\int_{w'} p(\mathcal{D}|w')p(w') dw'}
         .
-    </p>
-    <p>
-        Its call signature requires two input distributions, the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(\mathcal{D} | w)$, and returns the posterior $p(w | \mathcal{D})$.
+        $$
+        Computing the posterior in this way is sometimes called <i>exact inference</i>, simply to distinguishes it from approximations which we will later find to be more practical.
+        Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(\mathcal{D} | w)$.
         While the posterior distribution is easily expressed, it is typically expensive to compute due to the pesky integral over all possible values of $w$.
         For most neural network we can't evaluate this integral analytically.
         We could instead approximate it numerically, but this will only be practical for small neural networks, since $w$ represents all the weights and biases, so it becomes very high dimensional for deep networks.
