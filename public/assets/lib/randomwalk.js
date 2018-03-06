@@ -1,13 +1,14 @@
-function hmc(curve_div) {
+function randomwalk_view(curve_div) {
 
 	var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
 		false, false);
 	var samples = [];
 	var predictions = []; // for speed we store predictions and only append last
-	var steps = 15;
 	var timer;
 
 	initial_plot();
+
+	// needs optimization, specifically storing predictions, or even percentiles.
 
 	function initial_plot() {
 		curve_plotter.add_group("float");
@@ -38,6 +39,7 @@ function hmc(curve_div) {
 	}
 
 	function sample() {
+		var std = Math.log(0.25);
 		var last_sample = samples[samples.length - 1];
 
 		// gaussian proposal
@@ -49,30 +51,40 @@ function hmc(curve_div) {
 
 		var idx = 0;
 		var transition_prob = Math.min(1, Math.exp(training_loss(last_net) - training_loss(new_net)));
+
+		var pts = [];
 		if (Math.random() <= transition_prob) {
 			// accept
 			samples.push(new_sample);
 			for (var i = -5; i <= 5; i += param.step_size) {
 				predictions[idx].push(new_net.forward(new net_lib.Vol([i])).w[0]);
+				pts.push({x: i, y: new_net.forward(new net_lib.Vol([i])).w[0]});
 				idx++;
 	        }
 		} else {
 			samples.push(last_sample);
 			for (var i = -5; i <= 5; i += param.step_size) {
 				predictions[idx].push(last_net.forward(new net_lib.Vol([i])).w[0]);
+				pts.push({x: i, y: last_net.forward(new net_lib.Vol([i])).w[0]});
 				idx++;
 			}
 		}
+
 		clear();
 		plot_sample_dist();
+		curve_plotter.plot_line(pts, {
+			color: "black",
+			width: 2,
+			opacity: 1,
+			id: "#float"
+		});
 	}
 
 	function propose(sample_t, std) {
-		// gaussian random initial values given dimension
-		var p0 = sample_t.weights.map(layer => {
+		var new_weights = sample_t.weights.map(layer => {
 			return layer.map(r => {
 				return r.map(c => {
-					return net_lib.randn(0, 0);
+					return c + net_lib.randn(0, std);
 				});
 			});
 		});
@@ -139,7 +151,7 @@ function hmc(curve_div) {
 			for (var j = 0; j < percentiles.length; j++) {
                 percentiles[j].push({
                     x: i,
-                    y: single_point_pred[Math.floor(0.01 * j * samples.length)]
+                    y: single_point_pred[Math.floor(0.01 * j * (samples.length - 1))]
                 });
             }
 			idx++;
@@ -160,7 +172,7 @@ function hmc(curve_div) {
 
 	function training_loss(net) {
 		return param.train_points.map((point, i) => {
-			return net.getCostLoss(new net_lib.Vol([point]), Math.sin(point) + param.train_noise[i]);
+			return 2 * net.getCostLoss(new net_lib.Vol([point]), Math.sin(point) + param.train_noise[i]);
 		}).reduce((a, b) => a + b, 0);
 	}
 

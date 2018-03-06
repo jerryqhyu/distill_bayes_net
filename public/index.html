@@ -214,9 +214,18 @@
         Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
      <!-- Exact Inference figures -->
-    <figure style="position:relative; width:984px; height:470px;">
+    <figure style="position:relative; width:984px; height:900px;">
+        <figcaption id="randomwalk_caption" class='little_caption'>
+            Gaussian Random Walk Proposal
+        </figcaption>
         <div id="exact_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="metropolis.start()">Sample</button>
+        <button type="button" onclick="rw.start()">Sample</button>
+
+        <figcaption id="hmc_caption" class='little_caption'>
+            HMC Proposal
+        </figcaption>
+        <div id="hmc_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
+        <button type="button" onclick="hmc.start(); rw.start();">Sample</button>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
             Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$.
             Once sampling begins, the running-average of the Monte Carlo approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red.
@@ -459,7 +468,8 @@
     <script src="assets/lib/bnn.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
     <script src="assets/lib/exact_inference.js"></script>
-    <script src="assets/lib/metropolis.js"></script>
+    <script src="assets/lib/randomwalk.js"></script>
+    <script src="assets/lib/hamiltonian.js"></script>
     <script src="assets/lib/net_lib.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
     <script src="assets/iterates.js"></script>
@@ -468,7 +478,8 @@
         var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
         mlp.plot();
 
-        var metropolis = metropolis_view(d3.select("#exact_train"));
+        var rw = randomwalk_view(d3.select("#exact_train"));
+        var hmc = hmc_view(d3.select("#hmc_train"));
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), 0, 1);
