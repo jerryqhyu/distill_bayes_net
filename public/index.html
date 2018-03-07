@@ -258,22 +258,30 @@
 
     <p>
         Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost.
-        As network and dataset size grow, however, the cost of sampling also grows.
-        In these cases we can instead solve a related but distinct inference problem that admits a learning algorithm very similar algorithm to what we used for standard training; we'll pose the problem now and discuss the learning algorithm in the next section.
+        As network and dataset size grow, however, so grows the cost of estimating the posterior via sampling.
+        In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training; we'll pose the problem now and discuss the learning algorithm in the next section.
         <p>
-            <i>Variational methods</i> use a parameterized <i>approximate posterior</i> $q_\phi(w)$ as a stand-in for the true posterior $p(w|\mathcal{D})$.
-            Since we want $q$ to approximate $p$, we can simply write inference as minimizing the difference between the two distributions:
-        <p>
-            $\underset{\phi}{\text{minimize}} \quad D_{KL}(q_\phi(w)||p(w|\mathcal{D})$,
+        Generally speaking, when faced with an intractable distribution like the posterior $p(w|\mathcal{D})$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i> $q_\phi(w)$<dt-fn>
+            While we can alternatively specify the approximate posterior as conditionally dependent on specific inputs $q_\phi(w|x)$, as in the variational autoencoder's encoder network <dt-cite key="kingma2013autoencoding"></dt-cite>, this is not necessary in the classification task we consider here since there is no need to reconstruct the inputs.
+            </dt-fn>
+, then tune the parameters $\phi$ so that it better approximates the intractable distribution. 
+            Developing a variational method for approximate inference requires two steps: first, formalizing a notion of similarity between two probability distributions, then writing down a tractable optimization problem that corresponds to maximizing this notion of similarity.
+            The second step, maximizing the similarity of the approximate and true posteriors, might seem difficult since we can't even evaluate the true posterior.
+            But we will see that our choice of objective in the first step will help us in this regard.
         </p>
+        <p>
+            We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as 
+            $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})] \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$
+            We choose the $q||p$ direction so that the expectation is expressed over $q$
+            So our optimization problem should be something like "minimize the KL-divergence between from the approximate posterior to the true posterior, which we will formalize shortly. 
+            But before proceeding, it's worthwhile to condi
+            In variational inference <i>Variational methods</i> use an <i>approximate posterior</i> $q_\phi(w)$ (with parameters $\phi$) as a stand-in for the true posterior $p(w|\mathcal{D})$.
+            Intuitively there are two steps: first, coming up with a quantity that represents our notions of dissimilarity similarity two probability distributions; then come up with a tractable optimization problem that maximizes this notion of dissimilarity (or, equivalently, minimizes dissimilarity).
+            Since we want $q$ to approximate $p$, we can simply write inference as minimizing the difference between the two distributions:
+            $$\underset{\phi}{\text{minimize}} \quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})],$$
 
         <p>
             where $D_{KL}$ captures our notion of dissimilarity between two distributions.
-            It is called the <i>Kullback-Liebler diverence</i> (or KL divergence), and is defined as
-        </p>
-        <p>
-        $\quad D_{KL}(q_\phi(w)||p(w|\mathcal{D}) \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})]$
-        .
         </p>
 
    <!-- KL divergence figure -->
@@ -298,6 +306,10 @@
         </figcaption>
     </figure>
 
+    <p style="color:red;">
+    TODO: It would be nice to figure out how to put a legend in the KL interactive figure to clarify things.
+    </p>
+
         <p>
             Why should we be content with $D_{KL}$ as our notion of dissimilarity?
             We might notice, for example, by definition it is not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance.
@@ -314,9 +326,14 @@
         We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
    </p>
 
+    <p>
+    $$\tilde \mathcal{L}(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right]$$
+        Thus variational inference corresponds to the following optimization problem:
+    $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim \mathcal{D}_{train}} \left[ \tilde \mathcal{L}(x,y) \right]$$
+    </p>
+
     <p style="color:red;">
-    TODO: We should say something about the role of the KL-divergence here and reference the figure.
-    It would be nice to figure out how to put a legend in the KL interactive figure to clarify things.
+    TODO: reconcile the difference in call signature between $\mathcal{L}(x,y)$ and $\mathcal{L}_{\text{train}}(w)$.
     </p>
 
 
@@ -353,33 +370,6 @@
     <pre id="hello-world-code2">
     \begin{algorithmic}
     \PROCEDURE{SVI}{$x, y, w$}
-        \WHILE {training not converged}
-            \STATE ${\color{blue} \epsilon \sim \mathcal{N}(0, I)}$
-            \STATE $g = \text{BACKPROP}(x, y, {\color{blue} w+\epsilon\sigma})$
-            \STATE $w = w + \alpha g$
-            \STATE ${\color{blue}\sigma = \sigma + \alpha\epsilon g}$
-        \ENDWHILE
-        \ENDPROCEDURE
-    \end{algorithmic}
-    </pre>
-
-    <p style="color:red;">
-    TODO: segueway into the figure and algo box
-    </p>
-
-    <!-- Variational Inference Layer -->
-    <figure style="position:relative; width:984px; height:1075px;">
-        <figcaption id="Var_inf_caption">
-            Variational Inference
-        </figcaption>
-        <figcaption id="var_caption">
-            Now we fit a distribution of weights to the underlying latent distribution.
-        </figcaption>
-        <div id="var_full" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="bnn.train()">Train</button>
-        <button type="button" onclick="bnn.sample()">Sample</button>
-        <button type="button" onclick="bnn.stop()">Pause</button>
-
         <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
             What if you sampled from the learned distribution?
         </figcaption>
@@ -454,8 +444,29 @@
         asdf
     </p>
     -->
+
+    <script src="assets/lib/parameters.js"></script>
+    <script src="assets/lib/plotter.js"></script>
+    <script src="assets/lib/divergence.js"></script>
+    <script src="assets/lib/contour_plot.js"></script>
+    <script src="assets/lib/mlp.js"></script>
+    <script src="assets/lib/bnn.js"></script>
+    <script src="assets/lib/full_bnn.js"></script>
+    </p>
+
+    <H3>Connection to Gradient Noise</H3>
     <p>
-        <!- ELLIOT Q: CAN WE FORMAT THIS LIKE A \citet IN LATEX? ->
+        asdf
+    </p>
+    -->
+
+    <script src="assets/lib/parameters.js"></script>
+    <script src="assets/lib/plotter.js"></script>
+    <script src="assets/lib/divergence.js"></script>
+    <script src="assets/lib/contour_plot.js"></script>
+    <script src="assets/lib/mlp.js"></script>
+    <script src="assets/lib/bnn.js"></script>
+    <script src="assets/lib/full_bnn.js"></script>
     </p>
 
     <script src="assets/lib/parameters.js"></script>
@@ -567,32 +578,6 @@
                     right: "\\\\",
                     display: true
                 },
-                {
-                    left: "\\",
-                    right: "\\",
-                    display: false
-                },
-            ]
-        }
-    );
-</script>
-
-<script type="text/bibliography">
-@inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015}, url={https://arxiv.org/abs/1505.05424}}
-    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016}}
-    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
-    @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} }
-    @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
-    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015}, url={https://github.com/karpathy/convnetjs} }
-    @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} }
-    @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
-    @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
-    @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
-    @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
-    @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
-    @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} }
-    @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} }
-    @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} }
     @article{rumelhart1986learning, title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} }
     @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} }
     @article{shlens2014notes, title={Notes on Kullback-Leibler divergence and likelihood}, author={Shlens, Jonathon}, journal={arXiv preprint arXiv:1404.2000}, year={2014}
