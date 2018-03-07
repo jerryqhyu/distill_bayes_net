@@ -211,7 +211,30 @@
         Also, it implies that we can approximate this infinite ensemble using a finite number of Monte Carlo samples from the posterior.
         Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
-     <!-- Exact Inference figures -->
+    <h3>Modeling uncertainty</h3>
+    <p>
+        But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i> $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$.
+        An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
+    This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data, which typically have high uncertainty when data is scarce.
+        In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
+   </p>
+    <h3>Approximate inference</h3>
+    <p>
+    Recall that computing the posterior using exact inference is costly even for modest-sized networks due to the denominator in Bayes' rule $p(\mathcal{D})$, which we call the <i>marginal data likelihood</i>. 
+    For many models of practical interest this cost is prohibitive, so we must resort to approximately computing the posterior. 
+    Approaches to doing so broadly fall into two categories, which we discuss in the following two sections.
+    <i>Sampling methods</i> leverage the tractability of the unnormalized posterior to approximate the integral over weight space with a finite number of suitably chosen Monte Carlo samples. 
+    <i>Variational methods</i> instead model the posterior using a parameterized distribution called the approximate posterior, then iteratively improve the approximation by solving a suitable optimization problems.
+    While both methods are of practical and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training.
+    We devote a section to this algorithm to underscore that being Bayeisna in neural network learning is well worth the modest cost in engineering overhead.
+    </p>
+
+    <h2>Sampling methods</h2>
+        <p style="color:red;">
+            TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
+        </p>
+
+     <!-- Sampling from the posterior figures -->
     <figure style="position:relative; width:984px; height:900px;">
         <figcaption id="randomwalk_caption" class='little_caption'>
             Gaussian Random Walk Proposal
@@ -232,26 +255,14 @@
 
         <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
     </figure>
-   </p>
-    <p>
-        The demo above illustrates shows the prediction function for a sequence of networks sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks.
-        Remember that computing the posterior using exact inference is costly even for modest-sized networks.
+ 
+   <p>
+        The demo above plots the sequence of functions we get when sampling network weights from the posterior using two sampling algorithms: one with the Metropolis proposal and one with Hamiltonian dynamics. shows the prediction function for a sequence of networks sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks.
+        The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the predictive distribution $p(\hat y(x)| \mathcal{D})$. 
         On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these samples to obtain an approximate posterior.
    </p>
-    <p>
-    But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i> $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$.
-    An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
-    This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data, which typically have high uncertainty when data is scarce.
-    In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
-   </p>
 
-    <h3>Sampling-based inference</h3>
-        <p style="color:red;">
-            TODO: discuss sampling-based methods to approximate the posterior
-        </p>
-
-
-   <h3>Variational inference</h3>
+   <h2>Variational inference</h2>
     <p style="color:red;">
         TODO: contrast sampling-based inference with gradient based inference, especially with their ability to scale.
     </p>
@@ -269,28 +280,14 @@
             The second step, maximizing the similarity of the approximate and true posteriors, might seem difficult since we can't even evaluate the true posterior.
             But we will see that our choice of objective in the first step will help us in this regard.
         </p>
-        <p>
-            We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as 
-            $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})] \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$
-            We choose the $q||p$ direction so that the expectation is expressed over $q$
-            So our optimization problem should be something like "minimize the KL-divergence between from the approximate posterior to the true posterior, which we will formalize shortly. 
-            But before proceeding, it's worthwhile to condi
-            In variational inference <i>Variational methods</i> use an <i>approximate posterior</i> $q_\phi(w)$ (with parameters $\phi$) as a stand-in for the true posterior $p(w|\mathcal{D})$.
-            Intuitively there are two steps: first, coming up with a quantity that represents our notions of dissimilarity similarity two probability distributions; then come up with a tractable optimization problem that maximizes this notion of dissimilarity (or, equivalently, minimizes dissimilarity).
-            Since we want $q$ to approximate $p$, we can simply write inference as minimizing the difference between the two distributions:
-            $$\underset{\phi}{\text{minimize}} \quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})],$$
-
-        <p>
-            where $D_{KL}$ captures our notion of dissimilarity between two distributions.
-        </p>
-
+        
    <!-- KL divergence figure -->
     <figure style="position:relative; width:984px; height:400px;">
         <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
         <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="KL" checked> KL<br>
-            <input type="radio" name="divergence_type" value="reverse KL"> reverse KL<br>
-            <input type="radio" name="divergence_type" value="JS"> JS
+            <input type="radio" name="divergence_type" value="reverse KL">$D_{KL}(q||p)$<br>
+            <input type="radio" name="divergence_type" value="KL" checked>$D_{KL}(p||q)$<br>
+            <input type="radio" name="divergence_type" value="JS"> D_{JS}(p, q)$
         </form>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
@@ -299,7 +296,7 @@
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
         </div>
         <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
-            In variational inference we seek to approximate a complicated distribution $p$ (black) with a simpler parameterized distribution $q$ (red), in this case a Gaussian.
+            In variational methods we fit a tractable parameterized distribution $q$ (e.g., the single Gaussian in red) to a comlicated (sometimes intractable distribution) $p$ (e.g., the mixture of Gaussians in black) by optimizing the divergence between these distributions.
             The shaded contour represents $q \log \frac{q}{p}$ and the diameter of the circle and its color represents its integral, the KL-divergence $D_{KL}(q||p)$.
             How should we select parameter values of $q$ if we want to minimize $D_{KL}(q||p)$?
             What about if we want to minimize one of the alternative metrics, reverse KL or Jensen-Shannon distance?
@@ -307,26 +304,39 @@
     </figure>
 
     <p style="color:red;">
-    TODO: It would be nice to figure out how to put a legend in the KL interactive figure to clarify things.
+    TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $D_{KL}(q||p)$.
     </p>
-
         <p>
-            Why should we be content with $D_{KL}$ as our notion of dissimilarity?
-            We might notice, for example, by definition it is not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance.
-            In short, we will show the KL-divergence is a sensible choice of objective because minimizing it equivalently improves a lower bound on the expected log likelihood, which is what we originally set out to maximize.
-            As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$ <dt-cite key="shlens2014notes"></dt-cite>.
-            The demo fixes a $p$ that we'd like to approximate, and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$.
-            You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$
-        </p>
-    <p style="color:red;">
-        TODO: derive the ELBO from the KL perspective
-        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify.
-        $$q^*(\theta) = \texttt{argmax} E_{q(\theta)} [ p(x|\theta) ] - D_{KL} [q(\theta)||p(\theta)].$$
-        The solution is a good one when the approximate posterior $q(\theta)$ is close to the true posterior $p(\theta|x)$.
-        We will use gradient-based optimization to solve the $\texttt{argmax}$ optimization, the same algorithm we used before to train our neural network.
-   </p>
+            We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as 
+            $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})] \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$
+            So our optimization problem should be something like "minimize the KL-divergence between from the approximate posterior to the true posterior, which we will formalize shortly. 
+            But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate, and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$.
+            You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$.
+            </p>
+            <p>
+            By definition the KL-divergence is  not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance.
+            We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we can estimate it using Monte Carlo samples.
+            But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing to model mass in $p$. 
 
+            <p>
+        <p>
+        Having acquired some intuition about how KL-divergence works, we now show that its practicality by deriving a tractable optimization problem that optimizes a bound on this quantity<dt-fn>
+            As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$ <dt-cite key="shlens2014notes"></dt-cite>.
+        </dt-fn>.
+        Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior.
+        Fortunately, we can derive a tractable and closely related quantity that is equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
+        $$D_{KL} [q_\phi(w)||p(w|D)] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D})  \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) - \log p(\mathcal{D}) \right] =  \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) \right] - \log p(\mathcal{D}) $$ 
+        Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. 
+        But notably it does not depend on the parameters of $q_\phi$, which means we can ignore during optimization. 
+        We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the evidence lower bound, which we here pose as a maximization problem for conventional consistency.
+        $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)}  \log p(w, mathcal{D}) - \left[ \log q_\phi(w) \right] $$
+        Thus the variatinal inference corresponds to the following optimization problem: 
+        $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
+        </p>
+        
+   <!-- extra stuff
     <p>
+        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify.
     $$\tilde \mathcal{L}(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right]$$
         Thus variational inference corresponds to the following optimization problem:
     $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim \mathcal{D}_{train}} \left[ \tilde \mathcal{L}(x,y) \right]$$
@@ -335,6 +345,7 @@
     <p style="color:red;">
     TODO: reconcile the difference in call signature between $\mathcal{L}(x,y)$ and $\mathcal{L}_{\text{train}}(w)$.
     </p>
+   -->
 
 
     <h2>Optimizing with gradients</h2>
