@@ -15,9 +15,6 @@
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
 <link rel="stylesheet" type="text/css" href="assets/lib/pseudocode.min.css">
 
-
-
-
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
     description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possible models. With a simple modification to standard neural network tools, we can mitigate overfitting, learn from small datasets, and express uncertainty about our predictions."
@@ -234,6 +231,16 @@
             TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
         </p>
 
+    <h3>Metropolis algorithm</h3>
+        <p style="color:red;">
+            TODO: fill out this stub
+        </p>
+    
+    <h3>Hamiltoniian MCMC algorithm</h3>
+        <p style="color:red;">
+            TODO: fill out this stub
+        </p>
+
      <!-- Sampling from the posterior figures -->
     <figure style="position:relative; width:984px; height:900px;">
         <figcaption id="randomwalk_caption" class='little_caption'>
@@ -271,6 +278,7 @@
         Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost.
         As network and dataset size grow, however, so grows the cost of estimating the posterior via sampling.
         In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training; we'll pose the problem now and discuss the learning algorithm in the next section.
+    <h3>Modling the approximate posterior</h3>
         <p>
         Generally speaking, when faced with an intractable distribution like the posterior $p(w|\mathcal{D})$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i> $q_\phi(w)$<dt-fn>
             While we can alternatively specify the approximate posterior as conditionally dependent on specific inputs $q_\phi(w|x)$, as in the variational autoencoder's encoder network <dt-cite key="kingma2013autoencoding"></dt-cite>, this is not necessary in the classification task we consider here since there is no need to reconstruct the inputs.
@@ -280,6 +288,8 @@
             The second step, maximizing the similarity of the approximate and true posteriors, might seem difficult since we can't even evaluate the true posterior.
             But we will see that our choice of objective in the first step will help us in this regard.
         </p>
+
+    <h3>The Kullback-Liebler divergence</h3>
 
    <!-- KL divergence figure -->
     <figure style="position:relative; width:984px; height:400px;">
@@ -318,7 +328,10 @@
             We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we can estimate it using Monte Carlo samples.
             But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing to model mass in $p$.
 
-            <p>
+            </p>
+
+
+            <h3>Approximate inference as optimization</h3>
         <p>
         Having acquired some intuition about how KL-divergence works, we now show that its practicality by deriving a tractable optimization problem that optimizes a bound on this quantity<dt-fn>
             As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$ <dt-cite key="shlens2014notes"></dt-cite>.
