@@ -468,6 +468,20 @@
     </p>
 
 
+    <h2>Conclusion</h2>
+    <p style="color:red;">
+    TODO: OUTRO
+
+    To recap, we started with a standard maxmimum-likelihood optimization procedure, which overfits sometimes.
+    To fix this, we argued that we should instead integrate over all possible parameter values.
+    However, because this was too expensive to do exactly, we turned this integration problem into an optimization problem, with extra noise.
+
+    Why not just add noise to SGD in the first place, and skip all the math? [citations, e.g. dropout, and]
+    The answer is that this theory tells us how to tune the amount of noise on a per-parameter basis, automatically.
+
+    Also: Overfitting, small data, and uncertainty.
+    </p>
+
     <script src="assets/lib/parameters.js"></script>
     <script src="assets/lib/plotter.js"></script>
     <script src="assets/lib/divergence.js"></script>
