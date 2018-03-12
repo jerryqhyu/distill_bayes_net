@@ -43,7 +43,6 @@ var net_lib = net_lib || {
     var randi = function(a, b) {
         return Math.floor(Math.random() * (b - a) + a);
     }
-
     var randn = function(mu, sigma) {
         return mu + gaussRandom() * Math.exp(sigma);
     }
@@ -316,121 +315,6 @@ var net_lib = net_lib || {
     global.Vol = Vol;
 })(net_lib);
 
-//image manipulation
-(function(global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
-
-    // Volume utilities
-    // intended for use with data augmentation
-    // crop is the size of output
-    // dx,dy are offset wrt incoming volume, of the shift
-    // fliplr is boolean on whether we also want to flip left<->right
-    var augment = function(V, crop, dx, dy, fliplr) {
-        // note assumes square outputs of size crop x crop
-        if (typeof(fliplr) === 'undefined')
-            var fliplr = false;
-        if (typeof(dx) === 'undefined')
-            var dx = global.randi(0, V.sx - crop);
-        if (typeof(dy) === 'undefined')
-            var dy = global.randi(0, V.sy - crop);
-
-        // randomly sample a crop in the input volume
-        var W;
-        if (crop !== V.sx || dx !== 0 || dy !== 0) {
-            W = new Vol(crop, crop, V.depth, 0.0);
-            for (var x = 0; x < crop; x++) {
-                for (var y = 0; y < crop; y++) {
-                    if (x + dx < 0 || x + dx >= V.sx || y + dy < 0 || y + dy >= V.sy)
-                        continue; // oob
-                    for (var d = 0; d < V.depth; d++) {
-                        W.set(x, y, d, V.get(x + dx, y + dy, d)); // copy data over
-                    }
-                }
-            }
-        } else {
-            W = V;
-        }
-
-        if (fliplr) {
-            // flip volume horziontally
-            var W2 = W.cloneAndZero();
-            for (var x = 0; x < W.sx; x++) {
-                for (var y = 0; y < W.sy; y++) {
-                    for (var d = 0; d < W.depth; d++) {
-                        W2.set(x, y, d, W.get(W.sx - x - 1, y, d)); // copy data over
-                    }
-                }
-            }
-            W = W2; //swap
-        }
-        return W;
-    }
-
-    // img is a DOM element that contains a loaded image
-    // returns a Vol of size (W, H, 4). 4 is for RGBA
-    var img_to_vol = function(img, convert_grayscale) {
-
-        if (typeof(convert_grayscale) === 'undefined')
-            var convert_grayscale = false;
-
-        var canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        var ctx = canvas.getContext("2d");
-
-        // due to a Firefox bug
-        try {
-            ctx.drawImage(img, 0, 0);
-        } catch (e) {
-            if (e.name === "NS_ERROR_NOT_AVAILABLE") {
-                // sometimes happens, lets just abort
-                return false;
-            } else {
-                throw e;
-            }
-        }
-
-        try {
-            var img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        } catch (e) {
-            if (e.name === 'IndexSizeError') {
-                return false; // not sure what causes this sometimes but okay abort
-            } else {
-                throw e;
-            }
-        }
-
-        // prepare the input: get pixels and normalize them
-        var p = img_data.data;
-        var W = img.width;
-        var H = img.height;
-        var pv = []
-        for (var i = 0; i < p.length; i++) {
-            pv.push(p[i] / 255.0 - 0.5); // normalize image pixels to [-0.5, 0.5]
-        }
-        var x = new Vol(W, H, 4, 0.0); //input volume (image)
-        x.w = pv;
-
-        if (convert_grayscale) {
-            // flatten into depth=1 array
-            var x1 = new Vol(W, H, 1, 0.0);
-            for (var i = 0; i < W; i++) {
-                for (var j = 0; j < H; j++) {
-                    x1.set(i, j, 0, x.get(i, j, 0));
-                }
-            }
-            x = x1;
-        }
-
-        return x;
-    }
-
-    global.augment = augment;
-    global.img_to_vol = img_to_vol;
-
-})(net_lib);
-
 //FullyConn
 (function(global) {
     "use strict";
@@ -604,7 +488,7 @@ var net_lib = net_lib || {
         }
         this.sigma = [];
         for (var i = 0; i < this.out_depth; i++) {
-            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.1));
+            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.3));
         }
         this.sampled_epsilon = [];
         for (var i = 0; i < this.out_depth; i++) {
@@ -671,7 +555,8 @@ var net_lib = net_lib || {
                 for (var d = 0; d < this.num_inputs; d++) {
                     a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
                 }
-                a += this.biases.w[i] + seed[seed.length - 1];
+                // a += this.biases.w[i] + seed[seed.length - 1];
+                a += this.biases.w[i];
                 A.w[i] = a;
             }
             return A;
@@ -691,7 +576,7 @@ var net_lib = net_lib || {
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += -1e-2 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+                    this.sigma[j].dw[k] += -1e-3 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
@@ -1086,8 +971,58 @@ var net_lib = net_lib || {
                     V.dw[i] = 0; // threshold
                 else
                     V.dw[i] = V2.dw[i];
-                }
-            },
+            }
+        },
+        getParamsAndGrads: function() {
+            return [];
+        },
+        toJSON: function() {
+            var json = {};
+            json.out_depth = this.out_depth;
+            json.out_sx = this.out_sx;
+            json.out_sy = this.out_sy;
+            json.layer_type = this.layer_type;
+            return json;
+        },
+        fromJSON: function(json) {
+            this.out_depth = json.out_depth;
+            this.out_sx = json.out_sx;
+            this.out_sy = json.out_sy;
+            this.layer_type = json.layer_type;
+        }
+    }
+
+    var RbfLayer = function(opt) {
+        var opt = opt || {};
+        this.rbf = (x) => {return Math.exp(-Math.pow(x,2));}
+        // computed
+        this.out_sx = opt.in_sx;
+        this.out_sy = opt.in_sy;
+        this.out_depth = opt.in_depth;
+        this.layer_type = 'rbf';
+    }
+    RbfLayer.prototype = {
+        forward: function(V, is_training) {
+            this.in_act = V;
+            var V2 = V.cloneAndZero();
+            var N = V.w.length;
+            for (var i = 0; i < N; i++) {
+                V2.w[i] = this.rbf(V.w[i]);
+            }
+            this.out_act = V2;
+            return this.out_act;
+        },
+        backward: function() {
+            var V = this.in_act; // we need to set dw of this
+            var V2 = this.out_act;
+            var N = V.w.length;
+            V.dw = global.zeros(N); // zero out gradient wrt data
+            for (var i = 0; i < N; i++) {
+                var vwi = V.w[i];
+                var v2wi = V2.w[i];
+                V.dw[i] = -2 * vwi * v2wi * V2.dw[i];
+            }
+        },
         getParamsAndGrads: function() {
             return [];
         },
@@ -1164,6 +1099,7 @@ var net_lib = net_lib || {
     }
 
     global.TanhLayer = TanhLayer;
+    global.RbfLayer = RbfLayer;
     global.ReluLayer = ReluLayer;
 })(net_lib);
 
@@ -1207,8 +1143,6 @@ var net_lib = net_lib || {
                     }
 
                     if (def.type === 'vregression') {
-                        // add an fc layer here, there is no reason the user should
-                        // have to worry about this and we almost always want to
                         new_defs.push({type: 'variational', num_neurons: def.num_neurons});
                     }
 
@@ -1228,6 +1162,8 @@ var net_lib = net_lib || {
                             new_defs.push({type: 'relu'});
                         } else if (def.activation === 'tanh') {
                             new_defs.push({type: 'tanh'});
+                        } else if (def.activation === 'rbf') {
+                            new_defs.push({type: 'rbf'});
                         } else {
                             console.log('ERROR unsupported activation ' + def.activation);
                         }
@@ -1273,6 +1209,9 @@ var net_lib = net_lib || {
                     case 'tanh':
                         this.layers.push(new global.TanhLayer(def));
                         break;
+                    case 'rbf':
+                        this.layers.push(new global.RbfLayer(def));
+                        break;
                     default:
                         console.log('ERROR: UNRECOGNIZED LAYER TYPE: ' + def.type);
                 }
@@ -1294,10 +1233,14 @@ var net_lib = net_lib || {
         variationalForward: function(V, seeds) {
             var acts = [];
             for (var i = 0; i < seeds.length; i++) {
+                var slice_idx = 0;
                 var act = this.layers[0].forward(V, false);
                 for (var j = 1; j < this.layers.length; j++) {
                     if (this.layers[j].layer_type === 'variational') {
-                        act = this.layers[j].specialForward(act, seeds[i]);
+                        var num_weights = this.layers[j].mu.length * this.layers[j].mu[0].w.length;
+                        console.log(num_weights);
+                        act = this.layers[j].specialForward(act, seeds[i].slice(slice_idx, slice_idx + num_weights));
+                        slice_idx += num_weights;
                     } else {
                         act = this.layers[j].forward(act, false);
                     }
@@ -1416,7 +1359,6 @@ var net_lib = net_lib || {
     var Vol = global.Vol; // convenience
 
     var Trainer = function(net, options) {
-
         this.net = net;
 
         var options = options || {};
@@ -1432,58 +1374,29 @@ var net_lib = net_lib || {
         this.batch_size = typeof options.batch_size !== 'undefined'
             ? options.batch_size
             : 1;
-        this.method = typeof options.method !== 'undefined'
-            ? options.method
-            : 'sgd'; // sgd/adagrad/adadelta/windowgrad/netsterov
-
         this.momentum = typeof options.momentum !== 'undefined'
             ? options.momentum
             : 0.9;
-        this.ro = typeof options.ro !== 'undefined'
-            ? options.ro
-            : 0.95; // used in adadelta
-        this.eps = typeof options.eps !== 'undefined'
-            ? options.eps
-            : 1e-6; // used in adadelta
-
-        this.k = 0; // iteration counter
-        this.gsum = []; // last iteration gradients (used for momentum calculations)
-        this.xsum = []; // used in adadelta
+        this.iter = 0; // iteration counter
+        this.gsum = []; // last iteration gradients for momentum
     }
 
     Trainer.prototype = {
         train: function(x, y) {
-
-            var start = new Date().getTime();
-            this.net.forward(x, true); // also set the flag that lets the net know we're just training
-            var end = new Date().getTime();
-            var fwd_time = end - start;
-
-            var start = new Date().getTime();
+            this.net.forward(x, true); //is_training = true
             var cost_loss = this.net.backward(y);
             var l2_decay_loss = 0.0;
             var l1_decay_loss = 0.0;
-            var end = new Date().getTime();
-            var bwd_time = end - start;
 
-            this.k++;
-            if (this.k % this.batch_size === 0) {
+            this.iter++;
 
+            // apply grad update
+            if (this.iter % this.batch_size === 0) {
                 var pglist = this.net.getParamsAndGrads();
-
-                // initialize lists for accumulators. Will only be done once on first iteration
-                if (this.gsum.length === 0 && (this.method !== 'sgd' || this.momentum > 0.0)) {
+                if (this.gsum.length === 0 && this.momentum > 0.0) {
                     // only vanilla sgd doesnt need either lists
-                    // momentum needs gsum
-                    // adagrad needs gsum
-                    // adadelta needs gsum and xsum
                     for (var i = 0; i < pglist.length; i++) {
                         this.gsum.push(global.zeros(pglist[i].params.length));
-                        if (this.method === 'adadelta') {
-                            this.xsum.push(global.zeros(pglist[i].params.length));
-                        } else {
-                            this.xsum.push([]); // conserve memory
-                        }
                     }
                 }
 
@@ -1513,66 +1426,36 @@ var net_lib = net_lib || {
                             : -1);
                         var l2grad = l2_decay * (p[j]);
 
-                        var gij = (l2grad + l1grad + g[j]) / this.batch_size; // raw batch gradient
+                        var gij = (l2grad + l1grad + g[j]) / this.batch_size;
 
+                         // raw batch gradient
                         var gsumi = this.gsum[i];
-                        var xsumi = this.xsum[i];
-                        if (this.method === 'adagrad') {
-                            // adagrad update
-                            gsumi[j] = gsumi[j] + gij * gij;
-                            var dx = -this.learning_rate / Math.sqrt(gsumi[j] + this.eps) * gij;
-                            p[j] += dx;
-                        } else if (this.method === 'windowgrad') {
-                            // this is adagrad but with a moving window weighted average
-                            // so the gradient is not accumulated over the entire history of the run.
-                            // it's also referred to as Idea #1 in Zeiler paper on Adadelta. Seems reasonable to me!
-                            gsumi[j] = this.ro * gsumi[j] + (1 - this.ro) * gij * gij;
-                            var dx = -this.learning_rate / Math.sqrt(gsumi[j] + this.eps) * gij; // eps added for better conditioning
-                            p[j] += dx;
-                        } else if (this.method === 'adadelta') {
-                            // assume adadelta if not sgd or adagrad
-                            gsumi[j] = this.ro * gsumi[j] + (1 - this.ro) * gij * gij;
-                            var dx = -Math.sqrt((xsumi[j] + this.eps) / (gsumi[j] + this.eps)) * gij;
-                            xsumi[j] = this.ro * xsumi[j] + (1 - this.ro) * dx * dx; // yes, xsum lags behind gsum by 1.
-                            p[j] += dx;
-                        } else if (this.method === 'nesterov') {
-                            var dx = gsumi[j];
-                            gsumi[j] = gsumi[j] * this.momentum + this.learning_rate * gij;
-                            dx = this.momentum * dx - (1.0 + this.momentum) * gsumi[j];
-                            p[j] += dx;
+
+                        // assume SGD
+                        if (this.momentum > 0.0) {
+                            // momentum update
+                            var dx = this.momentum * gsumi[j] - this.learning_rate * gij; // step
+                            gsumi[j] = dx; // back this up for next iteration of momentum
+                            p[j] += dx; // apply corrected gradient
                         } else {
-                            // assume SGD
-                            if (this.momentum > 0.0) {
-                                // momentum update
-                                var dx = this.momentum * gsumi[j] - this.learning_rate * gij; // step
-                                gsumi[j] = dx; // back this up for next iteration of momentum
-                                p[j] += dx; // apply corrected gradient
-                            } else {
-                                // vanilla sgd
-                                p[j] += -this.learning_rate * gij;
-                            }
+                            // vanilla sgd
+                            p[j] += -this.learning_rate * gij;
                         }
+
                         g[j] = 0.0; // zero out gradient so that we can begin accumulating anew
                     }
                 }
             }
 
-            // appending softmax_loss for backwards compatibility, but from now on we will always use cost_loss
             // in future, TODO: have to completely redo the way loss is done around the network as currently
             // loss is a bit of a hack. Ideally, user should specify arbitrary number of loss functions on any layer
             // and it should all be computed correctly and automatically.
             return {
-                fwd_time: fwd_time,
-                bwd_time: bwd_time,
-                l2_decay_loss: l2_decay_loss,
-                l1_decay_loss: l1_decay_loss,
                 cost_loss: cost_loss,
-                softmax_loss: cost_loss,
                 loss: cost_loss + l1_decay_loss + l2_decay_loss
             }
         }
     }
 
     global.Trainer = Trainer;
-    global.SGDTrainer = Trainer; // backwards compatibility
 })(net_lib);
