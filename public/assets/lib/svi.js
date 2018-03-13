@@ -23,7 +23,8 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         method: 'sgd',
         learning_rate: param.learning_rate,
         momentum: param.momentum,
-        batch_size: param.batch_size
+        batch_size: param.batch_size,
+        l2_decay: param.l2_decay
     });
 
     //interval controller
