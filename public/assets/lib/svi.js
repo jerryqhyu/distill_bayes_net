@@ -1,4 +1,4 @@
-function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div) {
+function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div) {
 
     var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
     var train_loss_plotter = Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
@@ -153,9 +153,6 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
                 });
             }
         }
-
-        var valid = variational_prediction(param.validation_points, param.seeds);
-        plot_avg(curve, valid);
     }
 
     function plot_weight() {

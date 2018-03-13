@@ -39,7 +39,7 @@ function randomwalk_view(curve_div) {
 	}
 
 	function sample() {
-		var std = Math.log(0.25);
+		var std = Math.log(0.01);
 		var last_sample = samples[samples.length - 1];
 
 		// gaussian proposal
@@ -187,17 +187,17 @@ function randomwalk_view(curve_div) {
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 2,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 4,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 4,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'regression',

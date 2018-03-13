@@ -576,7 +576,7 @@ var net_lib = net_lib || {
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += -1e-3 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+                    this.sigma[j].dw[k] += -1e-4 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
@@ -1238,7 +1238,6 @@ var net_lib = net_lib || {
                 for (var j = 1; j < this.layers.length; j++) {
                     if (this.layers[j].layer_type === 'variational') {
                         var num_weights = this.layers[j].mu.length * this.layers[j].mu[0].w.length;
-                        console.log(num_weights);
                         act = this.layers[j].specialForward(act, seeds[i].slice(slice_idx, slice_idx + num_weights));
                         slice_idx += num_weights;
                     } else {
