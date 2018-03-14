@@ -391,52 +391,48 @@
         TODO: segueway into the figure and algo box
     </p>
 
-    <div class="l-page" style="position:relative; width:984px; height:1075px;">
-        <dt-include src="assets/svi.html">
-            <figure style="position:relative; width:984px; height:1075px;">
-                <figcaption id="Var_inf_caption">
-                    Variational Inference
-                </figcaption>
-                <figcaption id="var_caption">
-                    Now we fit a distribution of weights to the underlying latent distribution.
-                </figcaption>
-                <div id="var_full" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-                <button type="button" onclick="svi.train()">Train</button>
-                <button type="button" onclick="svi.sample()">Sample</button>
-                <button type="button" onclick="svi.stop()">Pause</button>
+    <!-- Variational Inference Layer -->
+    <figure style="position:relative; width:984px; height:1075px;">
+        <figcaption id="svi_inf_caption">
+            Variational Inference
+        </figcaption>
+        <figcaption id="svi_caption">
+            Now we fit a distribution of weights to the underlying latent distribution.
+        </figcaption>
+        <div id="svi_curve" class='bordered' style="position:relative; width:984px; height:300px;"></div>
+        <button type="button" onclick="svi.train()">Train</button>
+        <button type="button" onclick="svi.stop()">Pause</button>
 
-                <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
-                    What if you sampled from the learned distribution?
-                </figcaption>
-                <div class="container" style="margin-top: 20px;">
-                    <div id="var_progress" class='bordered' style="display: table-cell; width:364px; height:200px;"></div>
-                    <div id="var_graph" style="display: table-cell; width:600px; height:200px;"></div>
-                </div>
+        <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
+            What if you sampled from the learned distribution?
+        </figcaption>
+        <div class="container" style="margin-top: 20px;">
+            <div id="svi_progress" class='bordered' style="display: table-cell; width:364px; height:200px;"></div>
+            <div id="svi_graph" style="display: table-cell; width:600px; height:200px;"></div>
+        </div>
 
-                <div class='container'>
-                    <div style="display: table; height: 100%">
-                        <div class='table-cell-wrap'>
-                            <figcaption id="var_loss_train_title" class='little_caption'>
-                                Training Loss
-                            </figcaption>
-                            <div id="var_loss_train" class='contour'> </div>
-                        </div>
-                        <div class='table-cell-wrap'>
-                            <figcaption id="var_loss_caption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
-                                The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
-                            </figcaption>
-                        </div>
-                        <div class='table-cell-wrap'>
-                            <figcaption id="var_loss_valid_title" class='little_caption'>
-                                Test Loss
-                            </figcaption>
-                            <div id="var_loss_valid" class='contour'> </div>
-                        </div>
-                    </div>
+        <div class='container'>
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_train_title" class='little_caption'>
+                        Training Loss
+                    </figcaption>
+                    <div id="var_loss_train" class='contour'> </div>
                 </div>
-            </figure>
-        </dt-include>
-    </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_caption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
+                        The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
+                    </figcaption>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_valid_title" class='little_caption'>
+                        Test Loss
+                    </figcaption>
+                    <div id="var_loss_valid" class='contour'> </div>
+                </div>
+            </div>
+        </div>
+    </figure>
 
     <p>HERE ARE SOME IDEAS FOR EXTRA STUFF TO TALK ABOUT, SPACE PERMITTING</p>
 
@@ -486,10 +482,12 @@
     </p>
 
     <script src="assets/lib/parameters.js"></script>
+    <script src="assets/lib/graphical_constants.js"></script>
     <script src="assets/lib/plotter.js"></script>
     <script src="assets/lib/divergence.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/mlp.js"></script>
+    <script src="assets/lib/svi.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
     <script src="assets/lib/exact_inference.js"></script>
     <script src="assets/lib/randomwalk.js"></script>
@@ -510,15 +508,15 @@
         var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
 
         var sliderc = sliderGen([230, 40])
-            .ticks([0, 3, 6, 9, 12])
+            .ticks([0, 2, 4, 6, 8])
             .ticktitles(function(d, i) {
-                return ["-6", "-3", "0", "3", "6"][i]
+                return ["-4", "-2", "0", "2", "4"][i]
             })
             .change(function(i) {
-                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 6).toPrecision(2))
-                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 4).toPrecision(2))
+                divergence_curve.update(getmean() - 4, sdScaler(getsd()))
             })
-            .startxval(6)
+            .startxval(4)
             .cRadius(7)
             .shifty(-12)
             .margins(20, 20)
@@ -529,7 +527,7 @@
             })
             .change(function(i) {
                 d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2))
-                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+                divergence_curve.update(getmean() - 4, sdScaler(getsd()))
             })
             .cRadius(7)
             .shifty(-12)
@@ -539,6 +537,9 @@
         var getmean = sliderc(d3.select("#slider3")).xval
         var getsd = sliderd(d3.select("#slider4")).xval
         divergence_curve.draw_line();
+
+        // variational inference
+        var svi = svi(d3.select("#svi_curve"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#svi_progress"), d3.select("#svi_graph"));
 
         // variational inference
         var full_bnn = full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));

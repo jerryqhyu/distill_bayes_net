@@ -6,7 +6,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		param.loss_domain_y, true, true);
 	var valid_loss_plotter = Plotter(valid_loss_div, param.loss_domain_x,
 		param.loss_domain_y, true, true);
-	var graph_plotter = Plotter(graph_div, [0, 1], [0, 1], false, true);
+	var graph_plotter = Plotter(graph_div, param.nn_domain, param.nn_domain, false, true);
 
 	var linear_train_contour_data = new Array(param.n * param.m);
 	var linear_valid_contour_data = new Array(param.n * param.m);
@@ -14,6 +14,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	var shallow_valid_contour_data = new Array(param.n * param.m);
 	var deep_train_contour_data = new Array(param.n * param.m);
 	var deep_valid_contour_data = new Array(param.n * param.m);
+	var pred = new Array(curve_x.length);
 
 	//define a neural network
 	var deep_net = make_deep_net();
@@ -41,21 +42,23 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	var trainer = deep_trainer;
 
 	//interval controller
-	var timer;
+	var training_interval;
+	var plot_interval;
 	var epoch_count = 0;
 	var obtaining_param = 0;
 
 	setup();
 
 	function plot() {
-		plot_line();
+		plot_path();
 		plot_weight();
-		graph_plotter.plot_neural_net(net, "#float");
+		graph_plotter.plot_neural_net(net);
 	}
 
 	function train() {
-		if (!timer) {
-			timer = d3.timer(train_epoch, 50);
+		if (!training_interval) {
+			training_interval = d3.timer(train_epoch, 50);
+			plot_interval = d3.timer(plot, 200);
 			if (obtaining_param) {
 				net.getLayer(1).freeze_weights();
 			} else {
@@ -77,8 +80,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 					j]]);
 			}
 		}
-		clear();
-		plot();
 		epoch_count++;
 	}
 
@@ -114,7 +115,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			net = shallow_net;
 			trainer = shallow_trainer;
 		}
-		clear();
 		plot();
 		pause_training();
 		epoch_count = 0;
@@ -146,7 +146,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			plot_contour(valid_loss_plotter, shallow_valid_contour_data,
 				valid_contour_color, valid_contour_scale);
 		}
-		clear();
 		plot();
 	}
 
@@ -160,13 +159,19 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	function setup() {
-		curve_plotter.add_group("fixed");
+		var predicted_value;
+		var x_vol;
+		curve_x.forEach((x, i) => {
+			pred[i] = {
+				x: x,
+				y: 0
+			};
+		});
+
+		curve_plotter.add_group("training_points");
+		curve_plotter.add_group("validation_points");
 		train_loss_plotter.add_group("contour");
 		valid_loss_plotter.add_group("contour");
-		curve_plotter.add_group("float")
-		train_loss_plotter.add_group("float");
-		valid_loss_plotter.add_group("float");
-		graph_plotter.add_group("float");
 		train_loss_plotter.add_x_axis_label("w1");
 		train_loss_plotter.add_y_axis_label("w2");
 		valid_loss_plotter.add_x_axis_label("w1");
@@ -301,31 +306,19 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	function plot_train_and_valid_points() {
-		training_points_data = param.train_points.map((p, i) => {
-			return {
-				x: p,
-				y: Math.sin(p) + param.train_noise[i]
-			};
-		});
-		validation_points_data = param.validation_points.map((p, i) => {
-			return {
-				x: p,
-				y: Math.sin(p) + param.validation_noise[i]
-			};
-		});
 		curve_plotter.plot_points(training_points_data, {
 			stroke: "red",
 			color: "red",
 			size: 4,
 			opacity: 1,
-			id: "#fixed"
+			id: "#training_points"
 		});
 		curve_plotter.plot_points(validation_points_data, {
 			stroke: "green",
 			color: "green",
 			size: 4,
 			opacity: 0.5,
-			id: "#fixed"
+			id: "#validation_points"
 		});
 	}
 
@@ -368,29 +361,27 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	function pause_training() {
-		if (timer) {
-			timer.stop();
-			timer = undefined;
+		if (training_interval) {
+			training_interval.stop();
+			plot_interval.stop();
+			training_interval = undefined;
+			plot_interval = undefined;
 		}
 	}
 
-	function plot_line() {
-		var pred = [];
+	function plot_path() {
 		var predicted_value;
 		var x_val;
-		for (var i = -5; i <= 5; i += param.step_size) {
-			x_val = new net_lib.Vol([i]);
+		curve_x.forEach((x, i) => {
+			x_val = new net_lib.Vol([x]);
 			predicted_value = net.forward(x_val);
-			pred.push({
-				x: i,
-				y: predicted_value.w[0]
-			});
-		}
-		curve_plotter.plot_line(pred, {
+			pred[i].y = predicted_value.w[0];
+		});
+
+		curve_plotter.plot_path([pred], {
 			color: "darkorange",
 			width: 3,
 			opacity: 1,
-			id: "#float"
 		});
 	}
 
@@ -406,7 +397,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
-			id: "#float",
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag,
@@ -418,20 +408,12 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
-			id: "#float",
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag,
 			mouseover: mouseover,
 			mouseout: mouseout
 		});
-	}
-
-	function clear() {
-		curve_plotter.svg.select("#float").selectAll("*").remove();
-		train_loss_plotter.svg.select("#float").selectAll("*").remove();
-		valid_loss_plotter.svg.select("#float").selectAll("*").remove();
-		graph_plotter.svg.select("#float").selectAll("*").remove();
 	}
 
 	function on_drag(d) {
@@ -447,7 +429,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
             [inv_x_scale(new_x)],
             [inv_y_scale(new_y)]
         ]);
-		clear();
 		plot();
 	}
 

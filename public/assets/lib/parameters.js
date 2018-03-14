@@ -16,7 +16,7 @@ param = {
     l1_decay: 0,
     l2_decay: 0,
     momentum: 0.95,
-    batch_size: 16,
+    batch_size: 18,
     divergence_curve_domain_x: [
         -12, 12
     ],
@@ -573,14 +573,6 @@ inv_y_scale.clamp(true);
 var divergence_fill_color = d3.scaleLinear().domain([-50, 0]).interpolate(function() {
     return d3.interpolateRdYlGn;
 });
-
-var connection_strength_thickness = d3.scaleLinear().domain([-2.5, 2.5]).range([0.01, 2]);
-connection_strength_thickness.clamp(true);
-
-var connection_variation_color = d3.scaleLinear().domain([-0.5, 1]).interpolate(function() {
-    return d3.interpolateYlOrBr;
-});
-connection_variation_color.clamp(true);
 
 var train_contour_color = d3.scaleLinear().domain([-2.5, 0.05]).interpolate(function() {
     return d3.interpolateSpectral;
