@@ -14,7 +14,7 @@ param = {
     step_size: 0.1,
     learning_rate: 5e-3,
     l1_decay: 0,
-    l2_decay: 0,
+    l2_decay: 10.0,
     momentum: 0.95,
     batch_size: 18,
     divergence_curve_domain_x: [
