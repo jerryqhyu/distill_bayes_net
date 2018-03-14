@@ -39,7 +39,7 @@ function randomwalk_view(curve_div) {
 	}
 
 	function sample() {
-		var std = Math.log(0.25);
+		var std = Math.log(0.01);
 		var last_sample = samples[samples.length - 1];
 
 		// gaussian proposal
@@ -72,7 +72,7 @@ function randomwalk_view(curve_div) {
 
 		clear();
 		plot_sample_dist();
-		curve_plotter.plot_line(pts, {
+		curve_plotter.plot_path(pts, {
 			color: "black",
 			width: 2,
 			opacity: 1,
@@ -159,7 +159,7 @@ function randomwalk_view(curve_div) {
 
 		// plot the percentile of the samples
 		for (var i = 0; i < percentiles.length / 2; i++) {
-			curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length -
+			curve_plotter.plot_path(percentiles[i].concat(percentiles[percentiles.length -
 				1 - i].reverse()), {
 				color: "red",
 				fill: "red",
@@ -187,17 +187,17 @@ function randomwalk_view(curve_div) {
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 2,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 4,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'fc',
 			num_neurons: 4,
-			activation: 'tanh'
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'regression',

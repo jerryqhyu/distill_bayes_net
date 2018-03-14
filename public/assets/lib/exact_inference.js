@@ -113,7 +113,7 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
 
         // plot the percentile of the samples
         for (var i = 0; i < percentiles.length / 2; i++) {
-            curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse()), {
+            curve_plotter.plot_path(percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse()), {
                 color: "red",
                 fill: "red",
                 width: 1,
@@ -128,7 +128,7 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
         var sampled_net = get_sampled_net(seed);
         predictions = predicted_points(sampled_net);
 
-        curve_plotter.plot_line(predictions.curve, {
+        curve_plotter.plot_path(predictions.curve, {
             color: "darkblue",
             width: 1,
             opacity: 0.3,
@@ -236,14 +236,14 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
             }
         });
 
-        progress_plotter.plot_line(avg_loss_data, {
+        progress_plotter.plot_path(avg_loss_data, {
             color: "black",
             width: 3,
             opacity: 1,
             id: "#float"
         });
         // Also plot the average over sampled nets from training posterior
-        // curve_plotter.plot_line(avg_curve_points, {
+        // curve_plotter.plot_path(avg_curve_points, {
         //     color: "red",
         //     width: 3,
         //     opacity: 1,
@@ -268,7 +268,7 @@ function exact_inference_view(curve_div, posterior_div, progress_div) {
         for (var i = 0; i < 1; i += param.step_size) {
             MLE.push({x: i, y: 2.7963}); //MLE validation loss
         }
-        progress_plotter.plot_line(MLE, {
+        progress_plotter.plot_path(MLE, {
             color: "darkgreen",
             width: 2,
             opacity: 0.5,

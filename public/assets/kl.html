@@ -1,0 +1,154 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<script src="lib/template.v1.js"></script>
+<script src="lib/katex.min.js"></script>
+<script src="lib/auto-render.min.js"></script>
+<script src="lib/d3.v4.min.js"></script>
+<script src="lib/d3-contour.v1.min.js"></script>
+<script src="lib/d3-scale-chromatic.v1.min.js"></script>
+<script src="lib/svi.js"></script>
+<script src="lib/parameters.js"></script>
+<script src="lib/plotter.js"></script>
+<script src="lib/seedrandom.min.js"></script>
+<script src="lib/net_lib.js"></script>
+
+<link rel="stylesheet" type="text/css" href="lib/katex.min.css">
+<link rel="stylesheet" type="text/css" href="../styles.css">
+<link rel="stylesheet" type="text/css" href="widgets.css">
+<link rel="stylesheet" type="text/css" href="lib/pseudocode.min.css">
+
+<title>Kullback-Liebler divergence demo</title>
+
+<dt-article id="article" class="centered">
+    <link rel="stylesheet" type="text/css" href="widgets.css">
+<script src="utils.js"></script>
+<h2>Quantifying dissimilarity between distributions</h2>
+<p>
+Reverse Kullback-Liebler divergence:
+$$D_{KL}(q||p) = \mathbb{E}_{q}[\log \frac{q}{p}]$$
+Kullback-Liebler divergene:
+$$D_{KL}(p||q) = \mathbb{E}_{p}[\log \frac{p}{q}]$$
+Jensen-Shannon divergence:
+$$D_{JS}(p, q) = 0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$$
+</p>
+<!-- KL divergence figure -->
+    <figure style="position:relative; width:984px; height:400px;">
+        <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
+        <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
+            <input type="radio" name="divergence_type" value="reverse KL" checked>$D_{KL}(q||p)$<br>
+            <input type="radio" name="divergence_type" value="KL">$D_{KL}(p||q)$<br>
+            <input type="radio" name="divergence_type" value="JS"> $D_{JS}(p, q)$
+        </form>
+        <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
+        </div>
+        <div id="slider4" style="position:absolute; width: 300px; height: 50px; left: 280px; top: 320px;">
+            <text class="figtext" style="top: -5px; left: 20px; position: relative;">Standard Deviation = 1.0</text>
+        </div>
+        <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
+            In variational methods we fit a tractable parameterized distribution $q$ (e.g., the single Gaussian in red) to a comlicated (sometimes intractable distribution) $p$ (e.g., the mixture of Gaussians in black) by optimizing the divergence between these distributions.
+            The shaded contour represents the argument to the expectation (e.g., $q \log \frac{q}{p}$ for reverse KL) and the diameter of the circle and its color represents its integral, (e.g., the reverse KL). 
+            Variational inference seeks to minimize the reverse KL, so how should we select parameter values of $q$ to accomplish this?
+            What about if we want to minimize one of the alternative metrics, standard KL or Jensen-Shannon divergence?
+        </figcaption>
+    </figure>
+
+    <script src="lib/parameters.js"></script>
+    <script src="lib/plotter.js"></script>
+    <script src="lib/divergence.js"></script>
+    <script src="lib/contour_plot.js"></script>
+    <script src="lib/full_bnn.js"></script>
+    <script src="lib/exact_inference.js"></script>
+    <script src="lib/randomwalk.js"></script>
+    <script src="lib/hamiltonian.js"></script>
+    <script src="lib/net_lib.js"></script>
+    <script src="lib/seedrandom.min.js"></script>
+    <script src="iterates.js"></script>
+ 
+
+
+    <script>
+        //DIVERGENCES
+        var divergence_curve = divergence(d3.select("#curve"), 0, 1);
+        var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
+
+        var sliderc = sliderGen([230, 40])
+            .ticks([0, 3, 6, 9, 12])
+            .ticktitles(function(d, i) {
+                return ["-6", "-3", "0", "3", "6"][i]
+            })
+            .change(function(i) {
+                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 6).toPrecision(2))
+                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+            })
+            .startxval(6)
+            .cRadius(7)
+            .shifty(-12)
+            .margins(20, 20)
+        var sliderd = sliderGen([230, 40])
+            .ticks([0, 1, 2, 3, 4])
+            .ticktitles(function(d, i) {
+                return ["0.5", "1", "1.5", "2", "2.5"][i]
+            })
+            .change(function(i) {
+                d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2))
+                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+            })
+            .cRadius(7)
+            .shifty(-12)
+            .startxval(1)
+            .margins(20, 20)
+
+        var getmean = sliderc(d3.select("#slider3")).xval
+        var getsd = sliderd(d3.select("#slider4")).xval
+        divergence_curve.draw_line();
+
+        // variational inference
+        var full_bnn = full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
+        // full_bnn.train();
+
+        // SGD algo box
+        var code = document.getElementById("hello-world-code").textContent;
+        var code2 = document.getElementById("hello-world-code2").textContent;
+        var parent_left = document.getElementById("svi-algo-box-left");
+        var parent_right = document.getElementById("svi-algo-box-right");
+        var options = {
+            lineNumber: true
+        };
+        pseudocode.render(code, parent_left, options);
+        pseudocode.render(code2, parent_right, options);
+    </script>
+
+
+</dt-article>
+
+<script>
+    renderMathInElement(
+        document.body, {
+            delimiters: [{
+                    left: "$$",
+                    right: "$$",
+                    display: true
+                },
+                {
+                    left: "$",
+                    right: "$",
+                    display: false
+                },
+                {
+                    left: "\\\\",
+                    right: "\\\\",
+                    display: true
+                },
+                {
+                    left: "\\",
+                    right: "\\",
+                    display: false
+                },
+            ]
+        }
+    );
+</script>
+
+

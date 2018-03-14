@@ -1,4 +1,4 @@
-function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div) {
+function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div) {
 
     var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
     var train_loss_plotter = Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
@@ -12,8 +12,12 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
 
     var var_dist_data = new Array(param.var_n * param.var_m);
     var avg_loss = [];
-
+    var samples = sample_from_seed("Toronto", 15, 2);
     var last_10_samples = [];
+    var isocontours = new Array(5);
+    for (var i = 0; i < 5; i++) {
+        isocontours[i] = new Array(Math.floor((Math.PI * 2 + param.step_size) / param.step_size + 1));
+    }
 
     //define a neural network
     var epoch_count = 0;
@@ -23,19 +27,22 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         method: 'sgd',
         learning_rate: param.learning_rate,
         momentum: param.momentum,
-        batch_size: param.batch_size
+        batch_size: param.batch_size,
+        l2_decay: param.l2_decay
     });
 
     //interval controller
-    var timer;
+    var training_interval;
+    var plot_interval;
     setup();
 
     function train() {
-        if (!timer) {
+        if (!training_interval) {
             console.log("started training");
             net.freezeAllButLayer(1);
             net.getLayer(1).freeze_biases();
-            timer = d3.timer(train_epoch, 50);
+            training_interval = d3.timer(train_epoch, 50);
+            plot_interval = d3.timer(plot, 1000);
         }
     }
 
@@ -45,28 +52,27 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             x = new net_lib.Vol([param.train_points[j]]);
             trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
         }
-
-        if (last_10_samples.length === 10) {
-            last_10_samples.shift();
-        }
-
-        last_10_samples.push({x: net.getLayer(1).sampled_w[0].w[0], y: net.getLayer(1).sampled_w[1].w[0]});
-
-        clear();
-        plot();
         epoch_count++;
     }
 
     function setup() {
-        curve_plotter.add_group("fixed");
+        curve_plotter.add_group("training_point");
+        curve_plotter.add_group("validation_point");
         train_loss_plotter.add_group("fixed");
         valid_loss_plotter.add_group("fixed");
         progress_plotter.add_group("fixed");
+
+        curve_plotter.add_group("curve");
+        train_loss_plotter.add_group("curve");
+        valid_loss_plotter.add_group("curve");
         curve_plotter.add_group("float");
         train_loss_plotter.add_group("float");
         valid_loss_plotter.add_group("float");
         progress_plotter.add_group("float");
+
         graph_plotter.add_group("float");
+        train_loss_plotter.add_group("pts");
+        valid_loss_plotter.add_group("pts");
 
         train_loss_plotter.add_x_axis_label("w1");
         train_loss_plotter.add_y_axis_label("w2");
@@ -111,59 +117,34 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         });
         avg_loss = [];
 		last_10_samples = [];
-        clear();
         plot();
         pause_training();
         epoch_count = 0;
     }
 
     function plot() {
-        plot_line();
+        // plot_avg();
+        plot_path();
         plot_variational_distribution();
-        plot_curve_distribution();
         plot_weight();
         graph_plotter.plot_neural_net(net, "#float");
     }
 
-    function plot_line() {
-        var rng = new Math.seedrandom('Vector');
-        var curve_x = [];
-        var training_curve = [];
-        var sampled_weights = last_10_samples.map(sample => [
-            sample.x, sample.y, rng() * 0.25
-        ]);
-
-        if (sampled_weights.length > 0) {
-            for (var i = -5; i <= 5; i += param.step_size) {
-                curve_x.push(i);
-                training_curve.push({
-                    x: i,
-                    y: single_point_pred = net.variationalForward(new net_lib.Vol([i]), sampled_weights)[0].w[0]
-                });
-            }
-
-            var sampled_curves = variational_prediction(curve_x, sampled_weights);
-
-            for (var i = sampled_curves.length; i > 0; i--) {
-                curve_plotter.plot_line(sampled_curves[i - 1], {
-                    color: "darkgreen",
-                    width: 2,
-                    opacity: 1 / (sampled_curves.length - i),
-                    id: "#float"
-                });
-            }
-        }
-
-        var valid = variational_prediction(param.validation_points, param.seeds);
-        plot_avg(curve, valid);
-    }
+    function plot_path() {
+		var curve = variational_prediction(curve_x, samples);
+		curve_plotter.plot_path(curve, {
+			color: "darkorange",
+			width: 1,
+			opacity: 0.5,
+			id: "#curve",
+		});
+	}
 
     function plot_weight() {
         var mean = [
             net.getLayer(1).mu[0].w[0],
             net.getLayer(1).mu[1].w[0]
         ];
-
         train_loss_plotter.plot_points([
             {
                 x: mean[0],
@@ -188,23 +169,24 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             opacity: 0.5,
             id: "#float"
         });
-
-        for (var i = last_10_samples.length; i > 0; i--) {
-            train_loss_plotter.plot_points([last_10_samples[i - 1]], {
-                stroke: "black",
-                color: "darkgreen",
-                size: 4,
-                opacity: 1 / (last_10_samples.length - i),
-                id: "#float"
-            });
-            valid_loss_plotter.plot_points([last_10_samples[i - 1]], {
-                stroke: "black",
-                color: "darkgreen",
-                size: 4,
-                opacity: 1 / (last_10_samples.length - i),
-                id: "#float"
-            });
+        if (last_10_samples.length === 10) {
+            last_10_samples.shift();
         }
+        last_10_samples.push({x: net.getLayer(1).sampled_w[0].w[0], y: net.getLayer(1).sampled_w[1].w[0]});
+        train_loss_plotter.plot_points(last_10_samples, {
+            stroke: "black",
+            color: "darkgreen",
+            size: 4,
+            opacity: 0.5,
+            id: "#pts"
+        });
+        valid_loss_plotter.plot_points(last_10_samples, {
+            stroke: "black",
+            color: "darkgreen",
+            size: 4,
+            opacity: 0.5,
+            id: "#pts"
+        });
     }
 
     function sample_weight() {
@@ -214,14 +196,13 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             net_lib.randn(0, -2)
         ];
         param.seeds.push(s);
-        clear();
         plot();
     }
 
     function pause_training() {
-        if (timer) {
-            timer.stop();
-            timer = undefined;
+        if (training_interval) {
+            training_interval.stop();
+            training_interval = undefined;
         }
     }
 
@@ -234,81 +215,29 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             net.getLayer(1).sigma[0].w[0],
             net.getLayer(1).sigma[1].w[0]
         ];
-        var isocontours = [];
         for (var i = 0; i < 5; i++) {
-            isocontours.push([]);
-            for (var t = 0; t <= Math.PI * 2 + param.step_size; t += param.step_size) {
-                isocontours[i].push({
+            for (var t = 0, n = 0; t <= Math.PI * 2 + param.step_size; t += param.step_size, n++) {
+                isocontours[i][n] = {
                     x: mean[0] + i * std[0] * Math.cos(t),
                     y: mean[1] + i * std[1] * Math.sin(t)
-                });
-            }
-            train_loss_plotter.plot_line(isocontours[i], {
-                color: "black",
-                fill: "white",
-                width: 1,
-                opacity: 1 / (4 * i),
-                id: "#float"
-            });
-            valid_loss_plotter.plot_line(isocontours[i], {
-                color: "black",
-                fill: "white",
-                width: 1,
-                opacity: 1 / (4 * i),
-                id: "#float"
-            });
-        }
-    }
-
-    function plot_curve_distribution() {
-        var rng = new Math.seedrandom('Toronto');
-        var sample_size = 300;
-        var sampled_seeds = [];
-        var percentiles = []; // 10, 25, 45, 55, 75, 90
-        for (var i = 0; i < 100; i++) {
-            percentiles.push([]);
-        }
-        // sample 100 nets
-        for (var net_idx = 0; net_idx < sample_size; net_idx++) {
-            sampled_seeds.push([
-                net_lib.seededGaussian(rng), net_lib.seededGaussian(rng), net_lib.seededGaussian(rng) * 0.25
-            ]);
-        }
-
-        // collect percentile for each point
-        for (var i = -5; i <= 5; i += param.step_size) {
-            single_point_pred = net.variationalForward(new net_lib.Vol([i]), sampled_seeds).map(predVol => {
-                return predVol.w[0];
-            }).sort((a, b) => {
-                return a - b;
-            });
-
-            for (var j = 0; j < percentiles.length; j++) {
-                percentiles[j].push({
-                    x: i,
-                    y: single_point_pred[Math.floor(0.01 * j * sample_size)]
-                });
+                };
             }
         }
 
-        // plot the percentile of the samples
-        for (var i = 0; i < percentiles.length / 2; i++) {
-            curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse()), {
-                color: "red",
-                fill: "red",
-                width: 1,
-                opacity: 1 / (percentiles.length - 10 - i),
-                id: "#float"
-            });
-        }
-    }
-
-    function clear() {
-        curve_plotter.svg.select("#float").selectAll("*").remove();
-        train_loss_plotter.svg.select("#float").selectAll("*").remove();
-        valid_loss_plotter.svg.select("#float").selectAll("*").remove();
-        progress_plotter.svg.select("#float").selectAll("*").remove();
-        graph_plotter.svg.select("#float").selectAll("*").remove();
+        train_loss_plotter.plot_path(isocontours, {
+            color: "black",
+            fill: "white",
+            width: 1,
+            opacity: 1 / 6,
+            id: "#curve"
+        });
+        valid_loss_plotter.plot_path(isocontours, {
+            color: "black",
+            fill: "white",
+            width: 1,
+            opacity: 1 / 6,
+            id: "#curve"
+        });
     }
 
     function initial_plot() {
@@ -350,14 +279,14 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             color: "red",
             size: 3,
             opacity: 1,
-            id: "#fixed"
+            id: "#training_point"
         });
         curve_plotter.plot_points(validation_points_data, {
             stroke: "green",
             color: "green",
             size: 3,
             opacity: 0.5,
-            id: "#fixed"
+            id: "#validation_point"
         });
     }
 
@@ -366,11 +295,11 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         for (var i = 0; i < 1; i += param.step_size) {
             MLE.push({x: i, y: 2.7963}); //MLE validation loss
         }
-        progress_plotter.plot_line(MLE, {
+        progress_plotter.plot_path([MLE], {
             color: "darkgreen",
             width: 2,
             opacity: 0.5,
-            id: "#fixed"
+            id: "#curve"
         });
     }
 
@@ -385,7 +314,7 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
                 y: avg_loss[i]
             });
         }
-        progress_plotter.plot_line(avg_loss_data, {
+        progress_plotter.plot_path([avg_loss_data], {
             color: "black",
             width: 3,
             opacity: 1,
@@ -448,15 +377,15 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     function variational_prediction(x, seeds) {
         var predicted_values;
         var x_val;
-        var pred = [];
+        var pred = new Array(seeds.length);
         for (var i = 0; i < seeds.length; i++) {
-            pred.push([]);
+            pred[i] = new Array(x.length);
         }
         for (var i = 0; i < x.length; i++) {
             x_val = new net_lib.Vol([x[i]]);
             predicted_values = net.variationalForward(x_val, seeds);
             for (var j = 0; j < seeds.length; j++) {
-                pred[j].push({x: x[i], y: predicted_values[j].w[0]});
+                pred[j][i] = {x: x[i], y: predicted_values[j].w[0]};
             }
         }
         return pred;
@@ -486,7 +415,6 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             [inv_x_scale(new_x)],
             [inv_y_scale(new_y)]
         ]);
-        clear();
         plot();
         console.log(d3.event.x);
     }
@@ -503,5 +431,5 @@ function bnn(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         d3.select(this).attr("r", 5);
     }
 
-    return {train: train, plot: plot, reset: reset, stop: stop, sample: sample_weight};
+    return {train: train, plot: plot, reset: reset, stop: stop};
 }

@@ -17,15 +17,16 @@
 
 <script type="text/front-matter">
     title: "Bayesian Neural Networks"
-    description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possible models. With a simple modification to standard neural network tools, we can mitigate overfitting, learn from small datasets, and express uncertainty about our predictions."
+    description: "By combining neural networks with Bayesian inference, we can learn a probability distribution over possible models. With a simple modification to standard neural network tools, we can mitigate overfitting,
+    learn from small datasets, and express uncertainty about our predictions."
     authors:
-    - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
-    - Elliot Creager: http://www.cs.toronto.edu/~creager/
-    - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
+        - Jerry Qinghui Yu: http://www.cs.toronto.edu/~jerry/
+        - Elliot Creager: http://www.cs.toronto.edu/~creager/
+        - David Duvenaud: http://www.cs.toronto.edu/~duvenaud/
     affiliations:
-    - University of Toronto
-    - University of Toronto, Vector Institute
-    - University of Toronto, Vector Institute
+        - University of Toronto
+        - University of Toronto, Vector Institute
+        - University of Toronto, Vector Institute
 </script>
 
 <title>Bayesian Neural Networks</title>
@@ -35,14 +36,13 @@
     <script src="assets/utils.js"></script>
     <!-- <script src="assets/lib/lib.js"></script> -->
     <figure style="width:100%; height:400px;">
-            <div id="full_bnn" class='.l-screen' style="width:100%; height:400px;"></div>
+        <div id="full_bnn" class='.l-screen' style="width:100%; height:400px;"></div>
     </figure>
 
     <H1>Bayesian Neural Networks</H1>
     <p>
-    Bayesian inference allows us to learn a probability distribution over possible neural networks.
-    We can approximately solve inference with a simple modification to standard neural network tools.
-    The resulting algorithm mitigates overfitting, enables learning from small datasets, and tells us how uncertain our predictions are.
+        Bayesian inference allows us to learn a probability distribution over possible neural networks. We can approximately solve inference with a simple modification to standard neural network tools. The resulting algorithm mitigates overfitting, enables learning
+        from small datasets, and tells us how uncertain our predictions are.
     </p>
 
     <figure>
@@ -55,17 +55,15 @@
 
     <h2>What's wrong with neural networks?</h2>
     <p>
-        You may have heard deep neural networks described as <i>powerful function approximators</i>.
-        Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via gradient-based optimization.
-        Because they are good at approximating functions (input-output relationships) when lots of data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
+        You may have heard deep neural networks described as <i>powerful function approximators</i>. Their power is due to the extreme flexibility of having many model parameters (the weights and biases) whose values can be learned from data via gradient-based
+        optimization. Because they are good at approximating functions (input-output relationships) when lots of data are available, neural networks are well-suited to artificial intelligence tasks like speech recognition and image classification.
     </p>
 
     <p>
-        But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>.
-        Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training set&mdash;by optimizing its <i>objective function</i>&mdash;that the performance on new examples suffers.
-        Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it.
-        The flexibility of neural networks during training time actually makes them brittle at test time.
-        This might sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
+        But the extreme flexibility of neural networks has a downside: they are particularly vulnerable to <i>overfitting</i>. Overfitting happens when the learning algorithm does such a good job of tuning the model parameters for performance on the training
+        set&mdash;by optimizing its <i>objective function</i>&mdash;that the performance on new examples suffers. Deep neural networks have a ton of parameters (typically millions in modern models), which essentially guarantees eventual overfitting because
+        the learning algorithm can always do just a little bit better on the training set by tweaking some of the many knobs available to it. The flexibility of neural networks during training time actually makes them brittle at test time. This might
+        sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
     </p>
 
     <!-- Regular MLP objective surfaces -->
@@ -80,11 +78,9 @@
                 </div>
                 <div class='table-cell-wrap'>
                     <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
-                        The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset.
-                        Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to pre-trained values.
-                        Bluer is better.
-                        Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient descent.
-                        Notice how weight values affect both the training and test objectives (left, right) and the network predictions changes (below).
+                        The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset. Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
+                        pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient descent. Notice how weight values affect both the training
+                        and test objectives (left, right) and the network predictions changes (below).
                     </figcaption>
                 </div>
                 <div class="table-cell-wrap">
@@ -127,9 +123,8 @@
 
 
     <p>
-        First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of input-output pairs.
-        Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output pairs.
-        Then neural network training corresponds to the following optimization problem:
+        First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output
+        pairs. Then neural network training corresponds to the following optimization problem:
     </p>
     <p>
         $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
@@ -138,110 +133,102 @@
         where $\mathcal{L}_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
     </p>
     <p>
-        $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right]$
-        .
+        $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right]$ .
     </p>
     <p>
-        Here $\log p(\hat y(x) = y|w)$ represents the log likelihood<dt-fn>
+        Here $\log p(\hat y(x) = y|w)$ represents the log likelihood
+        <dt-fn>
             Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
-            </dt-fn>
-        of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples<dt-fn>
-        We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood.
-        In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical (i.e., multinomial) distribution
-    </dt-fn>.
-        Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
+        </dt-fn>
+        of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples
+        <dt-fn>
+            We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
+            (i.e., multinomial) distribution
+        </dt-fn>. Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
     </p>
     <p>
-        During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$.
-        In the demo above, we plot these functions side-by-side as a function of two weights<dt-fn>
-        In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call $w_1$ and $w_2$.
-    </dt-fn>.
-        Notice that the optimal weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yield a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$.
-        This indicates overfitting, which manifests as the neural net generalizing poorly: it makes predictions $\hat y(x)$ that hug closely to the training data at the expense of deviating from the test data.
-
-        Scaling up to networks with millions of weights amplifies the severity of overfitting, since $\mathcal{L}_{\text{train}}(w)$ and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions.
-        Indeed, one key insight from deep learning is that the more capacity<dt-fn>
-        Very often "capacity" is shorthand for "depth"
-    </dt-fn>
-        a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit.
-        Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden layer ("shallow") or no activations ("linear") we see that $\mathcal{L}_{\text{train}}$ looks similar to $\mathcal{L}_{\text{test}}$, so there's little danger of overfitting.
+        During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$. In the demo above, we plot these functions side-by-side
+        as a function of two weights
+        <dt-fn>
+            In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call $w_1$ and $w_2$.
+        </dt-fn>. Notice that the optimal weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yield a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$. This indicates overfitting, which manifests as the neural net generalizing
+        poorly: it makes predictions $\hat y(x)$ that hug closely to the training data at the expense of deviating from the test data. Scaling up to networks with millions of weights amplifies the severity of overfitting, since $\mathcal{L}_{\text{train}}(w)$
+        and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions. Indeed, one key insight from deep learning is that the more capacity
+        <dt-fn>
+            Very often "capacity" is shorthand for "depth"
+        </dt-fn>
+        a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit. Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden
+        layer ("shallow") or no activations ("linear") we see that $\mathcal{L}_{\text{train}}$ looks similar to $\mathcal{L}_{\text{test}}$, so there's little danger of overfitting.
     </p>
 
     <h2>Bayes to the rescue</h2>
     <p>
-        The problem of overfitting is certainly not unique to neural networks.
-        But because the flexibility of neural networks makes them particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting<dt-cite key="hinton2012improving"></dt-cite>.
+        The problem of overfitting is certainly not unique to neural networks. But because the flexibility of neural networks makes them particularly susceptible, researchers and practitioners have come up with many extensions to the standard learning algorithm
+        (early stopping, weight decay, and dropout, just to name a few) to reduce overfitting
+        <dt-cite key="hinton2012improving"></dt-cite>.
     </p>
 
     <p>
-        This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters.
-        Before we used the training data $\mathcal{D}_{\text{train}}$ plus a gradient-based optimizer to tune the weights $w$ in order to maximize $\mathcal{L}_{\text{train}}(w)$.
-        In Bayesian inference, instead of learning the parameter values, we seek to compute $p(w | \mathcal{D}_{\text{train}})$, the conditional distribution of the weights given the training data.
-        $p(w|\mathcal{D}_{\text{train}})$ is called the <i>posterior distribution</i>, or often the <i>posterior</i> for short.
+        This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters. Before we used the training data $\mathcal{D}_{\text{train}}$ plus
+        a gradient-based optimizer to tune the weights $w$ in order to maximize $\mathcal{L}_{\text{train}}(w)$. In Bayesian inference, instead of learning the parameter values, we seek to compute $p(w | \mathcal{D}_{\text{train}})$, the conditional distribution
+        of the weights given the training data. $p(w|\mathcal{D}_{\text{train}})$ is called the <i>posterior distribution</i>, or often the <i>posterior</i> for short.
     </p>
 
     <h3>Exact Bayesian inference</h3>
     <p>
-        Bayes' rule tells us how to compute the posterior:
-        $$
-        p(w | \mathcal{D}) = \dfrac{p(\mathcal{D}|w)p(w)}{p(\mathcal{D})} = \dfrac{p(\mathcal{D}|w)p(w)}{\int_{w'} p(\mathcal{D}|w')p(w') dw'}
-        .
-        $$
-        Computing the posterior in this way is sometimes called <i>exact inference</i>, simply to distinguishes it from approximations which we will later find to be more practical.
-        Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(\mathcal{D} | w)$.
-        While the posterior distribution is easily expressed, it is typically expensive to compute due to the pesky integral over all possible values of $w$.
-        For most neural network we can't evaluate this integral analytically.
-        We could instead approximate it numerically, but this will only be practical for small neural networks, since $w$ represents all the weights and biases, so it becomes very high dimensional for deep networks.
+        Bayes' rule tells us how to compute the posterior: $$ p(w | \mathcal{D}) = \dfrac{p(\mathcal{D}|w)p(w)}{p(\mathcal{D})} = \dfrac{p(\mathcal{D}|w)p(w)}{\int_{w'} p(\mathcal{D}|w')p(w') dw'} . $$ Computing the posterior in this way is sometimes called <i>exact inference</i>,
+        simply to distinguishes it from approximations which we will later find to be more practical. Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(\mathcal{D} | w)$. While the posterior distribution
+        is easily expressed, it is typically expensive to compute due to the pesky integral over all possible values of $w$. For most neural network we can't evaluate this integral analytically. We could instead approximate it numerically, but this will
+        only be practical for small neural networks, since $w$ represents all the weights and biases, so it becomes very high dimensional for deep networks.
     </p>
     <p>
-        So we will need to address this computational issue, which we do in the next section.
-        In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|\mathcal{D})$ instead of the estimate $w^*$ from standard neural network training.
-        In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
+        So we will need to address this computational issue, which we do in the next section. In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|\mathcal{D})$ instead of the estimate $w^*$ from standard neural
+        network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
     </p>
     <p>
-    $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{w \sim p(w|\mathcal{D})}[p(\hat y(x)|w)]$, <!-- why not p(w| \mathcal{D}, x) here...-->
+        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{w \sim p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
+        <!-- why not p(w| \mathcal{D}, x) here...-->
     </p>
     <p>
-        which we call the <i>predictive distribution</i>.
-        Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|\mathcal{D})$.
-        This yields a nice interpretation of the predictive distribution as an <i>infinite ensemble</i> of networks<dt-cite key="blundell2015weight"></dt-cite>, with each network's contribution to the overall prediction weighted by the posterior likelihood of its weights given the training data.
-        Also, it implies that we can approximate this infinite ensemble using a finite number of Monte Carlo samples from the posterior.
-        Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
+        which we call the <i>predictive distribution</i>. Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|\mathcal{D})$. This yields a nice interpretation of the predictive distribution
+        as an <i>infinite ensemble</i> of networks
+        <dt-cite key="blundell2015weight"></dt-cite>, with each network's contribution to the overall prediction weighted by the posterior likelihood of its weights given the training data. Also, it implies that we can approximate this infinite ensemble using a finite number of Monte
+        Carlo samples from the posterior. Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse
+        of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
     <h3>Modeling uncertainty</h3>
     <p>
-        But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i> $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$.
-        An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
-    This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data, which typically have high uncertainty when data is scarce.
-        In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
-   </p>
+        But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i>        $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$. An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
+        This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data,
+        which typically have high uncertainty when data is scarce. In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks
+        we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
+    </p>
     <h3>Approximate inference</h3>
     <p>
-    Recall that computing the posterior using exact inference is costly even for modest-sized networks due to the denominator in Bayes' rule $p(\mathcal{D})$, which we call the <i>marginal data likelihood</i>.
-    For many models of practical interest this cost is prohibitive, so we must resort to approximately computing the posterior.
-    Approaches to doing so broadly fall into two categories, which we discuss in the following two sections.
-    <i>Sampling methods</i> leverage the tractability of the unnormalized posterior to approximate the integral over weight space with a finite number of suitably chosen Monte Carlo samples.
-    <i>Variational methods</i> instead model the posterior using a parameterized distribution called the approximate posterior, then iteratively improve the approximation by solving a suitable optimization problems.
-    While both methods are of practical and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training.
-    We devote a section to this algorithm to underscore that being Bayeisna in neural network learning is well worth the modest cost in engineering overhead.
+        Recall that computing the posterior using exact inference is costly even for modest-sized networks due to the denominator in Bayes' rule $p(\mathcal{D})$, which we call the <i>marginal data likelihood</i>. For many models of practical interest
+        this cost is prohibitive, so we must resort to approximately computing the posterior. Approaches to doing so broadly fall into two categories, which we discuss in the following two sections.
+        <i>Sampling methods</i> leverage the tractability of the unnormalized posterior to approximate the integral over weight space with a finite number of suitably chosen Monte Carlo samples.
+        <i>Variational methods</i> instead model the posterior using a parameterized distribution called the approximate posterior, then iteratively improve the approximation by solving a suitable optimization problems. While both methods are of practical
+        and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training. We devote a section to this algorithm to underscore that
+        being Bayeisna in neural network learning is well worth the modest cost in engineering overhead.
     </p>
 
     <h2>Sampling methods</h2>
-        <p style="color:red;">
-            TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
-        </p>
+    <p style="color:red;">
+        TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
+    </p>
 
     <h3>Metropolis algorithm</h3>
-        <p style="color:red;">
-            TODO: fill out this stub
-        </p>
-    
-    <h3>Hamiltoniian MCMC algorithm</h3>
-        <p style="color:red;">
-            TODO: fill out this stub
-        </p>
+    <p style="color:red;">
+        TODO: fill out this stub
+    </p>
 
-     <!-- Sampling from the posterior figures -->
+    <h3>Hamiltoniian MCMC algorithm</h3>
+    <p style="color:red;">
+        TODO: fill out this stub
+    </p>
+
+    <!-- Sampling from the posterior figures -->
     <figure style="position:relative; width:984px; height:900px;">
         <figcaption id="randomwalk_caption" class='little_caption'>
             Gaussian Random Walk Proposal
@@ -255,49 +242,51 @@
         <div id="hmc_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
         <button type="button" onclick="hmc.start();">Sample</button>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
-            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$.
-            Once sampling begins, the running-average of the Monte Carlo approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red.
-            Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
+            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$. Once sampling begins, the running-average of the Monte Carlo
+            approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red. Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
         </figcaption>
 
         <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
     </figure>
 
-   <p>
-        The demo above plots the sequence of functions we get when sampling network weights from the posterior using two sampling algorithms: one with the Metropolis proposal and one with Hamiltonian dynamics. shows the prediction function for a sequence of networks sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks.
-        The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the predictive distribution $p(\hat y(x)| \mathcal{D})$.
-        On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these samples to obtain an approximate posterior.
-   </p>
+    <p>
+        The demo above plots the sequence of functions we get when sampling network weights from the posterior using two sampling algorithms: one with the Metropolis proposal and one with Hamiltonian dynamics. shows the prediction function for a sequence of networks
+        sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks. The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the
+        predictive distribution $p(\hat y(x)| \mathcal{D})$. On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these
+        samples to obtain an approximate posterior.
+    </p>
 
-   <h2>Variational inference</h2>
+    <h2>Variational inference</h2>
     <p style="color:red;">
         TODO: contrast sampling-based inference with gradient based inference, especially with their ability to scale.
     </p>
 
     <p>
-        Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost.
-        As network and dataset size grow, however, so grows the cost of estimating the posterior via sampling.
-        In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training; we'll pose the problem now and discuss the learning algorithm in the next section.
+    Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost. As network and dataset size grow, however, so grows
+    the cost of estimating the posterior via sampling. In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training;
+    we'll pose the problem now and discuss the learning algorithm in the next section.
     <h3>Modling the approximate posterior</h3>
-        <p>
-        Generally speaking, when faced with an intractable distribution like the posterior $p(w|\mathcal{D})$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i> $q_\phi(w)$<dt-fn>
-            While we can alternatively specify the approximate posterior as conditionally dependent on specific inputs $q_\phi(w|x)$, as in the variational autoencoder's encoder network <dt-cite key="kingma2013autoencoding"></dt-cite>, this is not necessary in the classification task we consider here since there is no need to reconstruct the inputs.
-            </dt-fn>
-, then tune the parameters $\phi$ so that it better approximates the intractable distribution.
-            Developing a variational method for approximate inference requires two steps: first, formalizing a notion of similarity between two probability distributions, then writing down a tractable optimization problem that corresponds to maximizing this notion of similarity.
-            The second step, maximizing the similarity of the approximate and true posteriors, might seem difficult since we can't even evaluate the true posterior.
-            But we will see that our choice of objective in the first step will help us in this regard.
-        </p>
+    </p>
+    <p>
+        Generally speaking, when faced with an intractable distribution like the posterior $p(w|\mathcal{D})$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i>            $q_\phi(w)$
+        <dt-fn>
+            While we can alternatively specify the approximate posterior as conditionally dependent on specific inputs $q_\phi(w|x)$, as in the variational autoencoder's encoder network
+            <dt-cite key="kingma2013autoencoding"></dt-cite>, this is not necessary in the classification task we consider here since there is no need to reconstruct the inputs.
+        </dt-fn>
+        , then tune the parameters $\phi$ so that it better approximates the intractable distribution. Developing a variational method for approximate inference requires two steps: first, formalizing a notion of similarity between two probability distributions,
+        then writing down a tractable optimization problem that corresponds to maximizing this notion of similarity. The second step, maximizing the similarity of the approximate and true posteriors, might seem difficult since we can't even evaluate
+        the true posterior. But we will see that our choice of objective in the first step will help us in this regard.
+    </p>
 
     <h3>The Kullback-Liebler divergence</h3>
 
-   <!-- KL divergence figure -->
+    <!-- KL divergence figure -->
     <figure style="position:relative; width:984px; height:400px;">
         <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
         <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="reverse KL">$D_{KL}(q||p)$<br>
-            <input type="radio" name="divergence_type" value="KL" checked>$D_{KL}(p||q)$<br>
-            <input type="radio" name="divergence_type" value="JS"> D_{JS}(p, q)$
+            <input type="radio" name="divergence_type" value="reverse KL" checked>$D_{KL}(q||p)$<br>
+            <input type="radio" name="divergence_type" value="KL">$D_{KL}(p||q)$<br>
+            <input type="radio" name="divergence_type" value="JS"> $D_{JS}(p, q)$
         </form>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
@@ -307,126 +296,119 @@
         </div>
         <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
             In variational methods we fit a tractable parameterized distribution $q$ (e.g., the single Gaussian in red) to a comlicated (sometimes intractable distribution) $p$ (e.g., the mixture of Gaussians in black) by optimizing the divergence between these distributions.
-            The shaded contour represents $q \log \frac{q}{p}$ and the diameter of the circle and its color represents its integral, the KL-divergence $D_{KL}(q||p)$.
-            How should we select parameter values of $q$ if we want to minimize $D_{KL}(q||p)$?
+            The shaded contour represents $q \log \frac{q}{p}$ and the diameter of the circle and its color represents its integral, the KL-divergence $D_{KL}(q||p)$. How should we select parameter values of $q$ if we want to minimize $D_{KL}(q||p)$?
             What about if we want to minimize one of the alternative metrics, reverse KL or Jensen-Shannon distance?
         </figcaption>
     </figure>
 
     <p style="color:red;">
-    TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $D_{KL}(q||p)$.
+        TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $D_{KL}(q||p)$.
     </p>
-        <p>
-            We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as
-            $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})] \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$
-            So our optimization problem should be something like "minimize the KL-divergence between from the approximate posterior to the true posterior, which we will formalize shortly.
-            But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate, and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$.
-            You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$.
-            </p>
-            <p>
-            By definition the KL-divergence is  not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance.
-            We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we can estimate it using Monte Carlo samples.
-            But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing to model mass in $p$.
-
-            </p>
-
-
-            <h3>Approximate inference as optimization</h3>
-        <p>
-        Having acquired some intuition about how KL-divergence works, we now show that its practicality by deriving a tractable optimization problem that optimizes a bound on this quantity<dt-fn>
-            As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$ <dt-cite key="shlens2014notes"></dt-cite>.
-        </dt-fn>.
-        Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior.
-        Fortunately, we can derive a tractable and closely related quantity that is equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
-        $$D_{KL} [q_\phi(w)||p(w|D)] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D})  \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) - \log p(\mathcal{D}) \right] =  \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w)  \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) \right] - \log p(\mathcal{D}) $$
-        Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule.
-        But notably it does not depend on the parameters of $q_\phi$, which means we can ignore during optimization.
-        We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the evidence lower bound, which we here pose as a maximization problem for conventional consistency.
-        $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)}  \log p(w, mathcal{D}) - \left[ \log q_\phi(w) \right] $$
-        Thus the variatinal inference corresponds to the following optimization problem:
-        $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
-        </p>
-
-   <!-- extra stuff
     <p>
-        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify.
-    $$\tilde \mathcal{L}(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right]$$
-        Thus variational inference corresponds to the following optimization problem:
-    $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim \mathcal{D}_{train}} \left[ \tilde \mathcal{L}(x,y) \right]$$
+        We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})]
+        \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$ So our optimization problem should be something like "minimize the KL-divergence between from
+        the approximate posterior to the true posterior, which we will formalize shortly. But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate,
+        and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon
+        distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$.
+    </p>
+    <p>
+        By definition the KL-divergence is not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance. We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we
+        can estimate it using Monte Carlo samples. But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing
+        to model mass in $p$.
+
+    </p>
+
+
+    <h3>Approximate inference as optimization</h3>
+    <p>
+        Having acquired some intuition about how KL-divergence works, we now show that its practicality by deriving a tractable optimization problem that optimizes a bound on this quantity
+        <dt-fn>
+            As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$
+            <dt-cite key="shlens2014notes"></dt-cite>.
+        </dt-fn>. Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
+        equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective. $$D_{KL} [q_\phi(w)||p(w|D)] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D}) \right]
+        = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) - \log p(\mathcal{D}) \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D})
+        \right] - \log p(\mathcal{D}) $$ Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
+        of $q_\phi$, which means we can ignore during optimization. We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the
+        evidence lower bound, which we here pose as a maximization problem for conventional consistency. $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, mathcal{D}) - \left[ \log q_\phi(w) \right] $$ Thus the variatinal inference
+        corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
+    </p>
+
+    <p>
+        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify. $$\tilde \mathcal{L}(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) =
+        y|w) + \log p(w) - \log q_{\phi}(w) \right]$$ Thus variational inference corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim \mathcal{D}_{train}} \left[ \tilde \mathcal{L}(x,y)
+        \right]$$
     </p>
 
     <p style="color:red;">
-    TODO: reconcile the difference in call signature between $\mathcal{L}(x,y)$ and $\mathcal{L}_{\text{train}}(w)$.
+        TODO: reconcile the difference in call signature between $\mathcal{L}(x,y)$ and $\mathcal{L}_{\text{train}}(w)$.
     </p>
-   -->
+
 
 
     <h2>Optimizing with gradients</h2>
-        <p>
-            Variational inference reframes the computation of an integral as the optimization of its lower bound, which notably implies we can use tools from the optimization literature to approximately solve our inference problem.
-            This includes optimizing with minibatch (a.k.a. "stochastic") gradients, like we did with standard neural network training.
-            Thus, with a slight tweak, we can adapt SGD to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
-        </p>
-
-    <p style="color:red;">
-    TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side.
-    We should also cite relevant papers, e.g.,
+    <p>
+        Variational inference reframes the computation of an integral as the optimization of its lower bound, which notably implies we can use tools from the optimization literature to approximately solve our inference problem. This includes optimizing with minibatch
+        (a.k.a. "stochastic") gradients, like we did with standard neural network training. Thus, with a slight tweak, we can adapt SGD to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
     </p>
 
-   <figure style="position:relative; width:800px; height:200px;">
-       <div class="container" style="width: 800px;">
-           <div id="svi-algo-box-left" style="display: table-cell;"></div>
-           <div id="svi-algo-box-right" style="display: table-cell;"></div>
-       </div>
-   </figure>
+    <p style="color:red;">
+        TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side. We should also cite relevant papers, e.g.,
+    </p>
+
+    <figure style="position:relative; width:800px; height:200px;">
+        <div class="container" style="width: 800px;">
+            <div id="svi-algo-box-left" style="display: table-cell;"></div>
+            <div id="svi-algo-box-right" style="display: table-cell;"></div>
+        </div>
+    </figure>
 
     <pre id="hello-world-code">
-    \begin{algorithmic}
-    \PROCEDURE{SGD}{$x, y, w$}
-        \WHILE {training not converged}
-            \STATE $g = \text{BACKPROP}(x, y, w)$
-            \STATE $w = w + \alpha g$
-        \ENDWHILE
-        \ENDPROCEDURE
-    \end{algorithmic}
+        \begin{algorithmic}
+        \PROCEDURE{SGD}{$x, y, w$}
+            \WHILE {training not converged}
+                \STATE $g = \text{BACKPROP}(x, y, w)$
+                \STATE $w = w + \alpha g$
+            \ENDWHILE
+            \ENDPROCEDURE
+        \end{algorithmic}
     </pre>
 
     <pre id="hello-world-code2">
-    \begin{algorithmic}
-    \PROCEDURE{SVI}{$x, y, w$}
-    \WHILE {training not converged}
-            \STATE ${\color{blue} \epsilon \sim \mathcal{N}(0, I)}$
-            \STATE $g = \text{BACKPROP}(x, y, {\color{blue} w+\epsilon\sigma})$
-            \STATE $w = w + \alpha g$
-            \STATE ${\color{blue}\sigma = \sigma + \alpha\epsilon g}$
-        \ENDWHILE
-        \ENDPROCEDURE
-    \end{algorithmic}
+        \begin{algorithmic}
+        \PROCEDURE{SVI}{$x, y, w$}
+            \WHILE {training not converged}
+                \STATE ${\color{blue} \epsilon \sim \mathcal{N}(0, I)}$
+                \STATE $g = \text{BACKPROP}(x, y, {\color{blue}w+\epsilon\sigma})$
+                \STATE $w = w + \alpha g$
+                \STATE ${\color{blue}\sigma = \sigma + \alpha\epsilon g}$
+            \ENDWHILE
+            \ENDPROCEDURE
+        \end{algorithmic}
     </pre>
 
     <p style="color:red;">
-    TODO: segueway into the figure and algo box
+        TODO: segueway into the figure and algo box
     </p>
 
     <!-- Variational Inference Layer -->
     <figure style="position:relative; width:984px; height:1075px;">
-        <figcaption id="Var_inf_caption">
+        <figcaption id="svi_inf_caption">
             Variational Inference
         </figcaption>
-        <figcaption id="var_caption">
+        <figcaption id="svi_caption">
             Now we fit a distribution of weights to the underlying latent distribution.
         </figcaption>
-        <div id="var_full" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="bnn.train()">Train</button>
-        <button type="button" onclick="bnn.sample()">Sample</button>
-        <button type="button" onclick="bnn.stop()">Pause</button>
+        <div id="svi_curve" class='bordered' style="position:relative; width:984px; height:300px;"></div>
+        <button type="button" onclick="svi.train()">Train</button>
+        <button type="button" onclick="svi.stop()">Pause</button>
 
         <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
             What if you sampled from the learned distribution?
         </figcaption>
         <div class="container" style="margin-top: 20px;">
-            <div id="var_progress" class='bordered' style="display: table-cell; width:364px; height:200px;"></div>
-            <div id="var_graph" style="display: table-cell; width:600px; height:200px;"></div>
+            <div id="svi_progress" class='bordered' style="display: table-cell; width:364px; height:200px;"></div>
+            <div id="svi_graph" style="display: table-cell; width:600px; height:200px;"></div>
         </div>
 
         <div class='container'>
@@ -452,19 +434,8 @@
         </div>
     </figure>
 
-    <!-- VARIANCE FIGURE
-        <figure style="position:relative; width:984px; height:350px;">
-        <figcaption id="disagree">
-            A Change in Perspective
-        </figcaption>
-        <div id="uncertain_mlp" style="position:relative; float:left; width:485px; height:300px; bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-        <div id="uncertain_bnn" style="position:relative; margin-left: 499px; width:485px; height:300px; bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.05);"></div>
-        <button type="button" name="uncertain_train" onclick="uncertainty.train()">Train</button>
-        <button type="button" name="uncertain_reset" onclick="uncertainty.reset()">Reset</button>
-    </figure> -->
+    <p>HERE ARE SOME IDEAS FOR EXTRA STUFF TO TALK ABOUT, SPACE PERMITTING</p>
 
-    <!--
-        HERE ARE SOME IDEAS FOR EXTRA STUFF TO TALK ABOUT, SPACE PERMITTING
     <h3>Automatic Differentiation Variational Inference</h3>
     <p>
         The reparameterization trick
@@ -494,16 +465,6 @@
     <p>
         asdf
     </p>
-    -->
-
-    <script src="assets/lib/parameters.js"></script>
-    <script src="assets/lib/plotter.js"></script>
-    <script src="assets/lib/divergence.js"></script>
-    <script src="assets/lib/contour_plot.js"></script>
-    <script src="assets/lib/mlp.js"></script>
-    <script src="assets/lib/bnn.js"></script>
-    <script src="assets/lib/full_bnn.js"></script>
-    </p>
 
 
     <h2>Conclusion</h2>
@@ -520,22 +481,13 @@
     Also: Overfitting, small data, and uncertainty.
     </p>
 
-
     <script src="assets/lib/parameters.js"></script>
+    <script src="assets/lib/graphical_constants.js"></script>
     <script src="assets/lib/plotter.js"></script>
     <script src="assets/lib/divergence.js"></script>
     <script src="assets/lib/contour_plot.js"></script>
     <script src="assets/lib/mlp.js"></script>
-    <script src="assets/lib/bnn.js"></script>
-    <script src="assets/lib/full_bnn.js"></script>
-    </p>
-
-    <script src="assets/lib/parameters.js"></script>
-    <script src="assets/lib/plotter.js"></script>
-    <script src="assets/lib/divergence.js"></script>
-    <script src="assets/lib/contour_plot.js"></script>
-    <script src="assets/lib/mlp.js"></script>
-    <script src="assets/lib/bnn.js"></script>
+    <script src="assets/lib/svi.js"></script>
     <script src="assets/lib/full_bnn.js"></script>
     <script src="assets/lib/exact_inference.js"></script>
     <script src="assets/lib/randomwalk.js"></script>
@@ -556,15 +508,15 @@
         var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
 
         var sliderc = sliderGen([230, 40])
-            .ticks([0, 3, 6, 9, 12])
+            .ticks([0, 2, 4, 6, 8])
             .ticktitles(function(d, i) {
-                return ["-6", "-3", "0", "3", "6"][i]
+                return ["-4", "-2", "0", "2", "4"][i]
             })
             .change(function(i) {
-                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 6).toPrecision(2))
-                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+                d3.select("#slider3").selectAll(".figtext").html("Mean μ = " + (getmean() - 4).toPrecision(2))
+                divergence_curve.update(getmean() - 4, sdScaler(getsd()))
             })
-            .startxval(6)
+            .startxval(4)
             .cRadius(7)
             .shifty(-12)
             .margins(20, 20)
@@ -575,7 +527,7 @@
             })
             .change(function(i) {
                 d3.select("#slider4").selectAll(".figtext").html("Standard Deviation = " + sdScaler(getsd()).toPrecision(2))
-                divergence_curve.update(getmean() - 6, sdScaler(getsd()))
+                divergence_curve.update(getmean() - 4, sdScaler(getsd()))
             })
             .cRadius(7)
             .shifty(-12)
@@ -587,18 +539,18 @@
         divergence_curve.draw_line();
 
         // variational inference
-        var bnn = bnn(d3.select("#var_full"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#var_progress"), d3.select("#var_graph"));
+        var svi = svi(d3.select("#svi_curve"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#svi_progress"), d3.select("#svi_graph"));
 
         // variational inference
         var full_bnn = full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
         // full_bnn.train();
 
         // SGD algo box
-       var code = document.getElementById("hello-world-code").textContent;
-       var code2 = document.getElementById("hello-world-code2").textContent;
-       var parent_left = document.getElementById("svi-algo-box-left");
-       var parent_right = document.getElementById("svi-algo-box-right");
-       var options = {
+        var code = document.getElementById("hello-world-code").textContent;
+        var code2 = document.getElementById("hello-world-code2").textContent;
+        var parent_left = document.getElementById("svi-algo-box-left");
+        var parent_right = document.getElementById("svi-algo-box-right");
+        var options = {
             lineNumber: true
         };
         pseudocode.render(code, parent_left, options);
@@ -607,18 +559,19 @@
 </dt-article>
 
 <dt-appendix>
-  <h3>Acknowledgments</h3>
-  <p style="color:red;">
-    TODO: Write down our acknowledgments.
-  </p>
-  <p>
-    Many of our demos rely on Karpathy's ConvNetJS library <dt-cite key="karpathy2015convnetjs"></dt-cite>, including the example code provided therein.
+    <h3>Acknowledgments</h3>
+    <p style="color:red;">
+        TODO: Write down our acknowledgments.
+    </p>
+    <p>
+        Many of our demos rely on Karpathy's ConvNetJS library
+        <dt-cite key="karpathy2015convnetjs"></dt-cite>, including the example code provided therein.
 
-  <h3>Author contribution</h3>
+        <h3>Author contribution</h3>
 
-  <p style="color:red;">
-    TODO: List the author contributions.
-  </p>
+        <p style="color:red;">
+            TODO: List the author contributions.
+        </p>
 </dt-appendix>
 
 <script>
@@ -640,33 +593,32 @@
                     display: true
                 },
                 {
-    left: "\\",
-    right: "\\",
-    display: false
-},
-]
-}
-);
+                    left: "\\",
+                    right: "\\",
+                    display: false
+                },
+            ]
+        }
+    );
 </script>
 
 <script type="text/bibliography">
-    @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015}, url={https://arxiv.org/abs/1505.05424}}
-    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016}}
-    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
-    @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} }
-    @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley, John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
-    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015}, url={https://github.com/karpathy/convnetjs} }
-    @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} }
-    @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
-    @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
-    @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
-    @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
-    @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
-    @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} }
-    @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} }
-    @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} }
-    @article{rumelhart1986learning, title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} }
-    @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} }
-    @article{shlens2014notes, title={Notes on Kullback-Leibler divergence and likelihood}, author={Shlens, Jonathon}, journal={arXiv preprint arXiv:1404.2000}, year={2014}
-}   @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois at Urbana-Champaign} }
+    @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622},
+    year={2015}, url={https://arxiv.org/abs/1505.05424}} @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international
+    conference on machine learning}, pages={1050--1059}, year={2016}} @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems},
+    pages={2348--2356}, year={2011} } @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov,
+    Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} } @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley,
+    John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} } @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015}, url={https://github.com/karpathy/convnetjs}
+    } @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} } @inproceedings{kingma2015adam, title={{Adam}:
+    A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, } @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization
+    trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} } @article{kucukelbir2016automatic, title={Automatic Differentiation Variational
+    Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} } @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks},
+    author={Neal, Radford M}, year={1995}, school={University of Toronto} } @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint
+    arXiv:1206.6430}, year={2012} } @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} } @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation
+    and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} } @article{robbins1951stochastic,
+    title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} } @article{rumelhart1986learning, title={Learning representations by back-propagating
+    errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} } @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and
+    Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} } @article{shlens2014notes, title={Notes on Kullback-Leibler divergence and likelihood}, author={Shlens,
+    Jonathon}, journal={arXiv preprint arXiv:1404.2000}, year={2014} } @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois
+    at Urbana-Champaign} }
 </script>

@@ -1,0 +1,67 @@
+<!doctype html>
+<script src="lib/template.v1.js"></script>
+<script src="lib/katex.min.js"></script>
+<script src="lib/auto-render.min.js"></script>
+<script src="lib/d3.v4.min.js"></script>
+<script src="lib/d3-contour.v1.min.js"></script>
+<script src="lib/d3-scale-chromatic.v1.min.js"></script>
+<script src="lib/svi.js"></script>
+<script src="lib/parameters.js"></script>
+<script src="lib/plotter.js"></script>
+<script src="lib/seedrandom.min.js"></script>
+<script src="lib/net_lib.js"></script>
+
+<link rel="stylesheet" type="text/css" href="lib/katex.min.css">
+<link rel="stylesheet" type="text/css" href="../styles.css">
+<link rel="stylesheet" type="text/css" href="widgets.css">
+<link rel="stylesheet" type="text/css" href="lib/pseudocode.min.css">
+
+<title>SVI demo</title>
+
+<dt-article id="article" class="centered">
+    <figure style="position:relative; width:984px; height:1075px;">
+        <figcaption id="Var_inf_caption">
+            Variational Inference
+        </figcaption>
+        <figcaption id="var_caption">
+            Now we fit a distribution of weights to the underlying latent distribution.
+        </figcaption>
+        <div id="var_full" class='bordered' style="position:relative; width:984px; height:300px;"></div>
+        <button type="button" onclick="svi.train()">Train</button>
+        <button type="button" onclick="svi.sample()">Sample</button>
+        <button type="button" onclick="svi.stop()">Pause</button>
+
+        <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
+            What if you sampled from the learned distribution?
+        </figcaption>
+        <div class="container" style="margin-top: 20px;">
+            <div id="var_progress" class='bordered' style="display: table-cell; width:364px; height:200px;"></div>
+            <div id="var_graph" style="display: table-cell; width:600px; height:200px;"></div>
+        </div>
+
+        <div class='container'>
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_train_title" class='little_caption'>
+                        Training Loss
+                    </figcaption>
+                    <div id="var_loss_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_caption" style="position: relative; width: 150px; left: 75px; right: 75px; top: 100px;">
+                        The loss surface for the Variational Net. The training loss is plotted on the left, the validation loss is plotted on the right.
+                    </figcaption>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="var_loss_valid_title" class='little_caption'>
+                        Test Loss
+                    </figcaption>
+                    <div id="var_loss_valid" class='contour'> </div>
+                </div>
+            </div>
+        </div>
+    </figure>
+
+    <script>
+    </script>
+</dt-article>

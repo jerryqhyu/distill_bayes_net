@@ -71,7 +71,7 @@ function hmc_view(curve_div) {
 
 		clear();
 		plot_sample_dist();
-		curve_plotter.plot_line(pts, {
+		curve_plotter.plot_path(pts, {
 			color: "black",
 			width: 2,
 			opacity: 1,
@@ -248,7 +248,7 @@ function hmc_view(curve_div) {
 
 		// plot the percentile of the samples
 		for (var i = 0; i < percentiles.length / 2; i++) {
-			curve_plotter.plot_line(percentiles[i].concat(percentiles[percentiles.length -
+			curve_plotter.plot_path(percentiles[i].concat(percentiles[percentiles.length -
 				1 - i].reverse()), {
 				color: "red",
 				fill: "red",
@@ -275,18 +275,13 @@ function hmc_view(curve_div) {
 		});
 		layer_defs.push({
 			type: 'fc',
-			num_neurons: 2,
-			activation: 'tanh'
+			num_neurons: 7,
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'fc',
-			num_neurons: 4,
-			activation: 'tanh'
-		});
-		layer_defs.push({
-			type: 'fc',
-			num_neurons: 4,
-			activation: 'tanh'
+			num_neurons: 7,
+			activation: 'rbf'
 		});
 		layer_defs.push({
 			type: 'regression',
@@ -294,14 +289,6 @@ function hmc_view(curve_div) {
 		});
 		var new_net = new net_lib.Net();
 		new_net.makeLayers(layer_defs);
-		new_net.getLayer(1).setWeights([[-0.2], [-0.2]]);
-		new_net.getLayer(3).setWeights(param.opt_layer3_w);
-		new_net.getLayer(5).setWeights(param.opt_layer5_w);
-		new_net.getLayer(7).setWeights(param.opt_layer7_w);
-		new_net.getLayer(1).setBiases(param.opt_layer1_b);
-		new_net.getLayer(3).setBiases(param.opt_layer3_b);
-		new_net.getLayer(5).setBiases(param.opt_layer5_b);
-		new_net.getLayer(7).setBiases(param.opt_layer7_b);
 		return new_net;
 	}
 

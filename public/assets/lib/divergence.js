@@ -2,6 +2,9 @@ function divergence(div, mean, sd) {
 
 	var divergence_curve_plotter = Plotter(div, param.divergence_curve_domain_x,
 		param.divergence_curve_domain_y, false, false);
+	divergence_curve_plotter.add_group("variable");
+	divergence_curve_plotter.add_group("fixed");
+	divergence_curve_plotter.add_group("divergence");
 
 	var state_mean = mean;
 	var state_sd = sd;
@@ -78,25 +81,28 @@ function divergence(div, mean, sd) {
 
 	function draw_line() {
 		data = getGaussianFunctionPoints();
-		divergence_curve_plotter.plot_line(data.variable, {
+		divergence_curve_plotter.plot_path([data.variable], {
 			color: "darkred",
 			width: 2,
 			opacity: 0.5,
+			id: "#variable"
 		});
-		divergence_curve_plotter.plot_line(data.fixed, {
+		divergence_curve_plotter.plot_path([data.fixed], {
 			color: "black",
 			width: 2,
 			opacity: 0.5,
+			id: "#fixed"
 		});
 		var negsum = 0;
 		for (var i = 0; i < data.divergence.length; i++) {
 			negsum -= data.divergence[i].y;
 		}
-		divergence_curve_plotter.plot_line(data.divergence, {
+		divergence_curve_plotter.plot_path([data.divergence], {
 			color: "darkgrey",
 			width: 0,
 			opacity: 0.5,
 			fill: divergence_fill_color(negsum),
+			id: "#divergence"
 		});
 		var size_scale = d3.scaleLinear().domain([-150, 10]).range([50, 5]);
 		size_scale.clamp(true);
@@ -112,7 +118,6 @@ function divergence(div, mean, sd) {
 	}
 
 	function redraw_line(mean, sd) {
-		divergence_curve_plotter.svg.selectAll("*").remove();
 		updateMean(mean);
 		updateSd(sd);
 		draw_line();
