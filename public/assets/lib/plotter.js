@@ -240,16 +240,13 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
                 last_idx++;
             }
         });
-
+		plot_line(lines_to_plot);
         plot_points(points, {
             stroke: 'black',
             color: 'white',
             size: 10,
             opacity: 1,
         });
-
-		plot_line(lines_to_plot);
-
 		svg.selectAll("text").remove();
         texts.forEach(t => {
             svg.append('text').attr('transform', 'translate(' + t.x + ' ,' + t.y + ')').attr('color', 'black').style('text-anchor', 'middle').style('font-size', 30).attr('opacity', 0.5).text('~');

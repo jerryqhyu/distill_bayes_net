@@ -58,6 +58,7 @@ function full_bnn_view(curve_div, graph_div) {
     }
 
     function reset() {
+		samples = sample_from_seed("Toronto", 30, 255);
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
