@@ -10,9 +10,10 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         0, 1
     ], false, false);
 
+    this.num_samples = 10;
     var var_dist_data = new Array(param.var_n * param.var_m);
     var avg_loss = [];
-    var samples = sample_from_seed("Toronto", 15, 2);
+    var samples = sample_from_seed("Toronto", this.num_samples, 2);
     var last_10_samples = [];
     var isocontours = new Array(5);
     for (var i = 0; i < 5; i++) {
@@ -58,16 +59,16 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     function setup() {
         curve_plotter.add_group("training_point");
         curve_plotter.add_group("validation_point");
-        train_loss_plotter.add_group("fixed");
-        valid_loss_plotter.add_group("fixed");
+        train_loss_plotter.add_group("contour");
+        valid_loss_plotter.add_group("contour");
         progress_plotter.add_group("fixed");
 
         curve_plotter.add_group("curve");
-        train_loss_plotter.add_group("curve");
-        valid_loss_plotter.add_group("curve");
+        train_loss_plotter.add_group("distribution");
+        valid_loss_plotter.add_group("distribution");
         curve_plotter.add_group("float");
-        train_loss_plotter.add_group("float");
-        valid_loss_plotter.add_group("float");
+        train_loss_plotter.add_group("mean");
+        valid_loss_plotter.add_group("mean");
         progress_plotter.add_group("float");
 
         graph_plotter.add_group("float");
@@ -84,9 +85,9 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 2, activation: 'tanh'});
-        layer_defs.push({type: 'fc', num_neurons: 4, activation: 'tanh'});
-        layer_defs.push({type: 'fc', num_neurons: 4, activation: 'tanh'});
+        layer_defs.push({type: 'variational', num_neurons: 2, activation: 'tanh', alpha: 1e-2});
+        layer_defs.push({type: 'fc', num_neurons: 4, activation: 'tanh', alpha: 1e-2});
+        layer_defs.push({type: 'fc', num_neurons: 4, activation: 'tanh', alpha: 1e-2});
         layer_defs.push({type: 'regression', num_neurons: 1});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
@@ -153,9 +154,9 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         ], {
             stroke: "black",
             color: "black",
-            size: 3,
-            opacity: 0.5,
-            id: "#float"
+            size: 4,
+            opacity: 0.75,
+            id: "#mean"
         });
         valid_loss_plotter.plot_points([
             {
@@ -165,9 +166,9 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         ], {
             stroke: "black",
             color: "black",
-            size: 3,
-            opacity: 0.5,
-            id: "#float"
+            size: 4,
+            opacity: 0.75,
+            id: "#mean"
         });
         if (last_10_samples.length === 10) {
             last_10_samples.shift();
@@ -229,14 +230,14 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             fill: "white",
             width: 1,
             opacity: 1 / 6,
-            id: "#curve"
+            id: "#distribution"
         });
         valid_loss_plotter.plot_path(isocontours, {
             color: "black",
             fill: "white",
             width: 1,
             opacity: 1 / 6,
-            id: "#curve"
+            id: "#distribution"
         });
     }
 
@@ -342,7 +343,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             m: param.m,
             color_scale: color,
             contour_scale: contours,
-            id: "#fixed"
+            id: "#contour"
         });
     }
 

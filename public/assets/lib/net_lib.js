@@ -480,6 +480,7 @@ var net_lib = net_lib || {
         this.out_sx = 1;
         this.out_sy = 1;
         this.layer_type = 'variational';
+        this.alpha = typeof opt.alpha !== 'undefined' ? opt.alpha : 1e-2;
 
         // initializations
         this.mu = [];
@@ -576,7 +577,7 @@ var net_lib = net_lib || {
             for (var j = 0; j < this.sampled_w.length; j++) {
                 for (var k = 0; k < this.sampled_w[j].dw.length; k++) {
                     this.mu[j].dw[k] += this.sampled_w[j].dw[k];
-                    this.sigma[j].dw[k] += -1e-3 / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
+                    this.sigma[j].dw[k] += -this.alpha / this.sigma[j].w[k] + (this.sampled_w[j].dw[k] * this.sampled_epsilon[j].w[k]);
                 }
             }
         },
