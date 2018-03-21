@@ -26,6 +26,9 @@ param = {
     curve_domain_x: [
         -5, 5
     ],
+    curve_domain_x_extended: [
+        -10, 10
+    ],
     curve_domain_y: [
         -2, 2
     ],

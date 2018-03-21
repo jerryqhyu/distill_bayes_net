@@ -1,18 +1,37 @@
-function randomwalk_view(curve_div) {
+function randomwalk_view(curve_div, use_validation_data) {
 
-    var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
+	this.div_id = curve_div.attr('id');
+
+	this.start = function() {
+        if (!walk_timer) {
+            walk_timer = d3.timer(sample, 25);
+            plot_timer = d3.timer(plot, 200);
+        }
+    }
+
+    this.stop = function() {
+		if (walk_timer) {
+			walk_timer.stop();
+			plot_timer.stop();
+			walk_timer = undefined;
+			plot_timer = undefined;
+		}
+    }
+
+
+    var curve_plotter = Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
     var samples = [];
-	var predictions = new Array(curve_x.length); // for speed we store predictions and only append last
-    var proposal_pred = new Array(curve_x.length);
+	var predictions = new Array(curve_x_extended.length); // for speed we store predictions and only append last
+    var proposal_pred = new Array(curve_x_extended.length);
     var walk_timer;
     var plot_timer;
 
     var percentiles = new Array(100); // 1-100
     for (var i = 0; i < 100; i++) {
-        percentiles[i] = new Array(curve_x.length);
+        percentiles[i] = new Array(curve_x_extended.length);
         for (var j = 0; j < percentiles[i].length; j++) {
             percentiles[i][j] = {
-                x: curve_x[j],
+                x: curve_x_extended[j],
                 y: 0
             };
         }
@@ -20,29 +39,18 @@ function randomwalk_view(curve_div) {
 
     initial_plot();
 
+	var first_net = make_preset_net();
+	samples.push(unpack_net(first_net));
+	curve_x_extended.forEach((x, n) => {
+		predictions[n] = [first_net.forward(new net_lib.Vol([i])).w[0]];
+	});
+
     function initial_plot() {
         curve_plotter.add_group("percentiles");
 		curve_plotter.add_group("lastproposal");
 		curve_plotter.add_group("lastsample");
         curve_plotter.add_group("fixed");
         plot_training_data();
-    }
-
-    function start() {
-        var first_net = make_preset_net();
-        samples.push(unpack_net(first_net));
-        curve_x.forEach((x, n) => {
-            predictions[n] = [first_net.forward(new net_lib.Vol([i])).w[0]];
-        });
-
-        if (!walk_timer) {
-            walk_timer = d3.timer(sample, 25);
-            plot_timer = d3.timer(plot, 500);
-        }
-    }
-
-    function reset() {
-        samples = [];
     }
 
     function sample() {
@@ -55,22 +63,22 @@ function randomwalk_view(curve_div) {
         // accept or reject
         var last_net = pack_net(last_sample);
         var new_net = pack_net(new_sample);
-		curve_x.forEach((x, n) => {
+		curve_x_extended.forEach((x, n) => {
 			proposal_pred[n] = new_net.forward(new net_lib.Vol([x])).w[0];
 		});
 
         var idx = 0;
-        var transition_prob = Math.min(1, Math.exp(training_loss(last_net) - training_loss(new_net)));
+        var transition_prob = Math.min(1, Math.exp(loss(last_net) - loss(new_net)));
 
         if (Math.random() <= transition_prob) {
             // accept
             samples.push(new_sample);
-            curve_x.forEach((x, n) => {
+            curve_x_extended.forEach((x, n) => {
                 predictions[n].push(new_net.forward(new net_lib.Vol([x])).w[0]);
             });
         } else {
             samples.push(last_sample);
-            curve_x.forEach((x, n) => {
+            curve_x_extended.forEach((x, n) => {
                 predictions[n].push(last_net.forward(new net_lib.Vol([x])).w[0]);
             });
         }
@@ -132,10 +140,10 @@ function randomwalk_view(curve_div) {
     }
 
     function plot() {
-        var proposal_pts = curve_x.map((x, n) => {
+        var proposal_pts = curve_x_extended.map((x, n) => {
             return {x: x, y: proposal_pred[n]}
         });
-		var pts = curve_x.map((x, n) => {
+		var pts = curve_x_extended.map((x, n) => {
             return {x: x, y: predictions[n][predictions[n].length - 1]}
         });
         curve_plotter.plot_path([pts], {
@@ -156,7 +164,7 @@ function randomwalk_view(curve_div) {
 
     function plot_sample_dist() {
         // collect percentile for each point
-        curve_x.forEach((x, n) => {
+        curve_x_extended.forEach((x, n) => {
             single_point_pred = predictions[n].sort((a, b) => {
                 return a - b;
             });
@@ -176,37 +184,38 @@ function randomwalk_view(curve_div) {
             color: "black",
             fill: "black",
             width: 1,
-            opacity: 1 / 50,
+            opacity: 1 / 100,
             id: "#percentiles"
         });
     }
 
-    function training_loss(net) {
-        return param.train_points.map((point, i) => {
-            return 2 * net.getCostLoss(new net_lib.Vol([point]), Math.sin(point) + param.train_noise[i]);
+    function loss(net) {
+		var pts = use_validation_data ? param.validation_points: param.train_points;
+		var noise = use_validation_data ? param.validation_noise: param.train_noise;
+        return pts.map((point, i) => {
+            return net.getCostLoss(new net_lib.Vol([point]), Math.sin(point) + noise[i]);
         }).reduce((a, b) => a + b, 0);
     }
 
     function make_preset_net() {
-        var layer_defs = [];
-        layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'fc', num_neurons: 10, activation: 'rbf'});
-        layer_defs.push({type: 'fc', num_neurons: 10, activation: 'rbf'});
-        layer_defs.push({type: 'regression', num_neurons: 1});
+        var layer_defs = new Array(4);
+        layer_defs[0] = {type: 'input', out_sx: 1, out_sy: 1, out_depth: 1};
+        layer_defs[1] = {type: 'fc', num_neurons: 10, activation: 'rbf'};
+        layer_defs[2] = {type: 'fc', num_neurons: 10, activation: 'rbf'};
+        layer_defs[3] = {type: 'regression', num_neurons: 1};
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         return new_net;
     }
 
     function plot_training_data() {
-        curve_plotter.plot_points(training_points_data, {
-            stroke: "darkgreen",
-            color: "darkgreen",
+		var pts = use_validation_data ? validation_points_data: training_points_data;
+        curve_plotter.plot_points(pts, {
+            stroke: "black",
+            color: "orange",
             size: 4,
             opacity: 1,
             id: "#fixed"
         });
     }
-
-    return {start: start, reset: reset};
 }

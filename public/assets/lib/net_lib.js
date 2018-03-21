@@ -64,6 +64,12 @@ var net_lib = net_lib || {
         }
     }
 
+    var setZero = function(arr) {
+        for (var i = 0; i < arr.length; i++) {
+            arr[i] = 0;
+        }
+    }
+
     var arrContains = function(arr, elt) {
         for (var i = 0, n = arr.length; i < n; i++) {
             if (arr[i] === elt)
@@ -175,6 +181,7 @@ var net_lib = net_lib || {
     global.randi = randi;
     global.randn = randn;
     global.zeros = zeros;
+    global.setZero = setZero;
     global.seededGaussian = seededGaussian;
     global.maxmin = maxmin;
     global.randperm = randperm;
@@ -286,30 +293,6 @@ var net_lib = net_lib || {
                 this.w[k] = a;
             }
         },
-
-        toJSON: function() {
-            // todo: we may want to only save d most significant digits to save space
-            var json = {}
-            json.sx = this.sx;
-            json.sy = this.sy;
-            json.depth = this.depth;
-            json.w = this.w;
-            return json;
-            // we wont back up gradients to save space
-        },
-        fromJSON: function(json) {
-            this.sx = json.sx;
-            this.sy = json.sy;
-            this.depth = json.depth;
-
-            var n = this.sx * this.sy * this.depth;
-            this.w = global.zeros(n);
-            this.dw = global.zeros(n);
-            // copy over the elements.
-            for (var i = 0; i < n; i++) {
-                this.w[i] = json.w[i];
-            }
-        }
     }
 
     global.Vol = Vol;
@@ -352,9 +335,9 @@ var net_lib = net_lib || {
         var bias = typeof opt.bias_pref !== 'undefined'
             ? opt.bias_pref
             : 0.0;
-        this.filters = [];
+        this.filters = new Array(this.out_depth);
         for (var i = 0; i < this.out_depth; i++) {
-            this.filters.push(new Vol(1, 1, this.num_inputs));
+            this.filters[i] = new Vol(1, 1, this.num_inputs);
         }
         this.biases = new Vol(1, 1, this.out_depth, bias);
     }
@@ -378,7 +361,7 @@ var net_lib = net_lib || {
         },
         backward: function() {
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
+            global.setZero(V.dw);
 
             // compute gradient wrt weights and data
             for (var i = 0; i < this.out_depth; i++) {
@@ -417,43 +400,6 @@ var net_lib = net_lib || {
         setBiases: function(b_list) {
             this.biases.w = b_list;
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            json.num_inputs = this.num_inputs;
-            json.l1_decay_mul = this.l1_decay_mul;
-            json.l2_decay_mul = this.l2_decay_mul;
-            json.filters = [];
-            for (var i = 0; i < this.filters.length; i++) {
-                json.filters.push(this.filters[i].toJSON());
-            }
-            json.biases = this.biases.toJSON();
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-            this.num_inputs = json.num_inputs;
-            this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined'
-                ? json.l1_decay_mul
-                : 1.0;
-            this.l2_decay_mul = typeof json.l2_decay_mul !== 'undefined'
-                ? json.l2_decay_mul
-                : 1.0;
-            this.filters = [];
-            for (var i = 0; i < json.filters.length; i++) {
-                var v = new Vol(0, 0, 0, 0);
-                v.fromJSON(json.filters[i]);
-                this.filters.push(v);
-            }
-            this.biases = new Vol(0, 0, 0, 0);
-            this.biases.fromJSON(json.biases);
-        }
     }
 
     global.FullyConnLayer = FullyConnLayer;
@@ -483,21 +429,15 @@ var net_lib = net_lib || {
         this.alpha = typeof opt.alpha !== 'undefined' ? opt.alpha : 1e-2;
 
         // initializations
-        this.mu = [];
+        this.mu = new Array(this.out_depth);
+        this.sigma = new Array(this.out_depth);
+        this.sampled_epsilon = new Array(this.out_depth);
+        this.sampled_w = new Array(this.out_depth);
         for (var i = 0; i < this.out_depth; i++) {
-            this.mu.push(new Vol(1, 1, this.num_inputs));
-        }
-        this.sigma = [];
-        for (var i = 0; i < this.out_depth; i++) {
-            this.sigma.push(new Vol(1, 1, this.num_inputs, 0.3));
-        }
-        this.sampled_epsilon = [];
-        for (var i = 0; i < this.out_depth; i++) {
-            this.sampled_epsilon.push(new Vol(1, 1, this.num_inputs));
-        }
-        this.sampled_w = [];
-        for (var i = 0; i < this.out_depth; i++) {
-            this.sampled_w.push(new Vol(1, 1, this.num_inputs));
+            this.mu[i] = new Vol(1, 1, this.num_inputs);
+            this.sigma[i] = new Vol(1, 1, this.num_inputs, 0.3);
+            this.sampled_epsilon[i] = new Vol(1, 1, this.num_inputs);
+            this.sampled_w[i] = new Vol(1, 1, this.num_inputs);
         }
 
         this.biases = new Vol(1, 1, this.out_depth);
@@ -538,25 +478,14 @@ var net_lib = net_lib || {
                 return this.out_act;
             }
         },
-        specialForward: function(V, seed) {
-            var A = new Vol(1, 1, this.out_depth, 0.0);
-            var sample = [];
-            for (var i = 0; i < this.out_depth; i++) {
-                sample.push(new Vol(1, 1, this.num_inputs));
-            }
-            for (var i = 0; i < sample.length; i++) {
-                for (var j = 0; j < sample[i].w.length; j++) {
-                    sample[i].w[j] = seed[i * this.num_inputs + j] * this.sigma[i].w[j] + this.mu[i].w[j];
-                }
-            }
+        seededForward: function(V, seed) {
+            var A = new Vol(1, 1, this.out_depth, 0);
             var Vw = V.w;
             for (var i = 0; i < this.out_depth; i++) {
                 var a = 0.0;
-                var wi = sample[i].w;
                 for (var d = 0; d < this.num_inputs; d++) {
-                    a += Vw[d] * wi[d]; // for efficiency use Vols directly for now
+                    a += Vw[d] * (seed[i * this.num_inputs + d] * this.sigma[i].w[d] + this.mu[i].w[d]);
                 }
-                // a += this.biases.w[i] + seed[seed.length - 1];
                 a += this.biases.w[i];
                 A.w[i] = a;
             }
@@ -564,7 +493,7 @@ var net_lib = net_lib || {
         },
         backward: function() {
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
+            global.setZero(V.dw);
             for (var i = 0; i < this.out_depth; i++) {
                 var tfi = this.sampled_w[i];
                 var chain_grad = this.out_act.dw[i];
@@ -589,18 +518,6 @@ var net_lib = net_lib || {
                     this.sampled_w[i].w[j] = this.sampled_epsilon[i].w[j] * this.sigma[i].w[j] + this.mu[i].w[j];
                 }
             }
-        },
-        sampled_weights: function(seeds) {
-            var sample = [];
-            for (var n = 0; n < seeds.length; n++) {
-                sample.push([]);
-                for (var i = 0; i < this.out_depth; i++) {
-                    for (var j = 0; j < this.num_inputs; j++) {
-                        sample[n].push(seeds[n][i * this.num_inputs + j] * this.sigma[i].w[j] + this.mu[i].w[j]);
-                    }
-                }
-            }
-            return sample;
         },
         getParamsAndGrads: function() {
             var response = [];
@@ -634,73 +551,6 @@ var net_lib = net_lib || {
                 this.sigma[i].w = std_list[i];
             }
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            json.num_inputs = this.num_inputs;
-            json.l1_decay_mul = this.l1_decay_mul;
-            json.l2_decay_mul = this.l2_decay_mul;
-            json.mu = [];
-            for (var i = 0; i < this.mu.length; i++) {
-                json.mu.push(this.mu[i].toJSON());
-            }
-            json.sigma = [];
-            for (var i = 0; i < this.sigma.length; i++) {
-                json.sigma.push(this.sigma[i].toJSON());
-            }
-            json.sampled_w = [];
-            for (var i = 0; i < this.sampled_w.length; i++) {
-                json.sampled_w.push(this.sampled_w[i].toJSON());
-            }
-            json.sampled_epsilon = [];
-            for (var i = 0; i < this.sampled_epsilon.length; i++) {
-                json.sampled_epsilon.push(this.sampled_epsilon[i].toJSON());
-            }
-            json.biases = this.biases.toJSON();
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-            this.num_inputs = json.num_inputs;
-            this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined'
-                ? json.l1_decay_mul
-                : 1.0;
-            this.l2_decay_mul = typeof json.l2_decay_mul !== 'undefined'
-                ? json.l2_decay_mul
-                : 1.0;
-            this.mu = [];
-            for (var i = 0; i < json.mu.length; i++) {
-                var v = new Vol(0, 0, 0, 0);
-                v.fromJSON(json.mu[i]);
-                this.mu.push(v);
-            }
-            this.sigma = [];
-            for (var i = 0; i < json.sigma.length; i++) {
-                var v = new Vol(0, 0, 0, 0);
-                v.fromJSON(json.sigma[i]);
-                this.sigma.push(v);
-            }
-            this.sampled_w = [];
-            for (var i = 0; i < json.sampled_w.length; i++) {
-                var v = new Vol(0, 0, 0, 0);
-                v.fromJSON(json.sampled_w[i]);
-                this.sampled_w.push(v);
-            }
-            this.sampled_epsilon = [];
-            for (var i = 0; i < json.sampled_epsilon.length; i++) {
-                var v = new Vol(0, 0, 0, 0);
-                v.fromJSON(json.sampled_epsilon[i]);
-                this.sampled_epsilon.push(v);
-            }
-            this.biases = new Vol(0, 0, 0, 0);
-            this.biases.fromJSON(json.biases);
-        }
     }
 
     global.VariationalLayer = VariationalLayer;
@@ -742,20 +592,6 @@ var net_lib = net_lib || {
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-        }
     }
 
     global.InputLayer = InputLayer;
@@ -839,22 +675,6 @@ var net_lib = net_lib || {
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            json.num_inputs = this.num_inputs;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-            this.num_inputs = json.num_inputs;
-        }
     }
 
     // implements an L2 regression cost layer,
@@ -881,58 +701,22 @@ var net_lib = net_lib || {
         // or it can be a struct {dim: i, val: x} where we only want to
         // regress on dimension i and asking it to have value x
         backward: function(y) {
-
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
-            var loss = 0.0;
-            if (y instanceof Array || y instanceof Float64Array) {
-                for (var i = 0; i < this.out_depth; i++) {
-                    var dy = x.w[i] - y[i];
-                    x.dw[i] = dy;
-                    loss += 0.5 * dy * dy;
-                }
-            } else if (typeof y === 'number') {
-                // lets hope that only one number is being regressed
-                var dy = x.w[0] - y;
-                x.dw[0] = dy;
-                loss += 0.5 * dy * dy;
-            } else {
-                // assume it is a struct with entries .dim and .val
-                // and we pass gradient only along dimension dim to be equal to val
-                var i = y.dim;
-                var yi = y.val;
-                var dy = x.w[i] - yi;
-                x.dw[i] = dy;
-                loss += 0.5 * dy * dy;
-            }
-            return loss;
+            global.setZero(x.dw);
+            var dy = x.w[0] - y;
+            x.dw[0] = dy;
+            return 0.5 * dy * dy;
         },
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            json.num_inputs = this.num_inputs;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-            this.num_inputs = json.num_inputs;
-        }
     }
     global.SoftmaxLayer = SoftmaxLayer;
     global.RegressionLayer = RegressionLayer;
 })(net_lib);
 
-//Relu, Tanh
+//Relu, Tanh, rbf
 (function(global) {
     "use strict";
     var Vol = global.Vol; // convenience
@@ -966,7 +750,7 @@ var net_lib = net_lib || {
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            global.setZero(V.dw); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 if (V2.w[i] <= 0)
                     V.dw[i] = 0; // threshold
@@ -977,25 +761,10 @@ var net_lib = net_lib || {
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-        }
     }
 
     var RbfLayer = function(opt) {
         var opt = opt || {};
-        this.rbf = (x) => {return Math.exp(-Math.pow(x,2));}
         // computed
         this.out_sx = opt.in_sx;
         this.out_sy = opt.in_sy;
@@ -1006,10 +775,9 @@ var net_lib = net_lib || {
         forward: function(V, is_training) {
             this.in_act = V;
             var V2 = V.cloneAndZero();
-            var N = V.w.length;
-            for (var i = 0; i < N; i++) {
-                V2.w[i] = this.rbf(V.w[i]);
-            }
+            V2.w = V.w.map((x) => {
+                return Math.exp(-Math.pow(x, 2))
+            });
             this.out_act = V2;
             return this.out_act;
         },
@@ -1017,7 +785,7 @@ var net_lib = net_lib || {
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            global.setZero(V.dw);
             for (var i = 0; i < N; i++) {
                 var vwi = V.w[i];
                 var v2wi = V2.w[i];
@@ -1027,20 +795,6 @@ var net_lib = net_lib || {
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-        }
     }
 
     // a helper function, since tanh is not yet part of ECMAScript. Will be in v6.
@@ -1074,7 +828,7 @@ var net_lib = net_lib || {
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            global.setZero(V.dw); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 var v2wi = V2.w[i];
                 V.dw[i] = (1.0 - v2wi * v2wi) * V2.dw[i];
@@ -1083,20 +837,6 @@ var net_lib = net_lib || {
         getParamsAndGrads: function() {
             return [];
         },
-        toJSON: function() {
-            var json = {};
-            json.out_depth = this.out_depth;
-            json.out_sx = this.out_sx;
-            json.out_sy = this.out_sy;
-            json.layer_type = this.layer_type;
-            return json;
-        },
-        fromJSON: function(json) {
-            this.out_depth = json.out_depth;
-            this.out_sx = json.out_sx;
-            this.out_sy = json.out_sy;
-            this.layer_type = json.layer_type;
-        }
     }
 
     global.TanhLayer = TanhLayer;
@@ -1239,7 +979,7 @@ var net_lib = net_lib || {
                 for (var j = 1; j < this.layers.length; j++) {
                     if (this.layers[j].layer_type === 'variational') {
                         var num_weights = this.layers[j].mu.length * this.layers[j].mu[0].w.length;
-                        act = this.layers[j].specialForward(act, seeds[i].slice(slice_idx, slice_idx + num_weights));
+                        act = this.layers[j].seededForward(act, seeds[i].slice(slice_idx, slice_idx + num_weights));
                         slice_idx += num_weights;
                     } else {
                         act = this.layers[j].forward(act, false);
@@ -1309,45 +1049,6 @@ var net_lib = net_lib || {
         getLayer: function(index) {
             return this.layers[index];
         },
-        toJSON: function() {
-            var json = {};
-            json.layers = [];
-            for (var i = 0; i < this.layers.length; i++) {
-                json.layers.push(this.layers[i].toJSON());
-            }
-            return json;
-        },
-        fromJSON: function(json) {
-            this.layers = [];
-            for (var i = 0; i < json.layers.length; i++) {
-                var Lj = json.layers[i]
-                var t = Lj.layer_type;
-                var L;
-                if (t === 'input') {
-                    L = new global.InputLayer();
-                }
-                if (t === 'relu') {
-                    L = new global.ReluLayer();
-                }
-                if (t === 'tanh') {
-                    L = new global.TanhLayer();
-                }
-                if (t === 'softmax') {
-                    L = new global.SoftmaxLayer();
-                }
-                if (t === 'regression') {
-                    L = new global.RegressionLayer();
-                }
-                if (t === 'fc') {
-                    L = new global.FullyConnLayer();
-                }
-                if (t === 'variational') {
-                    L = new global.VariationalLayer();
-                }
-                L.fromJSON(Lj);
-                this.layers.push(L);
-            }
-        }
     }
 
     global.Net = Net;

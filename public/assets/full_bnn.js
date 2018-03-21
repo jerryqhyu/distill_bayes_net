@@ -1,32 +1,57 @@
 function full_bnn_view(curve_div, graph_div) {
 
-    var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
-    var graph_plotter = Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
+	this.div_id = curve_div.attr('id');
 
-    //define a neural network
-    var epoch_count = 0;
-    var net = make_preset_net();
-    var samples = sample_from_seed("Toronto", 20, 35);
-
-    var trainer = new net_lib.Trainer(net, {
-        method: 'sgd',
-        learning_rate: param.learning_rate * 2,
-        momentum: 0.95,
-        batch_size: param.validation_points.length
-    });
-
-    //interval controller
-	var training_interval;
-    var plot_interval;
-    setup();
-
-    function train() {
+	this.start = function() {
         if (!training_interval) {
             console.log("started training");
 			training_interval = d3.timer(train_epoch, 50);
             plot_interval = d3.timer(plot, 200);
         }
     }
+
+	this.stop = function() {
+        if (training_interval) {
+            training_interval.stop();
+			plot_interval.stop();
+            training_interval = undefined;
+			plot_interval = undefined;
+        }
+    }
+
+	this.reset = function() {
+	    samples = sample_from_seed("Toronto", 10, 80);
+        net = make_preset_net();
+        trainer = new net_lib.Trainer(net, {
+            method: 'sgd',
+            learning_rate: param.learning_rate * 2,
+            momentum: param.momentum,
+            batch_size: param.validation_points.length * 2
+        });
+        plot();
+        this.stop();
+        epoch_count = 0;
+    }
+
+    var curve_plotter = Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
+    var graph_plotter = Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
+
+    //define a neural network
+    var epoch_count = 0;
+    var net = make_preset_net();
+    var samples = sample_from_seed("Toronto", 10, 80);
+
+    var trainer = new net_lib.Trainer(net, {
+        method: 'sgd',
+        learning_rate: param.learning_rate * 2,
+        momentum: param.momentum,
+        batch_size: param.validation_points.length * 2
+    });
+
+    //interval controller
+	var training_interval;
+    var plot_interval;
+    setup();
 
     function train_epoch() {
         var x;
@@ -49,26 +74,12 @@ function full_bnn_view(curve_div, graph_div) {
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 5, activation: 'rbf', alpha: 1e-3});
-        layer_defs.push({type: 'variational', num_neurons: 5, activation: 'rbf', alpha: 1e-3});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-3});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-3});
         layer_defs.push({type: 'vregression', num_neurons: 1, alpha:1e-3});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         return new_net;
-    }
-
-    function reset() {
-		samples = sample_from_seed("Toronto", 30, 255);
-        net = make_preset_net();
-        trainer = new net_lib.Trainer(net, {
-            method: 'sgd',
-            learning_rate: param.learning_rate * 2,
-            momentum: 0.95,
-            batch_size: param.validation_points.length
-        });
-        plot();
-        pause_training();
-        epoch_count = 0;
     }
 
     function plot() {
@@ -77,22 +88,13 @@ function full_bnn_view(curve_div, graph_div) {
     }
 
     function plot_path() {
-        var curve = variational_prediction(curve_x);
+        var curve = variational_prediction(curve_x_extended);
         curve_plotter.plot_path(curve, {
             color: "darkorange",
             width: 1,
             opacity: 0.5,
             id: "#float"
         });
-    }
-
-    function pause_training() {
-        if (training_interval) {
-            training_interval.stop();
-			plot_interval.stop();
-            training_interval = undefined;
-			plot_interval = undefined;
-        }
     }
 
     function plot_train_and_valid_points() {
@@ -124,6 +126,4 @@ function full_bnn_view(curve_div, graph_div) {
         }
         return pred;
     }
-
-    return {train: train, plot: plot, reset: reset};
 }
