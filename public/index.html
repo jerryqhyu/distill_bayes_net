@@ -186,7 +186,7 @@
         network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
     </p>
     <p>
-        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{w \sim p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
+        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
         <!-- why not p(w| \mathcal{D}, x) here...-->
     </p>
     <p>
@@ -205,27 +205,80 @@
     </p>
     <h3>Approximate inference</h3>
     <p>
-        Recall that computing the posterior using exact inference is costly even for modest-sized networks due to the denominator in Bayes' rule $p(\mathcal{D})$, which we call the <i>marginal data likelihood</i>. For many models of practical interest
-        this cost is prohibitive, so we must resort to approximately computing the posterior. Approaches to doing so broadly fall into two categories, which we discuss in the following two sections.
-        <i>Sampling methods</i> leverage the tractability of the unnormalized posterior to approximate the integral over weight space with a finite number of suitably chosen Monte Carlo samples.
-        <i>Variational methods</i> instead model the posterior using a parameterized distribution called the approximate posterior, then iteratively improve the approximation by solving a suitable optimization problems. While both methods are of practical
-        and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training. We devote a section to this algorithm to underscore that
-        being Bayeisna in neural network learning is well worth the modest cost in engineering overhead.
+        We have seen computationally difficult integrals arise during the Bayesian setup in the following two expressions<dt-fn>
+            While the second expression is more important for prediction, evaluating it exactly implicitly references the first expression via the posterior.
+        </dt-fn> :
+    </p>
+    <ul>
+        <li>the marginal data likliehood $p(\mathcal{D})$, which requires a integral over weight space and is required to evaluate the posterior $p(w|\mathcal{D})$;</li>
+        <li>the posterior predicitive distibution $p(\hat y(x)|\mathcal{D})$, which again integrates over weight space, this time via an expectation over $p(w|\mathcal{D})$.</li>
+    </ul>
+    <p>
+        At first glance, the glaring difficulty of computing these objects might suggest that Bayesian neural networks will be difficult implement in practice.
+        But as we will see, it is possible to approximately compute one or both of these objects via clever algorithms, which can be broadly categorized as either sampling-based or variational.
+    </p>
+    <p>
+           <i>Sampling methods</i> approximately compute $p(\hat y(x)|\mathcal{D}) = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1  sampling-free.\ldots w_N\}$ whose empirial distribution matches $p(w|\mathcal{D})$ in the limit of large $N$. 
+            Loosely speaking, the algorithmic design challenge is to relatively quickly produce a modest number ($N$ not too big) of network samples that yield a decent approximation of $p(\hat y(x)| \mathcal{D})$
+    </p>
+    <p>
+        <i>Variational methods</i> instead directly model the posterior $p(w|\mathcal{D})$ using a parameterized distribution $q_\phi(w)$, called the <i>approximate posterior</i>, then iteratively improve the approximation by solving a suitable optimization problems. 
+            We will show that a suitable optimziation problem can be derived, so the remaining design challenges are to specify $q_\phi$ and an optimizer.
+            Thankfully, we can use off-the-shelf optimizers from standard neural network training!
+    </p>
+     <p>
+        While both sampling and variational methods are of practical and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training. 
+        We devote a section to this algorithm to underscore that being Bayesian in neural network learning is well worth the modest cost in engineering overhead.
+    </p>
+    <p style="color:red;">
+        TODO: make the point (perhaps in a footnote that variational methods still typically evalute the posterior predictive via a Monte Carlo estimate, so they are not sampling-free.
     </p>
 
     <h2>Sampling methods</h2>
-    <p style="color:red;">
-        TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
-    </p>
 
-    <h3>Metropolis algorithm</h3>
-    <p style="color:red;">
-        TODO: fill out this stub
+    <h3>Monte Carlo integration</h3>
+    <p>
+        Sampling methods rely on <i>Monte Carlo integration</i>: the use of a finite set of random samples to approximate an expected value.
+        In particular, they generate a set of neural networks asymtotically distributed according to $p(w|\mathcal{D})$ in order to approximate $p(\hat y(x)|\mathcal{D})$ as the empircal expectation of single-network predictions $p(\hat y(x)|w)$ under the sampled networks. 
+        Monte Carlo integration is widely applicable, but it isn't always practical. 
+        We can see this by deriving a naive approximation to one of our previously identified difficult integrals: the marginal data likelihood $p(\mathcal{D})$.
+        $$ p(\mathcal{D}) = \int_{w} p(\mathcal{D}|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(\mathcal{D|w}) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(\mathcal{D|w_i}).$$ 
+        Here the sample set of network weights $\{w_1 \ldots w_N\}$ are drawn independently from the prior $p(w)$.
     </p>
+        
+    <p>
+        Given a good estimate for $p(D)$ then we could again use Monte Carlo integration using network samples $\{w_i\}$ from the prior to approximate the predictive posterior:
+        $$ p(\hat y(x)|D) = \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right] \approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)} $$
+        The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$. 
+    
+    </p>
+    <h3>Markov Chain Monte Carlo</h3>
+    <p>
+        <p style="color:red;">
+            NB: I only had a chance to outline this section; it will be revised soon
+        </p>
 
-    <h3>Hamiltoniian MCMC algorithm</h3>
+        <p>
+        We saw that Monte Carlo estimates from naively sampling network weights naively from the prior won't work. 
+        We can sacrifice our assumption of sample independence, instead using a Markov Chain to produce a sequence of dependent samples.
+        This is formalized by a <i>proposal distribution</i> over choices of next sample in the sequence conditioned on the previous choice $q(w'|w_t)$.
+        The Metropolis algorithm uses this proposal distribution to generate a set of samples that asymptotically are distributed according to $p(w|D)$.
+        We use the Markov chain to generate candidate samples and then stochastically accept them with probability $a$, expressed as the acceptance rate <dt-fn>
+            Here we assume a symmetric proposal distribution to simplify the expression of $a$, but this assumption is not necessary .
+        </dt-fn> is defined as 
+        $$ a = \frac{p(\mathcal{D}, w')}{p(\mathcal{D}, w_t)}$$ 
+
+        The accept rate is also equivalent to the ratio of posterior probabilities under the proposed and most recent samples $\frac{p(w'|D)}{p(w_t| D)}$.
+        This is because $p(D, w) = p(w|D)p(D)$ is equal to the posterior up to a multiplicative constant $p(D)$ that is the same for all $w$; here we've leveraged the fact that we can compute $p(D, w)$ but not $p(w|D)$. 
+        A simple specification of proposal distribution is a Normal distribution centered at the current sample $ q(w'|w_t) = \mathcal{N}(w_t, \sigma^2) $.
+        If we were to accept every sample from this proposal distribution, we would be performing a random walk in parameter space with step size equal to $\sigma$.
+        The accept/reject step of the Metropolis algorithm mitigates random steps into regions of low probability mass.
+        We've introduced a new hyperparameter $\sigma$ that will need tuning.
+        Generally speaking, we want to accept new samples often in order to converge quickly, and the acceptance rate is sensitive to the value of $\sigma$.
+       MCMC based methods are better for high dimensionality problems since they focus on areas with relatively high probability mass, we still don't have any guarantees about their speed of convergence.
+    </p>
     <p style="color:red;">
-        TODO: fill out this stub
+        TODO: segueway to the demo
     </p>
 
     <!-- Sampling from the posterior figures -->
@@ -254,6 +307,10 @@
         sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks. The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the
         predictive distribution $p(\hat y(x)| \mathcal{D})$. On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these
         samples to obtain an approximate posterior.
+    </p>
+
+    <p style="color:red;">
+        TODO: describe the wealth of other MCMC options by designing a better proposal distribution, cite Neal, MacKay, etc.<dt-cite key="mackay2003information"></dt-cite>
     </p>
 
     <h2>Variational inference</h2>
@@ -327,10 +384,12 @@
             <dt-cite key="shlens2014notes"></dt-cite>.
         </dt-fn>. Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
         equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective. $$D_{KL} [q_\phi(w)||p(w|D)] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D}) \right]
-        = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) - \log p(\mathcal{D}) \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D})
+        = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D}) - \log p(\mathcal{D}) \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D})
         \right] - \log p(\mathcal{D}) $$ Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
         of $q_\phi$, which means we can ignore during optimization. We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the
-        evidence lower bound, which we here pose as a maximization problem for conventional consistency. $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, mathcal{D}) - \left[ \log q_\phi(w) \right] $$ Thus the variatinal inference
+        evidence lower bound, which we here pose as a maximization problem for conventional consistency. 
+        $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, \mathcal{D}) - \left[ \log q_\phi(w) \right] $$ 
+        Thus the variatinal inference
         corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
     </p>
 
