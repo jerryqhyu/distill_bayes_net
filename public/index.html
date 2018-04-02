@@ -72,20 +72,20 @@
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
                     <figcaption id="nn_loss_train_title" class='little_caption'>
-                        Training likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                        Training likelihood $L_{\text{train}}(w_1, w_2)$
                     </figcaption>
                     <div id="nn_loss_train" class='contour'> </div>
                 </div>
                 <div class='table-cell-wrap'>
                     <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
-                        The neural network objective $\mathcal{L}$ is a function of both the weights and the dataset. Here we show $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
+                        The neural network objective $L$ is a function of both the weights and the dataset. Here we show $L_{\text{train}}$ and $L_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
                         pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient descent. Notice how weight values affect both the training
                         and test objectives (left, right) and the network predictions changes (below).
                     </figcaption>
                 </div>
                 <div class="table-cell-wrap">
                     <figcaption id="nn_loss_test_title" class='little_caption'>
-                        Test likelihood $\mathcal{L}_{\text{train}}(w_1, w_2)$
+                        Test likelihood $L_{\text{train}}(w_1, w_2)$
                     </figcaption>
                     <div id="nn_loss_valid" class='contour'> </div>
                 </div>
@@ -103,7 +103,7 @@
                 <div class='table-cell-wrap'>
                     <figcaption id="nn_graph_title" class='little_caption'>
                         Neural net architecture with the edge between neurons colored according to their shared weight value. In this demo all weights except the first two are fixed.
-                        <!-- Notice how the choice of architecture affects the contours of the $\mathcal{L}_{\text{train}}$ and $\mathcal{L}_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
+                        <!-- Notice how the choice of architecture affects the contours of the $L_{\text{train}}$ and $L_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
                     </figcaption>
                     <div id="nn_graph" style="width:440px; height: 200px;"></div>
                 </div>
@@ -123,17 +123,17 @@
 
 
     <p>
-        First, some notation: let's call inputs $x$ and outputs $y$ and the training set $\mathcal{D}_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $\mathcal{D}_{\text{test}}$ of <i>different</i> input-output
+        First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output
         pairs. Then neural network training corresponds to the following optimization problem:
     </p>
     <p>
-        $\underset{w}{\text{maximize}} \quad \mathcal{L}_{\text{train}}(w)$
+        $\underset{w}{\text{maximize}} \quad L_{\text{train}}(w)$
     </p>
     <p>
-        where $\mathcal{L}_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
+        where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
     </p>
     <p>
-        $\mathcal{L}_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim \mathcal{D}_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right]$ .
+        $L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right]$ .
     </p>
     <p>
         Here $\log p(\hat y(x) = y|w)$ represents the log likelihood
@@ -147,18 +147,18 @@
         </dt-fn>. Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
     </p>
     <p>
-        During training we optimize $\mathcal{L}_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $\mathcal{L}_{\text{test}}(w)$. In the demo above, we plot these functions side-by-side
+        During training we optimize $L_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $L_{\text{test}}(w)$. In the demo above, we plot these functions side-by-side
         as a function of two weights
         <dt-fn>
             In this example, we've pre-trained all the weights in the neural network except for two weights in the first layer, which we call $w_1$ and $w_2$.
-        </dt-fn>. Notice that the optimal weights $w^* = \underset{w}{\text{arg max}}\mathcal{L}_{\text{train}}(w) $ yield a suboptimal test loss $\mathcal{L}_{\text{test}}(w^*)$. This indicates overfitting, which manifests as the neural net generalizing
-        poorly: it makes predictions $\hat y(x)$ that hug closely to the training data at the expense of deviating from the test data. Scaling up to networks with millions of weights amplifies the severity of overfitting, since $\mathcal{L}_{\text{train}}(w)$
-        and $\mathcal{L}_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions. Indeed, one key insight from deep learning is that the more capacity
+        </dt-fn>. Notice that the optimal weights $w^* = \underset{w}{\text{arg max}}L_{\text{train}}(w) $ yield a suboptimal test loss $L_{\text{test}}(w^*)$. This indicates overfitting, which manifests as the neural net generalizing
+        poorly: it makes predictions $\hat y(x)$ that hug closely to the training data at the expense of deviating from the test data. Scaling up to networks with millions of weights amplifies the severity of overfitting, since $L_{\text{train}}(w)$
+        and $L_{\text{test}}(w)$ tend to be much more dissimilar in high dimensions. Indeed, one key insight from deep learning is that the more capacity
         <dt-fn>
             Very often "capacity" is shorthand for "depth"
         </dt-fn>
         a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit. Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden
-        layer ("shallow") or no activations ("linear") we see that $\mathcal{L}_{\text{train}}$ looks similar to $\mathcal{L}_{\text{test}}$, so there's little danger of overfitting.
+        layer ("shallow") or no activations ("linear") we see that $L_{\text{train}}$ looks similar to $L_{\text{test}}$, so there's little danger of overfitting.
     </p>
 
     <h2>Bayes to the rescue</h2>
@@ -169,36 +169,36 @@
     </p>
 
     <p>
-        This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters. Before we used the training data $\mathcal{D}_{\text{train}}$ plus
-        a gradient-based optimizer to tune the weights $w$ in order to maximize $\mathcal{L}_{\text{train}}(w)$. In Bayesian inference, instead of learning the parameter values, we seek to compute $p(w | \mathcal{D}_{\text{train}})$, the conditional distribution
-        of the weights given the training data. $p(w|\mathcal{D}_{\text{train}})$ is called the <i>posterior distribution</i>, or often the <i>posterior</i> for short.
+        This tutorial focuses on <i>Bayesian inference</i>, a powerful framework that not only helps with overfitting, but also tells us how uncertain our model is about its parameters. Before we used the training data $D_{\text{train}}$ plus
+        a gradient-based optimizer to tune the weights $w$ in order to maximize $L_{\text{train}}(w)$. In Bayesian inference, instead of learning the parameter values, we seek to compute $p(w | D_{\text{train}})$, the conditional distribution
+        of the weights given the training data. $p(w|D_{\text{train}})$ is called the <i>posterior distribution</i>, or often the <i>posterior</i> for short.
     </p>
 
     <h3>Exact Bayesian inference</h3>
     <p>
-        Bayes' rule tells us how to compute the posterior: $$ p(w | \mathcal{D}) = \dfrac{p(\mathcal{D}|w)p(w)}{p(\mathcal{D})} = \dfrac{p(\mathcal{D}|w)p(w)}{\int_{w'} p(\mathcal{D}|w')p(w') dw'} . $$ Computing the posterior in this way is sometimes called <i>exact inference</i>,
-        simply to distinguishes it from approximations which we will later find to be more practical. Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(\mathcal{D} | w)$. While the posterior distribution
+        Bayes' rule tells us how to compute the posterior: $$ p(w | D) = \dfrac{p(D|w)p(w)}{p(D)} = \dfrac{p(D|w)p(w)}{\int_{w'} p(D|w')p(w') dw'} . $$ Computing the posterior in this way is sometimes called <i>exact inference</i>,
+        simply to distinguishes it from approximations which we will later find to be more practical. Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(D | w)$. While the posterior distribution
         is easily expressed, it is typically expensive to compute due to the pesky integral over all possible values of $w$. For most neural network we can't evaluate this integral analytically. We could instead approximate it numerically, but this will
         only be practical for small neural networks, since $w$ represents all the weights and biases, so it becomes very high dimensional for deep networks.
     </p>
     <p>
-        So we will need to address this computational issue, which we do in the next section. In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|\mathcal{D})$ instead of the estimate $w^*$ from standard neural
+        So we will need to address this computational issue, which we do in the next section. In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|D)$ instead of the estimate $w^*$ from standard neural
         network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
     </p>
     <p>
-        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
-        <!-- why not p(w| \mathcal{D}, x) here...-->
+        $p(\hat y(x)| D) = \int_{w} p(\hat y(x)| w) p(w | D) dw = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)]$,
+        <!-- why not p(w| D, x) here...-->
     </p>
     <p>
-        which we call the <i>predictive distribution</i>. Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|\mathcal{D})$. This yields a nice interpretation of the predictive distribution
+        which we call the <i>predictive distribution</i>. Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|D)$. This yields a nice interpretation of the predictive distribution
         as an <i>infinite ensemble</i> of networks
         <dt-cite key="blundell2015weight"></dt-cite>, with each network's contribution to the overall prediction weighted by the posterior likelihood of its weights given the training data. Also, it implies that we can approximate this infinite ensemble using a finite number of Monte
-        Carlo samples from the posterior. Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|\mathcal{D})$; in a slight abuse
+        Carlo samples from the posterior. Approximating the predictive distribution with only a single Monte Carlo sample is equivalent to using a single network $\hat y_w(x)$ with weights $w$ chosen at random from $p(w|D)$; in a slight abuse
         of terminology, we can think of this process as <i>sampling networks</i> from the posterior.
     </p>
     <h3>Modeling uncertainty</h3>
     <p>
-        But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i>        $p(w|\mathcal{D})$ and $p(\hat y_{w}(x)|\mathcal{D})$. An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
+        But before we move on, let's briefly consider the implications of Bayesian inference, which replaces a <i>point estimate</i> of the weights $w^*$ and its corresponding prediction function $\hat y_{w^*}(x)$ from standard training with <i>inferred distributions</i>        $p(w|D)$ and $p(\hat y_{w}(x)|D)$. An immediate benefit of specifying distributions over the model parameters and predictions is that we can quantify our <i>uncertainty</i> about these things, e.g., by computing their variance.
         This is especially relevant when learning from small datasets; standard neural net training will overfit for the reasons discussed above, but Bayesian inference will find the best explanation for the model parameters given the available data,
         which typically have high uncertainty when data is scarce. In the limit of dataset size far exceeding the number of neurons, the inferred distributions sharpen and begin to resemble the solutions from the standard training; for modern networks
         we don't typically reach this limit in practice, so having a notion of model uncertainty is helpful.
@@ -210,19 +210,19 @@
         </dt-fn> :
     </p>
     <ul>
-        <li>the marginal data likliehood $p(\mathcal{D})$, which requires a integral over weight space and is required to evaluate the posterior $p(w|\mathcal{D})$;</li>
-        <li>the posterior predicitive distibution $p(\hat y(x)|\mathcal{D})$, which again integrates over weight space, this time via an expectation over $p(w|\mathcal{D})$.</li>
+        <li>the marginal data likliehood $p(D)$, which requires a integral over weight space and is required to evaluate the posterior $p(w|D)$;</li>
+        <li>the posterior predicitive distibution $p(\hat y(x)|D)$, which again integrates over weight space, this time via an expectation over $p(w|D)$.</li>
     </ul>
     <p>
         At first glance, the glaring difficulty of computing these objects might suggest that Bayesian neural networks will be difficult implement in practice.
         But as we will see, it is possible to approximately compute one or both of these objects via clever algorithms, which can be broadly categorized as either sampling-based or variational.
     </p>
     <p>
-           <i>Sampling methods</i> approximately compute $p(\hat y(x)|\mathcal{D}) = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1  sampling-free.\ldots w_N\}$ whose empirial distribution matches $p(w|\mathcal{D})$ in the limit of large $N$.
-            Loosely speaking, the algorithmic design challenge is to relatively quickly produce a modest number ($N$ not too big) of network samples that yield a decent approximation of $p(\hat y(x)| \mathcal{D})$
+           <i>Sampling methods</i> approximately compute $p(\hat y(x)|D) = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1  sampling-free.\ldots w_N\}$ whose empirial distribution matches $p(w|D)$ in the limit of large $N$.
+            Loosely speaking, the algorithmic design challenge is to relatively quickly produce a modest number ($N$ not too big) of network samples that yield a decent approximation of $p(\hat y(x)| D)$
     </p>
     <p>
-        <i>Variational methods</i> instead directly model the posterior $p(w|\mathcal{D})$ using a parameterized distribution $q_\phi(w)$, called the <i>approximate posterior</i>, then iteratively improve the approximation by solving a suitable optimization problems.
+        <i>Variational methods</i> instead directly model the posterior $p(w|D)$ using a parameterized distribution $q_\phi(w)$, called the <i>approximate posterior</i>, then iteratively improve the approximation by solving a suitable optimization problems.
             We will show that a suitable optimziation problem can be derived, so the remaining design challenges are to specify $q_\phi$ and an optimizer.
             Thankfully, we can use off-the-shelf optimizers from standard neural network training!
     </p>
@@ -239,10 +239,10 @@
     <h3>Monte Carlo integration</h3>
     <p>
         Sampling methods rely on <i>Monte Carlo integration</i>: the use of a finite set of random samples to approximate an expected value.
-        In particular, they generate a set of neural networks asymtotically distributed according to $p(w|\mathcal{D})$ in order to approximate $p(\hat y(x)|\mathcal{D})$ as the empircal expectation of single-network predictions $p(\hat y(x)|w)$ under the sampled networks.
+        In particular, they generate a set of neural networks asymtotically distributed according to $p(w|D)$ in order to approximate $p(\hat y(x)|D)$ as the empircal expectation of single-network predictions $p(\hat y(x)|w)$ under the sampled networks.
         Monte Carlo integration is widely applicable, but it isn't always practical.
-        We can see this by deriving a naive approximation to one of our previously identified difficult integrals: the marginal data likelihood $p(\mathcal{D})$.
-        $$ p(\mathcal{D}) = \int_{w} p(\mathcal{D}|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(\mathcal{D|w}) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(\mathcal{D|w_i}).$$
+        We can see this by deriving a naive approximation to one of our previously identified difficult integrals: the marginal data likelihood $p(D)$.
+        $$ p(D) = \int_{w} p(D|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(D|w) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(D|w_i).$$
         Here the sample set of network weights $\{w_1 \ldots w_N\}$ are drawn independently from the prior $p(w)$.
     </p>
 
@@ -266,7 +266,7 @@
         We use the Markov chain to generate candidate samples and then stochastically accept them with probability $a$, expressed as the acceptance rate <dt-fn>
             Here we assume a symmetric proposal distribution to simplify the expression of $a$, but this assumption is not necessary .
         </dt-fn> is defined as
-        $$ a = \frac{p(\mathcal{D}, w')}{p(\mathcal{D}, w_t)}$$
+        $$ a = \frac{p(D, w')}{p(D, w_t)}$$
 
         The accept rate is also equivalent to the ratio of posterior probabilities under the proposed and most recent samples $\frac{p(w'|D)}{p(w_t| D)}$.
         This is because $p(D, w) = p(w|D)p(D)$ is equal to the posterior up to a multiplicative constant $p(D)$ that is the same for all $w$; here we've leveraged the fact that we can compute $p(D, w)$ but not $p(w|D)$.
@@ -295,7 +295,7 @@
         </figcaption>
         <div id="rw_valid_figure" class='.l-screen bordered' style="position:relative; width:100%; height:400px;"></div>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
-            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$. Once sampling begins, the running-average of the Monte Carlo
+            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|D_{\text{train}})$. Once sampling begins, the running-average of the Monte Carlo
             approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red. Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
         </figcaption>
         <button type="button" onclick="rw_train.start(); rw_valid.start();" style="position:relative; left: 1040px; width: 150px; height: 30px;">Sample</button>
@@ -305,7 +305,7 @@
     <p>
         The demo above plots the sequence of functions we get when sampling network weights from the posterior using two sampling algorithms: one with the Metropolis proposal and one with Hamiltonian dynamics. shows the prediction function for a sequence of networks
         sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks. The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the
-        predictive distribution $p(\hat y(x)| \mathcal{D})$. On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these
+        predictive distribution $p(\hat y(x)| D)$. On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these
         samples to obtain an approximate posterior.
     </p>
 
@@ -325,7 +325,7 @@
     <h3>Modling the approximate posterior</h3>
     </p>
     <p>
-        Generally speaking, when faced with an intractable distribution like the posterior $p(w|\mathcal{D})$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i>            $q_\phi(w)$
+        Generally speaking, when faced with an intractable distribution like the posterior $p(w|D)$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i>            $q_\phi(w)$
         <dt-fn>
             While we can alternatively specify the approximate posterior as conditionally dependent on specific inputs $q_\phi(w|x)$, as in the variational autoencoder's encoder network
             <dt-cite key="kingma2013autoencoding"></dt-cite>, this is not necessary in the classification task we consider here since there is no need to reconstruct the inputs.
@@ -342,8 +342,8 @@
         <div id="divergence_ruler" class='bordered' style="position:relative; float:left; width:50px; height:300px;"></div>
         <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
         <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="reverse KL" checked>$D_{KL}(q||p)$<br>
-            <input type="radio" name="divergence_type" value="KL">$D_{KL}(p||q)$<br>
+            <input type="radio" name="divergence_type" value="reverse KL" checked>$d_{KL}(q||p)$<br>
+            <input type="radio" name="divergence_type" value="KL">$d_{KL}(p||q)$<br>
             <input type="radio" name="divergence_type" value="JS"> $D_{JS}(p, q)$
         </form>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
@@ -354,23 +354,23 @@
         </div>
         <figcaption id="Gaussiancaption" style="position:absolute; width: 420px; height: 90px; left: 540px; top: 320px;">
             In variational methods we fit a tractable parameterized distribution $q$ (e.g., the single Gaussian in red) to a comlicated (sometimes intractable distribution) $p$ (e.g., the mixture of Gaussians in black) by optimizing the divergence between these distributions.
-            The shaded contour represents $q \log \frac{q}{p}$ and the diameter of the circle and its color represents its integral, the KL-divergence $D_{KL}(q||p)$. How should we select parameter values of $q$ if we want to minimize $D_{KL}(q||p)$?
+            The shaded contour represents $q \log \frac{q}{p}$ and the diameter of the circle and its color represents its integral, the KL-divergence $d_{KL}(q||p)$. How should we select parameter values of $q$ if we want to minimize $d_{KL}(q||p)$?
             What about if we want to minimize one of the alternative metrics, reverse KL or Jensen-Shannon distance?
         </figcaption>
     </figure>
 
     <p style="color:red;">
-        TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $D_{KL}(q||p)$.
+        TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $d_{KL}(q||p)$.
     </p>
     <p>
-        We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as $$\quad D_{KL}[q_\phi(w)||p(w|\mathcal{D})]
-        \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|\mathcal{D})} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|\mathcal{D})].$$ So our optimization problem should be something like "minimize the KL-divergence between from
+        We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as $$\quad d_{KL}[q_\phi(w)||p(w|D)]
+        \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|D)} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|D)].$$ So our optimization problem should be something like "minimize the KL-divergence between from
         the approximate posterior to the true posterior, which we will formalize shortly. But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate,
-        and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon
-        distance $0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$.
+        and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $d_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $d_{KL}(p||q)$ and Jensen-Shannon
+        distance $0.5d_{KL}(p||0.5p+0.5q) + 0.5d_{KL}(q||0.5p+0.5q)$.
     </p>
     <p>
-        By definition the KL-divergence is not symmetrical, $D_{KL}(q||p) \neq D_{KL}(p||q)$, which is why it's called a divergence instead of a distance. We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we
+        By definition the KL-divergence is not symmetrical, $d_{KL}(q||p) \neq d_{KL}(p||q)$, which is why it's called a divergence instead of a distance. We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we
         can estimate it using Monte Carlo samples. But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing
         to model mass in $p$.
 
@@ -383,28 +383,28 @@
         <dt-fn>
             As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$
             <dt-cite key="shlens2014notes"></dt-cite>.
-        </dt-fn>. Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
+        </dt-fn>. Regrettably, we can't directly optimize $d_{KL}(q_\phi(w)||p(w|D)$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
         equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
-        $$\begin{aligned} D_{KL} [q_\phi(w)||p(w|D)] &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D}) \right]
-        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D}) - \log p(\mathcal{D}) \right]
-        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D})\right] - \log p(\mathcal{D})
+        $$\begin{aligned} d_{KL} [q_\phi(w)||p(w|D)] &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|D) \right]
+        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, D) - \log p(D) \right]
+        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, D)\right] - \log p(D)
         \end{aligned}$$
-        Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
+        Here $p(D)$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
         of $q_\phi$, which means we can ignore during optimization. We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the
         evidence lower bound, which we here pose as a maximization problem for conventional consistency.
-        $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, \mathcal{D}) - \left[ \log q_\phi(w) \right] $$
+        $$ \tilde L(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, D) - \left[ \log q_\phi(w) \right] $$
         Thus the variatinal inference
-        corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
+        corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde L(\phi)$$
     </p>
 
     <p>
-        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify. $$\tilde \mathcal{L}(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) =
-        y|w) + \log p(w) - \log q_{\phi}(w) \right]$$ Thus variational inference corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim \mathcal{D}_{train}} \left[ \tilde \mathcal{L}(x,y)
+        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify. $$\tilde L(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) =
+        y|w) + \log p(w) - \log q_{\phi}(w) \right]$$ Thus variational inference corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim D_{train}} \left[ \tilde L(x,y)
         \right]$$
     </p>
 
     <p style="color:red;">
-        TODO: reconcile the difference in call signature between $\mathcal{L}(x,y)$ and $\mathcal{L}_{\text{train}}(w)$.
+        TODO: reconcile the difference in call signature between $L(x,y)$ and $L_{\text{train}}(w)$.
     </p>
 
 
