@@ -1,10 +1,15 @@
-function divergence(div, mean, sd) {
+function divergence(div, ruler_div, mean, sd) {
 
-	var divergence_curve_plotter = Plotter(div, param.divergence_curve_domain_x,
-		param.divergence_curve_domain_y, false, false);
+	var divergence_curve_plotter = new Plotter(div, param.divergence_curve_domain_x, param.divergence_curve_domain_y, false, false);
+
+	var ruler_plotter = new Plotter(ruler_div, [0, 1], [0, 100], false, true);
+	ruler_plotter.add_group("val");
+	ruler_plotter.plot_axis([0, 100], 10);
+
+	divergence_curve_plotter.add_group("divergence");
 	divergence_curve_plotter.add_group("variable");
 	divergence_curve_plotter.add_group("fixed");
-	divergence_curve_plotter.add_group("divergence");
+	divergence_curve_plotter.add_group("val");
 
 	var state_mean = mean;
 	var state_sd = sd;
@@ -100,21 +105,21 @@ function divergence(div, mean, sd) {
 		divergence_curve_plotter.plot_path([data.divergence], {
 			color: "darkgrey",
 			width: 0,
-			opacity: 0.5,
+			opacity: 1,
 			fill: divergence_fill_color(negsum),
 			id: "#divergence"
 		});
-		var size_scale = d3.scaleLinear().domain([-150, 10]).range([50, 5]);
+		var size_scale = d3.scaleLinear().domain([-50, 10]).range([100, 0]);
 		size_scale.clamp(true);
-		divergence_curve_plotter.plot_points([{
-			x: -9.5,
-			y: 0.25
-		}], {
-			stroke: "white",
-			size: size_scale(negsum),
-			opacity: 1,
-			color: divergence_fill_color(negsum),
+		var ruler_line = Array.from(Array(Math.floor(size_scale(negsum))).keys()).map((x, i) => {
+			return {x: 0.5, y:i};
 		});
+		ruler_plotter.plot_path([ruler_line], {
+            color: divergence_fill_color(negsum),
+			width: ruler_plotter.width,
+            opacity: 1,
+			id: '#val'
+        });
 	}
 
 	function redraw_line(mean, sd) {

@@ -19,8 +19,12 @@ function full_bnn_view(curve_div, graph_div) {
         }
     }
 
+	this.is_running = function () {
+		return training_interval != null;
+	}
+
 	this.reset = function() {
-	    samples = sample_from_seed("Toronto", 10, 80);
+	    samples = sample_from_seed("Toronto", 10, 144);
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
             method: 'sgd',
@@ -33,13 +37,13 @@ function full_bnn_view(curve_div, graph_div) {
         epoch_count = 0;
     }
 
-    var curve_plotter = Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
-    var graph_plotter = Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
+    var curve_plotter = new Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
+    var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
 
     //define a neural network
     var epoch_count = 0;
     var net = make_preset_net();
-    var samples = sample_from_seed("Toronto", 10, 80);
+    var samples = sample_from_seed("Toronto", 10, 144);
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
@@ -74,9 +78,10 @@ function full_bnn_view(curve_div, graph_div) {
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-3});
-        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-3});
-        layer_defs.push({type: 'vregression', num_neurons: 1, alpha:1e-3});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
+		layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
+        layer_defs.push({type: 'vregression', num_neurons: 1, alpha:1e-4});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);
         return new_net;

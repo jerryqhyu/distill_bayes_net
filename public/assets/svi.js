@@ -21,6 +21,10 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         }
 	}
 
+    this.is_running = function () {
+		return training_interval != null;
+	}
+
     this.reset = function() {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
@@ -36,15 +40,21 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         epoch_count = 0;
     }
 
-    var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
-    var train_loss_plotter = Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
-    var valid_loss_plotter = Plotter(valid_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
-    var progress_plotter = Plotter(progress_div, param.progress_domain_x, param.progress_domain_y, false, true);
-    var graph_plotter = Plotter(graph_div, [
+    var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
+    var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
+    var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
+    var progress_plotter = new Plotter(progress_div, param.progress_domain_x, param.progress_domain_y, false, true);
+    var graph_plotter = new Plotter(graph_div, [
         0, 1
     ], [
         0, 1
     ], false, false);
+
+    var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
+    inv_x_scale.clamp(true);
+
+    var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
+    inv_y_scale.clamp(true);
 
     this.num_samples = 10;
     var var_dist_data = new Array(param.var_n * param.var_m);
@@ -401,34 +411,5 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             total_loss += 0.5 * (true_label - avg_prediction[j].y) * (true_label - avg_prediction[j].y);
         }
         return total_loss;
-    }
-
-    function on_drag(d) {
-        d3.select(this).raise().classed("active", true);
-        this.stop();
-    }
-
-    function dragging(d) {
-        var new_x = d3.event.x;
-        var new_y = d3.event.y;
-        d3.select(this).attr("cx", new_x).attr("cy", new_y);
-        net.getLayer(1).setMeans([
-            [inv_x_scale(new_x)],
-            [inv_y_scale(new_y)]
-        ]);
-        plot();
-        console.log(d3.event.x);
-    }
-
-    function end_drag(d) {
-        d3.select(this).raise().classed("active", false);
-    }
-
-    function mouseover() {
-        d3.select(this).attr("r", 10);
-    }
-
-    function mouseout() {
-        d3.select(this).attr("r", 5);
     }
 }

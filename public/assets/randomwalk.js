@@ -18,8 +18,11 @@ function randomwalk_view(curve_div, use_validation_data) {
 		}
     }
 
+	this.is_running = function () {
+		return walk_timer != null;
+	}
 
-    var curve_plotter = Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
+    var curve_plotter = new Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
     var samples = [];
 	var predictions = new Array(curve_x_extended.length); // for speed we store predictions and only append last
     var proposal_pred = new Array(curve_x_extended.length);

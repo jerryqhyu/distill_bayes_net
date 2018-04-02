@@ -16,8 +16,8 @@ pre {
 }
 
 .contour {
-    width: 320px;
-    height:320px;
+    width: 300px;
+    height:300px;
 }
 
 .little_caption {
@@ -27,5 +27,5 @@ pre {
 }
 
 .bordered {
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    outline: 1px solid rgba(0, 0, 0, 0.05);
 }

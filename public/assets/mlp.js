@@ -7,7 +7,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			training_interval = d3.timer(train_epoch, 50);
 			plot_interval = d3.timer(plot, 200);
 			if (obtaining_param) {
-				net.getLayer(1).freeze_weights();``
+				net.getLayer(1).freeze_weights();
 			} else {
 				net.freezeAllButLayer(1);
 			}
@@ -21,6 +21,10 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			training_interval = undefined;
 			plot_interval = undefined;
 		}
+	}
+
+	this.is_running = function () {
+		return training_interval != null;
 	}
 
 	this.reset = function() {
@@ -89,13 +93,19 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		plot();
 	}
 
-	var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
+	var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
 		false, false);
-	var train_loss_plotter = Plotter(train_loss_div, param.loss_domain_x,
+	var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x,
 		param.loss_domain_y, true, true);
-	var valid_loss_plotter = Plotter(valid_loss_div, param.loss_domain_x,
+	var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x,
 		param.loss_domain_y, true, true);
-	var graph_plotter = Plotter(graph_div, param.nn_domain, param.nn_domain, false, true);
+	var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, true);
+
+	var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
+	inv_x_scale.clamp(true);
+
+	var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
+	inv_y_scale.clamp(true);
 
 	var linear_train_contour_data = new Array(param.n * param.m);
 	var linear_valid_contour_data = new Array(param.n * param.m);
@@ -427,6 +437,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	function dragging(d) {
 		var new_x = d3.event.x;
 		var new_y = d3.event.y;
+		console.log([new_x, new_y]);
 		d3.select(this).attr("cx", new_x).attr("cy", new_y);
 		net.getLayer(1).setWeights([
             [inv_x_scale(new_x)],
