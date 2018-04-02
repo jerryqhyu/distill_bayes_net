@@ -248,16 +248,14 @@
 
     <p>
         Given a good estimate for $p(D)$ then we could again use Monte Carlo integration using network samples $\{w_i\}$ from the prior to approximate the predictive posterior:
-        $$ p(\hat y(x)|D) = \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right] \approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)} $$
+        $$\begin{aligned}
+        p(\hat y(x)|D) &= \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right]\\
+        &\approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)} 
+        \end{aligned}$$
         The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
 
     </p>
     <h3>Markov Chain Monte Carlo</h3>
-    <p>
-        <p style="color:red;">
-            NB: I only had a chance to outline this section; it will be revised soon
-        </p>
-
         <p>
         We saw that Monte Carlo estimates from naively sampling network weights naively from the prior won't work.
         We can sacrifice our assumption of sample independence, instead using a Markov Chain to produce a sequence of dependent samples.
@@ -310,7 +308,7 @@
     </p>
 
     <p style="color:red;">
-        TODO: describe the wealth of other MCMC options by designing a better proposal distribution, cite Neal, MacKay, etc.<dt-cite key="mackay2003information"></dt-cite>
+        TODO: briefly describe the wealth of other MCMC options that seek to design a better proposal distribution, cite Neal, MacKay, etc.<dt-cite key="mackay2003information"></dt-cite>
     </p>
 
     <h2>Variational inference</h2>
@@ -319,7 +317,7 @@
     </p>
 
     <p>
-    Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is relatively more important than its computational cost. As network and dataset size grow, however, so grows
+    Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is worth the computational cost. As network and dataset size grow, however, so grows
     the cost of estimating the posterior via sampling. In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training;
     we'll pose the problem now and discuss the learning algorithm in the next section.
     <h3>Modling the approximate posterior</h3>
@@ -344,7 +342,7 @@
         <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
             <input type="radio" name="divergence_type" value="reverse KL" checked>$d_{KL}(q||p)$<br>
             <input type="radio" name="divergence_type" value="KL">$d_{KL}(p||q)$<br>
-            <input type="radio" name="divergence_type" value="JS"> $D_{JS}(p, q)$
+            <input type="radio" name="divergence_type" value="JS"> $d_{JS}(p, q)$
         </form>
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
@@ -359,12 +357,13 @@
         </figcaption>
     </figure>
 
-    <p style="color:red;">
-        TODO: It would be nice to figure out how to put a legend in the KL interactive figure, and mabye labeling the diameter of the circle as, e.g., $d_{KL}(q||p)$.
-    </p>
     <p>
-        We use a quantity from information theory called the <i>Kullback-Liebler diverence</i> (or KL-divergence) to convey dissimilarity between two distributions (TODO: cite Kullback 1959), expressed as $$\quad d_{KL}[q_\phi(w)||p(w|D)]
-        \coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|D)} = \mathbb{E}_{w \sim q_\theta(w)}[\log q_\phi(w) - \log p(w|D)].$$ So our optimization problem should be something like "minimize the KL-divergence between from
+        We use a quantity from information theory called the <i>Kullback-Liebler diverence</i><dt-cite key="kullback1959statistics"></dt-cite> (or KL-divergence) to convey dissimilarity between two distributions, expressed as
+        $$\begin{aligned}
+        \quad d_{KL}[q_\phi(w)||p(w|D)] &\coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|D)} \\
+        &= \mathbb{E}_{q_\theta(w)}[\log q_\phi(w) - \log p(w|D)].
+        \end{aligned}$$ 
+        So our optimization problem should be something like "minimize the KL-divergence between from
         the approximate posterior to the true posterior, which we will formalize shortly. But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate,
         and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $d_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $d_{KL}(p||q)$ and Jensen-Shannon
         distance $0.5d_{KL}(p||0.5p+0.5q) + 0.5d_{KL}(q||0.5p+0.5q)$.
@@ -695,6 +694,7 @@
     @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
     @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
     @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
+    @article{kullback1959statistics, title={Statistics and Information theory}, author={Kullback, Solomon}, journal={J Wiley Sons, New York}, year={1959} } 
     @book{mackay2003information, title={Information theory, inference and learning algorithms}, author={MacKay, David JC}, year={2003}, publisher={Cambridge university press} }
     @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
     @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
