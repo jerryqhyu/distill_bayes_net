@@ -3,6 +3,11 @@ for (var i = -5, n = 0; i <= 5; i += param.step_size, n++) {
 	curve_x[n] = i;
 }
 
+var curve_x_extended = new Array(100);
+for (var i = -10, n = 0; i <= 10; i += param.step_size * 2, n++) {
+	curve_x_extended[n] = i;
+}
+
 var training_points_data = new Array(param.train_points.length);
 for (var i = 0; i < training_points_data.length; i++) {
     training_points_data[i] = {

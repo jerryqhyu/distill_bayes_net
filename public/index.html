@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="assets/widgets.css">
     <script src="assets/utils.js"></script>
     <!-- <script src="assets/lib/lib.js"></script> -->
-    <figure style="width:100%; height:400px;">
+    <figure id='bnn_figure' style="width:100%; height:400px;">
         <div id="full_bnn" class='.l-screen' style="width:100%; height:400px;"></div>
     </figure>
 
@@ -47,7 +47,7 @@
 
     <figure>
         <div id="bnn_graph" style="position:relative; width:650px; height:200px;"></div>
-        <button type="button" onclick="full_bnn.train()">Train</button>
+        <button type="button" onclick="full_bnn.start()">Train</button>
         <button type="button" onclick="full_bnn.reset()">Reset</button>
     </figure>
 
@@ -67,7 +67,7 @@
     </p>
 
     <!-- Regular MLP objective surfaces -->
-    <figure style="position:relative; width:984px;">
+    <figure id='mlp_figure' style="position:relative; width:984px;">
         <div class="container">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
@@ -113,7 +113,7 @@
                         <input type="radio" name="net_type" value="Shallow"> Shallow<br>
                         <input type="radio" name="net_type" value="Linear"> Linear<br>
                     </form>
-                    <button type="button" onclick="mlp.train()">Train</button>
+                    <button type="button" onclick="mlp.start()">Train</button>
                     <button type="button" onclick="mlp.reset()">Reset</button>
                 </div>
             </div>
@@ -186,7 +186,7 @@
         network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
     </p>
     <p>
-        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{w \sim p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
+        $p(\hat y(x)| \mathcal{D}) = \int_{w} p(\hat y(x)| w) p(w | \mathcal{D}) dw = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)]$,
         <!-- why not p(w| \mathcal{D}, x) here...-->
     </p>
     <p>
@@ -205,47 +205,100 @@
     </p>
     <h3>Approximate inference</h3>
     <p>
-        Recall that computing the posterior using exact inference is costly even for modest-sized networks due to the denominator in Bayes' rule $p(\mathcal{D})$, which we call the <i>marginal data likelihood</i>. For many models of practical interest
-        this cost is prohibitive, so we must resort to approximately computing the posterior. Approaches to doing so broadly fall into two categories, which we discuss in the following two sections.
-        <i>Sampling methods</i> leverage the tractability of the unnormalized posterior to approximate the integral over weight space with a finite number of suitably chosen Monte Carlo samples.
-        <i>Variational methods</i> instead model the posterior using a parameterized distribution called the approximate posterior, then iteratively improve the approximation by solving a suitable optimization problems. While both methods are of practical
-        and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training. We devote a section to this algorithm to underscore that
-        being Bayeisna in neural network learning is well worth the modest cost in engineering overhead.
+        We have seen computationally difficult integrals arise during the Bayesian setup in the following two expressions<dt-fn>
+            While the second expression is more important for prediction, evaluating it exactly implicitly references the first expression via the posterior.
+        </dt-fn> :
+    </p>
+    <ul>
+        <li>the marginal data likliehood $p(\mathcal{D})$, which requires a integral over weight space and is required to evaluate the posterior $p(w|\mathcal{D})$;</li>
+        <li>the posterior predicitive distibution $p(\hat y(x)|\mathcal{D})$, which again integrates over weight space, this time via an expectation over $p(w|\mathcal{D})$.</li>
+    </ul>
+    <p>
+        At first glance, the glaring difficulty of computing these objects might suggest that Bayesian neural networks will be difficult implement in practice.
+        But as we will see, it is possible to approximately compute one or both of these objects via clever algorithms, which can be broadly categorized as either sampling-based or variational.
+    </p>
+    <p>
+           <i>Sampling methods</i> approximately compute $p(\hat y(x)|\mathcal{D}) = \mathbb{E}_{p(w|\mathcal{D})}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1  sampling-free.\ldots w_N\}$ whose empirial distribution matches $p(w|\mathcal{D})$ in the limit of large $N$.
+            Loosely speaking, the algorithmic design challenge is to relatively quickly produce a modest number ($N$ not too big) of network samples that yield a decent approximation of $p(\hat y(x)| \mathcal{D})$
+    </p>
+    <p>
+        <i>Variational methods</i> instead directly model the posterior $p(w|\mathcal{D})$ using a parameterized distribution $q_\phi(w)$, called the <i>approximate posterior</i>, then iteratively improve the approximation by solving a suitable optimization problems.
+            We will show that a suitable optimziation problem can be derived, so the remaining design challenges are to specify $q_\phi$ and an optimizer.
+            Thankfully, we can use off-the-shelf optimizers from standard neural network training!
+    </p>
+     <p>
+        While both sampling and variational methods are of practical and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training.
+        We devote a section to this algorithm to underscore that being Bayesian in neural network learning is well worth the modest cost in engineering overhead.
+    </p>
+    <p style="color:red;">
+        TODO: make the point (perhaps in a footnote that variational methods still typically evalute the posterior predictive via a Monte Carlo estimate, so they are not sampling-free.
     </p>
 
     <h2>Sampling methods</h2>
-    <p style="color:red;">
-        TODO: introduce sampling methods; decompose posterior into joint likelihood and marginal data likelihood; discuss unnormalized distributions
+
+    <h3>Monte Carlo integration</h3>
+    <p>
+        Sampling methods rely on <i>Monte Carlo integration</i>: the use of a finite set of random samples to approximate an expected value.
+        In particular, they generate a set of neural networks asymtotically distributed according to $p(w|\mathcal{D})$ in order to approximate $p(\hat y(x)|\mathcal{D})$ as the empircal expectation of single-network predictions $p(\hat y(x)|w)$ under the sampled networks.
+        Monte Carlo integration is widely applicable, but it isn't always practical.
+        We can see this by deriving a naive approximation to one of our previously identified difficult integrals: the marginal data likelihood $p(\mathcal{D})$.
+        $$ p(\mathcal{D}) = \int_{w} p(\mathcal{D}|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(\mathcal{D|w}) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(\mathcal{D|w_i}).$$
+        Here the sample set of network weights $\{w_1 \ldots w_N\}$ are drawn independently from the prior $p(w)$.
     </p>
 
-    <h3>Metropolis algorithm</h3>
-    <p style="color:red;">
-        TODO: fill out this stub
-    </p>
+    <p>
+        Given a good estimate for $p(D)$ then we could again use Monte Carlo integration using network samples $\{w_i\}$ from the prior to approximate the predictive posterior:
+        $$ p(\hat y(x)|D) = \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right] \approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)} $$
+        The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
 
-    <h3>Hamiltoniian MCMC algorithm</h3>
+    </p>
+    <h3>Markov Chain Monte Carlo</h3>
+    <p>
+        <p style="color:red;">
+            NB: I only had a chance to outline this section; it will be revised soon
+        </p>
+
+        <p>
+        We saw that Monte Carlo estimates from naively sampling network weights naively from the prior won't work.
+        We can sacrifice our assumption of sample independence, instead using a Markov Chain to produce a sequence of dependent samples.
+        This is formalized by a <i>proposal distribution</i> over choices of next sample in the sequence conditioned on the previous choice $q(w'|w_t)$.
+        The Metropolis algorithm uses this proposal distribution to generate a set of samples that asymptotically are distributed according to $p(w|D)$.
+        We use the Markov chain to generate candidate samples and then stochastically accept them with probability $a$, expressed as the acceptance rate <dt-fn>
+            Here we assume a symmetric proposal distribution to simplify the expression of $a$, but this assumption is not necessary .
+        </dt-fn> is defined as
+        $$ a = \frac{p(\mathcal{D}, w')}{p(\mathcal{D}, w_t)}$$
+
+        The accept rate is also equivalent to the ratio of posterior probabilities under the proposed and most recent samples $\frac{p(w'|D)}{p(w_t| D)}$.
+        This is because $p(D, w) = p(w|D)p(D)$ is equal to the posterior up to a multiplicative constant $p(D)$ that is the same for all $w$; here we've leveraged the fact that we can compute $p(D, w)$ but not $p(w|D)$.
+        A simple specification of proposal distribution is a Normal distribution centered at the current sample $ q(w'|w_t) = \mathcal{N}(w_t, \sigma^2) $.
+        If we were to accept every sample from this proposal distribution, we would be performing a random walk in parameter space with step size equal to $\sigma$.
+        The accept/reject step of the Metropolis algorithm mitigates random steps into regions of low probability mass.
+        We've introduced a new hyperparameter $\sigma$ that will need tuning.
+        Generally speaking, we want to accept new samples often in order to converge quickly, and the acceptance rate is sensitive to the value of $\sigma$.
+       MCMC based methods are better for high dimensionality problems since they focus on areas with relatively high probability mass, we still don't have any guarantees about their speed of convergence.
+    </p>
     <p style="color:red;">
-        TODO: fill out this stub
+        TODO: segueway to the demo
     </p>
 
     <!-- Sampling from the posterior figures -->
-    <figure style="position:relative; width:984px; height:900px;">
+    <figure class='.l-screen' style="position:relative; width:100%; height:1100px;">
         <figcaption id="randomwalk_caption" class='little_caption'>
-            Gaussian Random Walk Proposal
+            Gaussian Random Walk Proposal on Training Data
         </figcaption>
-        <div id="exact_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="rw.start()">Sample</button>
+        <div id="rw_train_figure" class='.l-screen bordered' style="position:relative; width:100%; height:400px;"></div>
 
-        <figcaption id="hmc_caption" class='little_caption'>
-            HMC Proposal
+        <div style="position:relative; width:100%; height:50px;"></div>
+
+        <figcaption id="randomwalk_caption" class='little_caption'>
+            Gaussian Random Walk Proposal on Validation Data
         </figcaption>
-        <div id="hmc_train" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="hmc.start();">Sample</button>
+        <div id="rw_valid_figure" class='.l-screen bordered' style="position:relative; width:100%; height:400px;"></div>
         <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
             Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|\mathcal{D}_{\text{train}})$. Once sampling begins, the running-average of the Monte Carlo
             approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red. Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
         </figcaption>
-
+        <button type="button" onclick="rw_train.start(); rw_valid.start();" style="position:relative; left: 1040px; width: 150px; height: 30px;">Sample</button>
         <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
     </figure>
 
@@ -254,6 +307,10 @@
         sampled in this way, as well as the approximate predictive distribution computed as the running average of sampled networks. The weighted running average of sampled functions is shaded in red; this corresponds to the Monte Carlo estimate of the
         predictive distribution $p(\hat y(x)| \mathcal{D})$. On the other hand, producing <i>samples</i> from this unknown distribution is often feasible using algorithms described in the next section, and we can aggregate a finite number of these
         samples to obtain an approximate posterior.
+    </p>
+
+    <p style="color:red;">
+        TODO: describe the wealth of other MCMC options by designing a better proposal distribution, cite Neal, MacKay, etc.<dt-cite key="mackay2003information"></dt-cite>
     </p>
 
     <h2>Variational inference</h2>
@@ -281,7 +338,8 @@
     <h3>The Kullback-Liebler divergence</h3>
 
     <!-- KL divergence figure -->
-    <figure style="position:relative; width:984px; height:400px;">
+    <figure style="position:relative; width:1034px; height:500px;">
+        <div id="divergence_ruler" class='bordered' style="position:relative; float:left; width:50px; height:300px;"></div>
         <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
         <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
             <input type="radio" name="divergence_type" value="reverse KL" checked>$D_{KL}(q||p)$<br>
@@ -326,11 +384,16 @@
             As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$
             <dt-cite key="shlens2014notes"></dt-cite>.
         </dt-fn>. Regrettably, we can't directly optimize $D_{KL}(q_\phi(w)||p(w|\mathcal{D})$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
-        equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective. $$D_{KL} [q_\phi(w)||p(w|D)] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D}) \right]
-        = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D}) - \log p(\mathcal{D}) \right] = \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, mathcal{D})
-        \right] - \log p(\mathcal{D}) $$ Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
+        equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
+        $$\begin{aligned} D_{KL} [q_\phi(w)||p(w|D)] &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|\mathcal{D}) \right]
+        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D}) - \log p(\mathcal{D}) \right]
+        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, \mathcal{D})\right] - \log p(\mathcal{D})
+        \end{aligned}$$
+        Here $p(\mathcal{D})$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
         of $q_\phi$, which means we can ignore during optimization. We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the
-        evidence lower bound, which we here pose as a maximization problem for conventional consistency. $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, mathcal{D}) - \left[ \log q_\phi(w) \right] $$ Thus the variatinal inference
+        evidence lower bound, which we here pose as a maximization problem for conventional consistency.
+        $$ \tilde \mathcal{L}(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, \mathcal{D}) - \left[ \log q_\phi(w) \right] $$
+        Thus the variatinal inference
         corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde \mathcal{L}(\phi)$$
     </p>
 
@@ -392,7 +455,7 @@
     </p>
 
     <!-- Variational Inference Layer -->
-    <figure style="position:relative; width:984px; height:1075px;">
+    <figure id='svi_figure' style="position:relative; width:984px; height:1075px;">
         <figcaption id="svi_inf_caption">
             Variational Inference
         </figcaption>
@@ -400,7 +463,7 @@
             Now we fit a distribution of weights to the underlying latent distribution.
         </figcaption>
         <div id="svi_curve" class='bordered' style="position:relative; width:984px; height:300px;"></div>
-        <button type="button" onclick="svi.train()">Train</button>
+        <button type="button" onclick="svi.start()">Train</button>
         <button type="button" onclick="svi.stop()">Pause</button>
 
         <figcaption id="exact_caption" style="position:relative; width: 470px; height: 10px; left:500px">
@@ -481,30 +544,36 @@
     Also: Overfitting, small data, and uncertainty.
     </p>
 
+    <!-- backend libraries -->
     <script src="assets/lib/parameters.js"></script>
     <script src="assets/lib/graphical_constants.js"></script>
-    <script src="assets/lib/plotter.js"></script>
-    <script src="assets/lib/divergence.js"></script>
-    <script src="assets/lib/contour_plot.js"></script>
-    <script src="assets/lib/mlp.js"></script>
-    <script src="assets/lib/svi.js"></script>
-    <script src="assets/lib/full_bnn.js"></script>
-    <script src="assets/lib/exact_inference.js"></script>
-    <script src="assets/lib/randomwalk.js"></script>
-    <script src="assets/lib/hamiltonian.js"></script>
+    <script src="assets/lib/jquery-3.3.1.js"></script>
     <script src="assets/lib/net_lib.js"></script>
+    <script src="assets/lib/plotter.js"></script>
     <script src="assets/lib/seedrandom.min.js"></script>
-    <script src="assets/iterates.js"></script>
-    <script>
-        // NN on sine
-        var mlp = mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
-        mlp.plot();
 
-        var rw = randomwalk_view(d3.select("#exact_train"));
-        var hmc = hmc_view(d3.select("#hmc_train"));
+    <!-- views/figures you see -->
+    <script src="assets/iterates.js"></script>
+    <script src="assets/divergence.js"></script>
+    <script src="assets/mlp.js"></script>
+    <script src="assets/svi.js"></script>
+    <script src="assets/full_bnn.js"></script>
+    <script src="assets/exact_inference.js"></script>
+    <script src="assets/randomwalk.js"></script>
+    <script src="assets/hamiltonian.js"></script>
+    <script>
+        // BNN on top
+        var full_bnn = new full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
+
+        // NN on sine
+        var mlp = new mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
+
+        // MCMC
+        var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
+        var rw_valid = new randomwalk_view(d3.select("#rw_valid_figure"), true);
 
         //DIVERGENCES
-        var divergence_curve = divergence(d3.select("#curve"), 0, 1);
+        var divergence_curve = divergence(d3.select("#curve"), d3.select("#divergence_ruler"), 0, 1);
         var sdScaler = d3.scaleLinear().domain([0, 4]).range([0.5, 2.5])
 
         var sliderc = sliderGen([230, 40])
@@ -533,17 +602,39 @@
             .shifty(-12)
             .startxval(1)
             .margins(20, 20)
-
         var getmean = sliderc(d3.select("#slider3")).xval
         var getsd = sliderd(d3.select("#slider4")).xval
         divergence_curve.draw_line();
 
         // variational inference
-        var svi = svi(d3.select("#svi_curve"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#svi_progress"), d3.select("#svi_graph"));
+        var svi = new svi(d3.select("#svi_curve"), d3.select("#var_loss_train"), d3.select("#var_loss_valid"), d3.select("#svi_progress"), d3.select("#svi_graph"));
 
-        // variational inference
-        var full_bnn = full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
-        // full_bnn.train();
+        function isInView(elem){
+            var $elem = $(elem);
+            var $window = $(window);
+            var docViewTop = $window.scrollTop();
+            var docViewBottom = docViewTop + $window.height();
+            var elemTop = $elem.offset().top;
+            var elemBottom = elemTop + $elem.height();
+            return ((elemTop <= docViewBottom) && (elemBottom >= docViewTop));
+        }
+
+        var active_views = {
+            "#bnn_figure" : full_bnn,
+            "#mlp_figure" : mlp,
+            "#rw_train_figure": rw_train,
+            "#rw_valid_figure": rw_valid,
+            "#svi_figure": svi
+        };
+
+        $(window).scroll(function(){
+            Object.keys(active_views).forEach(x => {
+                if (!isInView($(x)) && active_views[x].is_running()) {
+                    console.log("stopped " + x);
+                    active_views[x].stop();
+                }
+            });
+        });
 
         // SGD algo box
         var code = document.getElementById("hello-world-code").textContent;
@@ -587,38 +678,31 @@
                     right: "$",
                     display: false
                 },
-                {
-                    left: "\\\\",
-                    right: "\\\\",
-                    display: true
-                },
-                {
-                    left: "\\",
-                    right: "\\",
-                    display: false
-                },
             ]
         }
     );
 </script>
 
 <script type="text/bibliography">
-    @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622},
-    year={2015}, url={https://arxiv.org/abs/1505.05424}} @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international
-    conference on machine learning}, pages={1050--1059}, year={2016}} @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems},
-    pages={2348--2356}, year={2011} } @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov,
-    Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} } @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley,
-    John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} } @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015}, url={https://github.com/karpathy/convnetjs}
-    } @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} } @inproceedings{kingma2015adam, title={{Adam}:
-    A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, } @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization
-    trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} } @article{kucukelbir2016automatic, title={Automatic Differentiation Variational
-    Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} } @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks},
-    author={Neal, Radford M}, year={1995}, school={University of Toronto} } @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint
-    arXiv:1206.6430}, year={2012} } @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} } @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation
-    and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} } @article{robbins1951stochastic,
-    title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} } @article{rumelhart1986learning, title={Learning representations by back-propagating
-    errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} } @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and
-    Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} } @article{shlens2014notes, title={Notes on Kullback-Leibler divergence and likelihood}, author={Shlens,
-    Jonathon}, journal={arXiv preprint arXiv:1404.2000}, year={2014} } @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois
-    at Urbana-Champaign} }
+    @inproceedings{blundell2015weight, title={Weight Uncertainty in Neural Network}, author={Blundell, Charles and Cornebise, Julien and Kavukcuoglu, Koray and Wierstra, Daan}, booktitle={International Conference on Machine Learning}, pages={1613--1622}, year={2015}, url={https://arxiv.org/abs/1505.05424}}
+    @inproceedings{gal2016dropout, title={Dropout as a Bayesian approximation: Representing model uncertainty in deep learning}, author={Gal, Yarin and Ghahramani, Zoubin}, booktitle={international conference on machine learning}, pages={1050--1059}, year={2016}}
+    @inproceedings{graves2011practical, title={Practical variational inference for neural networks}, author={Graves, Alex}, booktitle={Advances in Neural Information Processing Systems}, pages={2348--2356}, year={2011} }
+    @article{hinton2012improving, title={Improving neural networks by preventing co-adaptation of feature detectors}, author={Hinton, Geoffrey E and Srivastava, Nitish and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan R}, journal={arXiv preprint arXiv:1207.0580}, year={2012}, url={https://arxiv.org/abs/1207.0580} }
+    @article{hoffman2013stochastic, title={Stochastic variational inference}, author={Hoffman, Matthew D and Blei, David M and Wang, Chong and Paisley,
+    John}, journal={The Journal of Machine Learning Research}, volume={14}, number={1}, pages={1303--1347}, year={2013} }
+    @misc{karpathy2015convnetjs, title={ConvNetJS: Javascript library for deep learning}, author={Karpathy, A}, year={2015}, url={https://github.com/karpathy/convnetjs} }
+    @article{kingma2013autoencoding, author = {Diederik P. Kingma and Max Welling}, title = {Auto-Encoding Variational Bayes}, journal = {International Conference on Learning Representations}, year = {2014} }
+    @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
+    @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
+    @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
+    @book{mackay2003information, title={Information theory, inference and learning algorithms}, author={MacKay, David JC}, year={2003}, publisher={Cambridge university press} }
+    @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
+    @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
+    @article{rall1981automatic, title={Automatic differentiation: Techniques and applications}, author={Rall, Louis B}, year={1981}, publisher={Springer} }
+    @inproceedings{rezende2014stochastic, title={Stochastic Backpropagation and Approximate Inference in Deep Generative Models}, author={Rezende, Danilo J and Mohamed, Shakir and Wierstra, Daan}, booktitle={Proceedings of the 31st International Conference on Machine Learning}, pages={1278--1286}, year={2014} }
+    @article{robbins1951stochastic, title={A stochastic approximation method}, author={Robbins, Herbert and Monro, Sutton}, journal={The annals of mathematical statistics}, pages={400--407}, year={1951} }
+    @article{rumelhart1986learning, title={Learning representations by back-propagating errors}, author={Rumelhart, David E and Hinton, Geoffrey E}, journal={Nature}, volume={323}, pages={9}, year={1986} }
+    @inproceedings{schulman2015gradient, title={Gradient estimation using stochastic computation graphs}, author={Schulman, John and Heess, Nicolas and Weber, Theophane and Abbeel, Pieter}, booktitle={Advances in Neural Information Processing Systems}, pages={3528--3536}, year={2015} }
+    @article{shlens2014notes, title={Notes on Kullback-Leibler divergence and likelihood}, author={Shlens, Jonathon}, journal={arXiv preprint arXiv:1404.2000}, year={2014} }
+    @phdthesis{speelpenning1980compiling, title={Compiling Fast Partial Derivatives of Functions Given by Algorithms}, author={Speelpenning, Bert}, year={1980}, school={University of Illinois at Urbana-Champaign} }
 </script>

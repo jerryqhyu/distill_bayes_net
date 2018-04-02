@@ -3,40 +3,51 @@ function hmc_view(curve_div) {
 	var curve_plotter = Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
 		false, false);
 	var samples = [];
-	var predictions = []; // for speed we store predictions and only append last
+	var predictions = new Array(curve_x.length); // for speed we store predictions and only append last
+	var proposal_pred = new Array(curve_x.length);
+
+	var percentiles = new Array(100); // 1-100
+    for (var i = 0; i < 100; i++) {
+        percentiles[i] = new Array(curve_x.length);
+        for (var j = 0; j < percentiles[i].length; j++) {
+            percentiles[i][j] = {
+                x: curve_x[j],
+                y: 0
+            };
+        }
+    }
+
 	var p_length = [];
-	var steps = 30;
-	var timer;
+	var steps = 10;
+	var walk_timer;
+    var plot_timer;
 
 	initial_plot();
 
 	function initial_plot() {
-		curve_plotter.add_group("float");
-		curve_plotter.add_group("fixed");
-		plot_training_data();
-	}
+        curve_plotter.add_group("percentiles");
+		curve_plotter.add_group("lastproposal");
+		curve_plotter.add_group("lastsample");
+        curve_plotter.add_group("fixed");
+        plot_training_data();
+    }
 
-	function start() {
-		var first_net = make_preset_net();
-		samples.push(unpack_net(first_net));
-		for (var i = -5; i <= 5; i += param.step_size) {
-			predictions.push([first_net.forward(new net_lib.Vol([i])).w[0]]);
-		}
-		if (!timer) {
-			timer = d3.timer(sample, 50);
-		}
-	}
+    function start() {
+        var first_net = make_preset_net();
+        samples.push(unpack_net(first_net));
+        curve_x.forEach((x, n) => {
+            predictions[n] = [first_net.forward(new net_lib.Vol([i])).w[0]];
+        });
 
-	function reset() {
-		samples = [];
-		curve_plotter.svg.select("#float").selectAll("*").remove();
-		clear();
-		plot();
-	}
+        if (!walk_timer) {
+            walk_timer = d3.timer(sample, 25);
+            plot_timer = d3.timer(plot, 500);
+        }
+    }
 
-	function clear() {
-		curve_plotter.svg.select("#float").selectAll("*").remove();
-	}
+    function reset() {
+        samples = [];
+    }
 
 	function sample() {
 		var last_sample = samples[samples.length - 1];
@@ -47,36 +58,24 @@ function hmc_view(curve_div) {
 		// accept or reject
 		var last_net = pack_net(last_sample);
 		var new_net = pack_net(new_sample.p);
+		curve_x.forEach((x, n) => {
+			proposal_pred[n] = new_net.forward(new net_lib.Vol([x])).w[0];
+		});
 
-		var idx = 0;
 		var transition_prob = Math.min(1, Math.exp((training_loss(new_net) - new_sample.normp/2) - (training_loss(last_net) - new_sample.normp0/2)));
 
-		var pts = [];
 		if (Math.random() <= transition_prob) {
-			// accept
-			samples.push(new_sample.p);
-			for (var i = -5; i <= 5; i += param.step_size) {
-				predictions[idx].push(new_net.forward(new net_lib.Vol([i])).w[0]);
-				pts.push({x: i, y: new_net.forward(new net_lib.Vol([i])).w[0]});
-				idx++;
-	        }
-		} else {
-			samples.push(last_sample);
-			for (var i = -5; i <= 5; i += param.step_size) {
-				predictions[idx].push(last_net.forward(new net_lib.Vol([i])).w[0]);
-				pts.push({x: i, y: last_net.forward(new net_lib.Vol([i])).w[0]});
-				idx++;
-			}
-		}
-
-		clear();
-		plot_sample_dist();
-		curve_plotter.plot_path(pts, {
-			color: "black",
-			width: 2,
-			opacity: 1,
-			id: "#float"
-		});
+            // accept
+            samples.push(new_sample.p);
+            curve_x.forEach((x, n) => {
+                predictions[n].push(new_net.forward(new net_lib.Vol([x])).w[0]);
+            });
+        } else {
+            samples.push(last_sample);
+            curve_x.forEach((x, n) => {
+                predictions[n].push(last_net.forward(new net_lib.Vol([x])).w[0]);
+            });
+        }
 	}
 
 	function propose(sample_t, step_count, step_size) {
@@ -224,40 +223,55 @@ function hmc_view(curve_div) {
 		return new_net;
 	}
 
-	function plot_sample_dist() {
-		var percentiles = []; // 10, 25, 45, 55, 75, 90
-		for (var i = 0; i < 100; i++) {
-			percentiles.push([]);
-		}
+	function plot() {
+        var proposal_pts = curve_x.map((x, n) => {
+            return {x: x, y: proposal_pred[n]}
+        });
+		var pts = curve_x.map((x, n) => {
+            return {x: x, y: predictions[n][predictions[n].length - 1]}
+        });
+        curve_plotter.plot_path([pts], {
+            color: "green",
+            width: 2,
+            opacity: 1,
+            id: "#lastsample"
+        });
+		curve_plotter.plot_path([proposal_pts], {
+			color: "red",
+			width: 2,
+			opacity: 1,
+			id: "#lastproposal"
+		});
 
-		// collect percentile for each point
-		var idx = 0;
-		for (var i = -5; i <= 5; i += param.step_size) {
-			single_point_pred = predictions[idx].sort((a, b) => {
+        plot_sample_dist();
+    }
+
+    function plot_sample_dist() {
+        // collect percentile for each point
+        curve_x.forEach((x, n) => {
+            single_point_pred = predictions[n].sort((a, b) => {
                 return a - b;
             });
 
-			for (var j = 0; j < percentiles.length; j++) {
-                percentiles[j].push({
-                    x: i,
+            for (var j = 0; j < percentiles.length; j++) {
+                percentiles[j][n] = {
+                    x: x,
                     y: single_point_pred[Math.floor(0.01 * j * (samples.length - 1))]
-                });
+                };
             }
-			idx++;
-		}
+        });
 
-		// plot the percentile of the samples
-		for (var i = 0; i < percentiles.length / 2; i++) {
-			curve_plotter.plot_path(percentiles[i].concat(percentiles[percentiles.length -
-				1 - i].reverse()), {
-				color: "red",
-				fill: "red",
-				width: 1,
-				opacity: 1 / (percentiles.length - 12.5 - i * 1.75),
-				id: "#float"
-			});
-		}
-	}
+        // plot the percentile of the samples
+        curve_plotter.plot_path(percentiles.slice(0, percentiles.length / 2).map((x, i) => {
+            return percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse());
+        }), {
+            color: "black",
+            fill: "black",
+            width: 1,
+            opacity: 1 / 50,
+            id: "#percentiles"
+        });
+    }
 
 	function training_loss(net) {
 		return -1 * param.train_points.map((point, i) => {
@@ -266,48 +280,25 @@ function hmc_view(curve_div) {
 	}
 
 	function make_preset_net() {
-		var layer_defs = [];
-		layer_defs.push({
-			type: 'input',
-			out_sx: 1,
-			out_sy: 1,
-			out_depth: 1
-		});
-		layer_defs.push({
-			type: 'fc',
-			num_neurons: 7,
-			activation: 'rbf'
-		});
-		layer_defs.push({
-			type: 'fc',
-			num_neurons: 7,
-			activation: 'rbf'
-		});
-		layer_defs.push({
-			type: 'regression',
-			num_neurons: 1
-		});
-		var new_net = new net_lib.Net();
-		new_net.makeLayers(layer_defs);
-		return new_net;
-	}
+        var layer_defs = [];
+        layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
+        layer_defs.push({type: 'fc', num_neurons: 10, activation: 'rbf'});
+        layer_defs.push({type: 'fc', num_neurons: 10, activation: 'rbf'});
+        layer_defs.push({type: 'regression', num_neurons: 1});
+        var new_net = new net_lib.Net();
+        new_net.makeLayers(layer_defs);
+        return new_net;
+    }
 
-	function plot_training_data() {
-		training_points_data = param.train_points.map((p, i) => {
-			return {
-				x: p,
-				y: Math.sin(p) + param.train_noise[i]
-			}
-		});
-
-		curve_plotter.plot_points(training_points_data, {
-			stroke: "darkgreen",
-			color: "darkgreen",
-			size: 4,
-			opacity: 1,
-			id: "#fixed"
-		});
-	}
+    function plot_training_data() {
+        curve_plotter.plot_points(training_points_data, {
+            stroke: "darkgreen",
+            color: "darkgreen",
+            size: 4,
+            opacity: 1,
+            id: "#fixed"
+        });
+    }
 
 	return {
 		start: start,
