@@ -250,7 +250,7 @@
         Given a good estimate for $p(D)$ then we could again use Monte Carlo integration using network samples $\{w_i\}$ from the prior to approximate the predictive posterior:
         $$\begin{aligned}
         p(\hat y(x)|D) &= \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right]\\
-        &\approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)} 
+        &\approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)}
         \end{aligned}$$
         The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
 
@@ -338,16 +338,7 @@
     <!-- KL divergence figure -->
     <figure style="position:relative; width:1034px; height:500px;">
         <div id="divergence_ruler" class='bordered' style="position:relative; float:left; width:50px; height:300px;"></div>
-<<<<<<< HEAD
         <div id="curve" class='bordered' style="position:relative; float:left; width:984px; height:300px;"></div>
-=======
-        <div id="curve" class='bordered' style="position:relative; float:left; width:834px; height:300px;"></div>
-        <form style="position:relative; margin-left: 854px;" onclick="divergence_curve.update(getmean() - 6, sdScaler(getsd()))">
-            <input type="radio" name="divergence_type" value="reverse KL" checked>$d_{KL}(q||p)$<br>
-            <input type="radio" name="divergence_type" value="KL">$d_{KL}(p||q)$<br>
-            <input type="radio" name="divergence_type" value="JS"> $d_{JS}(p, q)$
-        </form>
->>>>>>> b191a98c28c9e4bbdba35c84889658fdab6139a1
         <div id="slider3" style="position:absolute; width:300px; height: 50px; left:20px; top: 320px;">
             <text class="figtext" style="top: -5px; left: 20px; position: relative;">Mean μ = 0.0</text>
         </div>
@@ -371,16 +362,11 @@
         $$\begin{aligned}
         \quad d_{KL}[q_\phi(w)||p(w|D)] &\coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|D)} \\
         &= \mathbb{E}_{q_\theta(w)}[\log q_\phi(w) - \log p(w|D)].
-        \end{aligned}$$ 
+        \end{aligned}$$
         So our optimization problem should be something like "minimize the KL-divergence between from
         the approximate posterior to the true posterior, which we will formalize shortly. But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate,
-<<<<<<< HEAD
         and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon
         distance. $$0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$$
-=======
-        and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $d_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $d_{KL}(p||q)$ and Jensen-Shannon
-        distance $0.5d_{KL}(p||0.5p+0.5q) + 0.5d_{KL}(q||0.5p+0.5q)$.
->>>>>>> b191a98c28c9e4bbdba35c84889658fdab6139a1
     </p>
     <p>
         By definition the KL-divergence is not symmetrical, $d_{KL}(q||p) \neq d_{KL}(p||q)$, which is why it's called a divergence instead of a distance. We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we
@@ -708,7 +694,7 @@
     @inproceedings{kingma2015adam, title={{Adam}: A Method for Stochastic Optimization}, year={2015}, author={Kingma, Diederik and Ba, Jimmy}, booktitle={International Conference on Learning Representations}, }
     @inproceedings{kingma2015variational, title={Variational dropout and the local reparameterization trick}, author={Kingma, Diederik P and Salimans, Tim and Welling, Max}, booktitle={Advances in Neural Information Processing Systems}, pages={2575--2583}, year={2015} }
     @article{kucukelbir2016automatic, title={Automatic Differentiation Variational Inference}, author={Kucukelbir, Alp and Tran, Dustin and Ranganath, Rajesh and Gelman, Andrew and Blei, David M}, journal={arXiv preprint arXiv:1603.00788}, year={2016} }
-    @article{kullback1959statistics, title={Statistics and Information theory}, author={Kullback, Solomon}, journal={J Wiley Sons, New York}, year={1959} } 
+    @article{kullback1959statistics, title={Statistics and Information theory}, author={Kullback, Solomon}, journal={J Wiley Sons, New York}, year={1959} }
     @book{mackay2003information, title={Information theory, inference and learning algorithms}, author={MacKay, David JC}, year={2003}, publisher={Cambridge university press} }
     @phdthesis{neal1995bayesian, title={Bayesian learning for neural networks}, author={Neal, Radford M}, year={1995}, school={University of Toronto} }
     @article{paisley2012variational, title={Variational Bayesian inference with stochastic search}, author={Paisley, John and Blei, David and Jordan, Michael}, journal={arXiv preprint arXiv:1206.6430}, year={2012} }
