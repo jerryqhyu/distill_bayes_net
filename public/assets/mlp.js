@@ -5,7 +5,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	this.start = function() {
 		if (!training_interval) {
 			training_interval = d3.timer(train_epoch, 50);
-			plot_interval = d3.timer(plot, 200);
+			plot_interval = d3.timer(plot00);
 			if (obtaining_param) {
 				net.getLayer(1).freeze_weights();
 			} else {
@@ -410,24 +410,20 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
-			transition: 50,
+			transition: 10,
 			on_drag: on_drag,
 			dragging: dragging,
-			end_drag: end_drag,
-			mouseover: mouseover,
-			mouseout: mouseout
+			end_drag: end_drag
 		});
 		valid_loss_plotter.plot_points(data, {
 			stroke: "black",
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
-			transition: 50,
+			transition: 10,
 			on_drag: on_drag,
 			dragging: dragging,
-			end_drag: end_drag,
-			mouseover: mouseover,
-			mouseout: mouseout
+			end_drag: end_drag
 		});
 	}
 
