@@ -410,6 +410,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
+			transition: 50,
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag,
@@ -421,6 +422,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 5,
 			opacity: 1,
+			transition: 50,
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag,
@@ -431,6 +433,10 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	function on_drag(d) {
 		d3.select(this).raise().classed("active", true);
+		var new_x = d3.event.x;
+		var new_y = d3.event.y;
+		console.log(this);
+		console.log(d3.event);
 		stop();
 	}
 

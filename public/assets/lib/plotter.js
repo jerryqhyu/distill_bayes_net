@@ -25,6 +25,13 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
 		return y_scale(d.y);
 	}
 
+    var ix = function(d) {
+		return d.x;
+	}
+	var iy = function(d) {
+		return d.y;
+	}
+
 	var x1 = function(d) {
 		return x_scale(d.x1);
 	}
@@ -65,6 +72,9 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
         var opacity = typeof(options.opacity) === 'undefined'
             ? 1
             : options.opacity;
+        var transition = typeof(options.transition) === 'undefined'
+            ? 100
+            : options.transition;
         var id = typeof(options.id) === 'undefined'
             ? ''
             : options.id;
@@ -76,7 +86,7 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
             paths = this.svg.selectAll('path').data(data);
         }
 		paths.exit().remove();
-        paths.enter().append('path').merge(paths).transition().duration(100).attr('d', line).attr('stroke', color).attr('stroke-width', width).attr('fill', fill).attr('opacity', opacity)
+        paths.enter().append('path').merge(paths).transition().duration(transition).attr('d', line).attr('stroke', color).attr('stroke-width', width).attr('fill', fill).attr('opacity', opacity)
     }
 
 	this.plot_line = function(data, options) {
@@ -93,6 +103,9 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
         var opacity = typeof(options.opacity) === 'undefined'
             ? 1
             : options.opacity;
+        var transition = typeof(options.transition) === 'undefined'
+            ? 100
+            : options.transition;
         var id = typeof(options.id) === 'undefined'
             ? ''
             : options.id;
@@ -104,7 +117,7 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
             lines = this.svg.selectAll('line').data(data);
         }
 		lines.exit().remove();
-		lines.enter().append('line').merge(lines).transition().duration(100).attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2).attr('stroke-width', conn_thickness).attr('stroke', conn_colour);
+		lines.enter().append('line').merge(lines).transition().duration(transition).attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2).attr('stroke-width', conn_thickness).attr('stroke', conn_colour);
     }
 
     this.plot_points = function(data, options) {
@@ -125,6 +138,9 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
         var id = typeof(options.id) === 'undefined'
             ? ''
             : options.id
+        var transition = typeof(options.transition) === 'undefined'
+            ? 100
+            : options.transition;
         var on_drag = typeof(options.on_drag) === 'undefined'
             ? undefined
             : options.on_drag
@@ -149,7 +165,7 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
             pts = this.svg.selectAll('circle').data(data);
         }
 		pts.exit().remove();
-        pts.enter().append('circle').merge(pts).on('mouseover', mouseover).on('mouseout', mouseout).call(d3.drag().on('start', on_drag).on('drag', dragging).on('end', end_drag)).transition().duration(100).attr('cx', px).attr('cy', py).attr('r', size).attr('stroke', stroke).attr('fill', color).attr('opacity', opacity);
+        pts.enter().append('circle').merge(pts).on('mouseover', mouseover).on('mouseout', mouseout).call(d3.drag().on('start', on_drag).on('drag', dragging).on('end', end_drag)).transition().duration(transition).attr('cx', px).attr('cy', py).attr('r', size).attr('stroke', stroke).attr('fill', color).attr('opacity', opacity);
     }
 
     this.plot_contour = function(data, options) {

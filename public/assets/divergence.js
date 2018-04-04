@@ -90,12 +90,14 @@ function divergence(div, ruler_div, mean, sd) {
 			color: "darkred",
 			width: 2,
 			opacity: 0.5,
+			transition: 10,
 			id: "#variable"
 		});
 		divergence_curve_plotter.plot_path([data.fixed], {
 			color: "black",
 			width: 2,
 			opacity: 0.5,
+			transition: 10,
 			id: "#fixed"
 		});
 		var negsum = 0;
@@ -107,6 +109,7 @@ function divergence(div, ruler_div, mean, sd) {
 			width: 0,
 			opacity: 1,
 			fill: divergence_fill_color(negsum),
+			transition: 10,
 			id: "#divergence"
 		});
 		var size_scale = d3.scaleLinear().domain([-50, 10]).range([100, 0]);
