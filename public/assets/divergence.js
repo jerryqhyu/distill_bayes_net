@@ -25,6 +25,10 @@ function divergence(div, ruler_div, mean, sd) {
 	}
 
 	function getGaussianFunctionPoints() {
+        function gaussianPdf(x, mu, sigma) {
+            return (1 / (sigma * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x - mu, 2) / (2 * (sigma * sigma)))); 
+        }
+
 		var data = {};
 		var variable = [];
 		var fixed = [];
@@ -33,13 +37,18 @@ function divergence(div, ruler_div, mean, sd) {
 		var kl = [];
 		var reversekl = [];
 		var js = [];
+        // parameters for the p distribution (a mixture of two gaussians)
+        var mus = [-2.0, 3.0];
+        var sigmas = [0.5, 1.25];
+        var pis = [0.6, 0.4];  // mixture coeffs; must sum to one
 		for (var i = -13; i < 13; i += step_size) {
-			v = (1 / (state_sd * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(i -
-				state_mean, 2) / (2 * (state_sd * state_sd))));
-			f = ((1 / (1.3 * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(i + 2, 2) /
-				(2 * (1.3 * 1.3)))) + (1 / (0.4 * Math.sqrt(Math.PI * 2))) * Math.exp(-(
-				Math.pow(i - 1.5, 2) / (2 * (0.4 * 0.4)))) + (1 / (2 * Math.sqrt(Math.PI *
-				2))) * Math.exp(-(Math.pow(i, 2) / (2 * (4))))) / 3;
+			v = gaussianPdf(i, state_mean, state_sd); 
+				
+            f = pis[0]*gaussianPdf(i, mus[0], sigmas[0]) + pis[1]*gaussianPdf(i, mus[1], sigmas[1])
+//			f = ((1 / (1.3 * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(i + 3, 2) /
+//				(2 * (1.0 * 1.0)))) + (1 / (0.4 * Math.sqrt(Math.PI * 2))) * Math.exp(-(
+//				Math.pow(i - 1.5, 2) / (2 * (0.4 * 0.4)))) + (1 / (2 * Math.sqrt(Math.PI *
+//				2))) * Math.exp(-(Math.pow(i, 2) / (2 * (4))))) / 3;  // this is where the p distribution is definied
 			if (state === "KL") {
 				m = f * (Math.log(f) - Math.log(v));
 			} else if (state === "reverse KL") {
