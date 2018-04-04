@@ -129,9 +129,7 @@
     $$ \underset{w}{\text{maximize}} \quad L_{\text{train}}(w), $$
     <p>
         where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
-    </p>
     $$ L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right].  $$
-    <p>
         Here $\log p(\hat y(x) = y|w)$ represents the log likelihood
         <dt-fn>
             Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
@@ -155,6 +153,10 @@
         </dt-fn>
         a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit. Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden
         layer ("shallow") or no activations ("linear") we see that $L_{\text{train}}$ looks similar to $L_{\text{test}}$, so there's little danger of overfitting.
+    </p>
+
+    <p style="color:red;">
+        TODO: add a small section about adding a prior on the weights (i.e., weight decay) so that the $p(w)$ term in the VI section doesn't come as a total surprise
     </p>
 
     <h2>Bayes to the rescue</h2>
@@ -226,6 +228,11 @@
     <p style="color:red;">
         TODO: make the point (perhaps in a footnote that variational methods still typically evalute the posterior predictive via a Monte Carlo estimate, so they are not sampling-free.
     </p>
+
+    <p style="color:red;">
+    TODO: discuss how we compute gradients through the expectation $\mathbb{E}_{x, y \sim D}[ \cdot ]$ using minibatches.
+    </p>
+
 
     <h2>Sampling methods</h2>
 
@@ -381,9 +388,9 @@
         \end{aligned}$$
         Here $p(D)$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. 
         But notably this term does not depend on the parameters of $q_\phi$, which means it can be ignored while optimizing with respect to $\phi$. 
-        We've encapsulated all of the computational intractability in the $\log p(x)$ term; taking the expectation of the remaining terms over the data $(x, y) \sim D$ yields a tractable and suitable surrogate objective called the evidence lower bound (ELBO):
+        We've encapsulated all of the computational intractability in the $\log p(x)$ term; taking the expectation of the remaining terms over the data distribution $D$ yields a tractable and suitable surrogate objective called the evidence lower bound (ELBO):
         $$\begin{aligned}
-        \tilde L(\phi) &\triangleq \mathbb{E}_{D, q_\phi(w)} \left[ \log p(w, D) - \log q_\phi(w) \right] \\ &= \mathbb{E}_{x, y \sim D} \left[ \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right] \right]
+        \tilde L(\phi) &:=\mathbb{E}_{D, q_\phi(w)} \left[ \log p(w, D) - \log q_\phi(w) \right] \\ &= \mathbb{E}_{x, y \sim D} \left[ \mathbb{E}_{w \sim q_{\phi}(w)} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right] \right]
         \end{aligned}$$
         Thus the variatinal inference corresponds to optimizing the ELBO with respect to the variational parameters: 
         $$\underset{\phi}{\text{maximize}} \quad \tilde L(\phi)$$
@@ -394,14 +401,42 @@
 
     <h2>Optimizing with gradients</h2>
     <p>
-        Variational inference reframes the computation of an integral as the optimization of its lower bound, which notably implies we can use tools from the optimization literature to approximately solve our inference problem. This includes optimizing with minibatch
-        (a.k.a. "stochastic") gradients, like we did with standard neural network training. Thus, with a slight tweak, we can adapt SGD to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
+        Variational inference reframes the computation of an integral (the marginal likelihood from exact inference) as the optimization of its lower bound.
+        Notably, this implies that we can now use tools from the optimization literature to approximately solve our inference problem. 
+        This includes optimizing with minibatch (a.k.a. "stochastic") gradients, like we did with standard neural network training. 
+        Thus, with a slight tweak, we can adapt SGD to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
+    </p>
+
+    <p>
+        As discussed above, an important step of designing a variational inference algorithm is to specify the parameterized variational distribution over the weights, $q_\phi(w)$.
+        In order to explicate the learning algorithm we discuss a simple choice of variational distritbution: a diagonal-covariance Gaussian.
+        However the practical import of appropriately specifying $q$ should be emphasized; in theory we want $q$ to be be sufficiently expressive to model the true posterior $p(w|D)$, which may not be true of the diagonal-convariance Gaussian for most interesting problems.
+    </p>
+    <p>
+        Specifying $q$ as a diagonal-covariance Gaussian implies that all of the network weights $w$ are jointly distributed according to the multivariate Gaussian $q_{\mu, \sigma}(w) = \mathcal{N}(w; \mu, \sigma^2 I)$, which has log probability $\log q_{\mu, \sigma}(w) = -\frac{1}{2}(w-\mu)^T(\sigma^2 I)^{-1}(w - \mu)$
+        Note that we have chosen an notation that makes explicit the variational parameters comprising all the means and standard deviations $\phi = (\mu, \sigma)$.
+        Due to the structure of the covariance matrix, we can equivalently think of each network weight $w_i$ as a random variable distributed according to its own Gaussian distirbution with mean $\mu_i$ and standard deviation $\sigma_i$.
+    </p>
+
+    <p>
+        In order to derive a gradient-based learning algorithm, let's compare the variational inference objective function $\tilde L(\phi)$ (with our choice of $q_\phi$) to the MAP objective function $L(w)$ from standard neural network training.
+        MAP neural network training is 
+    $$ L(w) = \mathbb{E}_{x, y \sim D} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right].  $$
+        VI neural network training is 
+        $$ \tilde L(\mu, \sigma) = \mathbb{E}_{x, y \sim D} \left[ \mathbb{E}_{w \sim q_{\mu, \sigma}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\mu, \sigma}(w) \right] \right] $$
+    </p>
+
+    <p>
+        We want to optimize the VI objective with gradients, which necessitates computing $\frac{\partial}{\partial \mu} \tilde L(\mu, \sigma)$ and $\frac{\partial}{\partial \sigma} \tilde L(\mu, \sigma)$, the gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
+        Note that whereas both the MAP and VI objectives involve an expecation over the data distribution, the VI objective additionally requires an expectation over the weights distribution. 
+        We previously discussed how to pass gradients through $\mathbb{E}_{x, y \sim D}[ \cdot ]$ using minibatches.
+        The trouble is with the second expecation, since the distribution depends on the parameters that we want to optimize...
     </p>
 
     <p style="color:red;">
-        TODO: The purpose of this section is to discuss SGD vs. SVI in more detail, and provide the algorithms side-by-side. We should also cite relevant papers, e.g.,
+        TODO: finish reparam trick explanation
     </p>
-
+    
     <figure style="position:relative; width:800px; height:200px;">
         <div class="container" style="width: 800px;">
             <div id="svi-algo-box-left" style="display: table-cell;"></div>
