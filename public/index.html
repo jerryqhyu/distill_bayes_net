@@ -220,7 +220,7 @@
             Thankfully, we can use off-the-shelf optimizers from standard neural network training!
     </p>
      <p>
-        While both sampling and variational methods are of practical and historical import, we emphasize that the ladder approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training.
+        While both sampling and variational methods are of practical and historical import, we emphasize that the latter approach admits a learning algorithm, called stochastic variational infernece, that closely resembles standard neural network training.
         We devote a section to this algorithm to underscore that being Bayesian in neural network learning is well worth the modest cost in engineering overhead.
     </p>
     <p style="color:red;">
@@ -310,7 +310,7 @@
     </p>
 
     <p>
-    Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an exact solution is worth the computational cost. As network and dataset size grow, however, so grows
+    Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an asymtotically exact solution is worth the computational cost. As network and dataset size grow, however, so grows
     the cost of estimating the posterior via sampling. In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training;
     we'll pose the problem now and discuss the learning algorithm in the next section.
     <h3>Modling the approximate posterior</h3>
@@ -356,50 +356,41 @@
         \quad d_{KL}[q_\phi(w)||p(w|D)] &\coloneqq \int_{w} q_\phi(w) \log \frac{q_\phi(w)}{p(w|D)} \\
         &= \mathbb{E}_{q_\theta(w)}[\log q_\phi(w) - \log p(w|D)].
         \end{aligned}$$
-        So our optimization problem should be something like "minimize the KL-divergence between from
-        the approximate posterior to the true posterior, which we will formalize shortly. But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate,
-        and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $D_{KL}(q||p)$. You can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $D_{KL}(p||q)$ and Jensen-Shannon
-        distance. $$0.5D_{KL}(p||0.5p+0.5q) + 0.5D_{KL}(q||0.5p+0.5q)$$
+        So our optimization problem should be something like "minimize the KL-divergence from the approximate posterior to the true posterior", which we will formalize shortly. 
+        But before proceeding, it's worthwhile to condsider some properties of the KL-divergence using the above demo, which fixes a $p$ that we'd like to approximate, and shows how the parameters of a Gaussian $q$ (its mean and variance) affect $d_{KL}(q||p)$. 
     </p>
     <p>
-        By definition the KL-divergence is not symmetrical, $d_{KL}(q||p) \neq d_{KL}(p||q)$, which is why it's called a divergence instead of a distance. We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we
-        can estimate it using Monte Carlo samples. But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing
-        to model mass in $p$.
-
+        By definition the KL-divergence is not symmetrical, $d_{KL}(q||p) \neq d_{KL}(p||q)$, which is why it's called a divergence instead of a distance. 
+        We choose the $q||p$ direction for computational reasons: since the expectation is expressed over $q$ we can estimate it using Monte Carlo samples. 
+        But we should note the implications of this choice of direction; we can see in the demo that in the $q||p$ direction whereever we don't assign probability mass to $q$ there is no price paid for failing to model mass in $p$.
+        Moreover, $q$ must be 0 wherever $p$ is zero, otherwise $d_{KL}(q||p)$ blows up.
+        In the demo you can also see how the parameters of $q$ affect two alternative measures of dissimilarity: the reverse KL-divergence $d_{KL}(p||q)$ and Jensen-Shannon distance
+        <dt-fn>
+            defined as $d_{JS}(p, q) = 0.5d_{KL}(p||0.5p+0.5q) + 0.5d_{KL}(q||0.5p+0.5q)$
+        </dt-fn>.
     </p>
-
 
     <h3>Approximate inference as optimization</h3>
     <p>
-        Having acquired some intuition about how KL-divergence works, we now show that its practicality by deriving a tractable optimization problem that optimizes a bound on this quantity
-        <dt-fn>
-            As a bonus, KL-divergence has some nice mathematical properties that make it quite generally useful as well as an information theoretic interpretation as the cost in bits of mismatch between $q$ and $p$
-            <dt-cite key="shlens2014notes"></dt-cite>.
-        </dt-fn>. Regrettably, we can't directly optimize $d_{KL}(q_\phi(w)||p(w|D)$ due to the familiar frustration of not being able to compute the posterior. Fortunately, we can derive a tractable and closely related quantity that is
-        equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
-        $$\begin{aligned} d_{KL} [q_\phi(w)||p(w|D)] &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|D) \right]
+        Having acquired some intuition about the KL-divergence---our notion of dissimilarity between the approximate and true posteriors---we now derive an optimization problem that minimizes this quantity. 
+        Regrettably, we can't directly optimize $d_{KL}(q_\phi(w)||p(w|D)$ due to the familiar frustration of not being able to compute the posterior.
+        Fortunately, we can derive a tractable and closely related quantity that is equal to the KL-divergence up to an additive constant and thus suitable as a surrogate objective.
+        $$\begin{aligned} d_{KL} (q_\phi(w)||p(w|D)) &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w|D) \right]
         \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, D) - \log p(D) \right]
-        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) \right] - \mathbb{E}_{q_\phi(w)} \left[ \log p(w, D)\right] - \log p(D)
+        \\ &= \mathbb{E}_{q_\phi(w)} \left[ \log q_\phi(w) + \log p(w, D)\right] - \log p(D)
         \end{aligned}$$
-        Here $p(D)$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. But notably it does not depend on the parameters
-        of $q_\phi$, which means we can ignore during optimization. We've encapsulated all of the computational intractability into the $\log p(x)$ term, which we can ignore since it doesn't depend on $q$, leaving a surrogate objective called the
-        evidence lower bound, which we here pose as a maximization problem for conventional consistency.
-        $$ \tilde L(\phi) \triangleq \mathbb{E}_{q_\phi(w)} \log p(w, D) - \left[ \log q_\phi(w) \right] $$
-        Thus the variatinal inference
-        corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \tilde L(\phi)$$
+        Here $p(D)$ represents the marginal data likelihood; we know this quantity to be intractable to compute since it was the demoninoator in Bayes' rule. 
+        But notably this term does not depend on the parameters of $q_\phi$, which means it can be ignored while optimizing with respect to $\phi$. 
+        We've encapsulated all of the computational intractability in the $\log p(x)$ term; taking the expectation of the remaining terms over the data $(x, y) \sim D$ yields a tractable and suitable surrogate objective called the evidence lower bound (ELBO):
+        $$\begin{aligned}
+        \tilde L(\phi) &\triangleq \mathbb{E}_{D, q_\phi(w)} \left[ \log p(w, D) - \log q_\phi(w) \right] \\ &= \mathbb{E}_{x, y \sim D} \left[ \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\phi}(w) \right] \right]
+        \end{aligned}$$
+        Thus the variatinal inference corresponds to optimizing the ELBO with respect to the variational parameters: 
+        $$\underset{\phi}{\text{maximize}} \quad \tilde L(\phi)$$
     </p>
-
     <p>
-        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify. $$\tilde L(x,y) \triangleq \mathbb{E}_{w \sim q_{\phi(w)}} \left[ \log p(\hat y(x) =
-        y|w) + \log p(w) - \log q_{\phi}(w) \right]$$ Thus variational inference corresponds to the following optimization problem: $$\underset{\phi}{\text{maximize}} \quad \mathbb{E}_{x, y \sim D_{train}} \left[ \tilde L(x,y)
-        \right]$$
+        The probability density function of $q_\phi(w)$, which depends on its parameters $\phi$ in addition to $w$, is a design choice that we will need to specify. 
     </p>
-
-    <p style="color:red;">
-        TODO: reconcile the difference in call signature between $L(x,y)$ and $L_{\text{train}}(w)$.
-    </p>
-
-
 
     <h2>Optimizing with gradients</h2>
     <p>
