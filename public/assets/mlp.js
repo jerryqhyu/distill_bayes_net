@@ -435,9 +435,9 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	function dragging(d) {
-		var new_x = d3.event.x;
-		var new_y = d3.event.y;
-		console.log([new_x, new_y]);
+		var new_x = d3.mouse(this)[0];
+		var new_y = d3.mouse(this)[1];
+
 		d3.select(this).attr("cx", new_x).attr("cy", new_y);
 		net.getLayer(1).setWeights([
             [inv_x_scale(new_x)],
