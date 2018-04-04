@@ -26,7 +26,7 @@ function divergence(div, ruler_div, mean, sd) {
 
 	function getGaussianFunctionPoints() {
         function gaussianPdf(x, mu, sigma) {
-            return (1 / (sigma * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x - mu, 2) / (2 * (sigma * sigma)))); 
+            return (1 / (sigma * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(x - mu, 2) / (2 * (sigma * sigma))));
         }
 
 		var data = {};
@@ -42,8 +42,8 @@ function divergence(div, ruler_div, mean, sd) {
         var sigmas = [0.5, 1.25];
         var pis = [0.6, 0.4];  // mixture coeffs; must sum to one
 		for (var i = -13; i < 13; i += step_size) {
-			v = gaussianPdf(i, state_mean, state_sd); 
-				
+			v = gaussianPdf(i, state_mean, state_sd);
+
             f = pis[0]*gaussianPdf(i, mus[0], sigmas[0]) + pis[1]*gaussianPdf(i, mus[1], sigmas[1])
 //			f = ((1 / (1.3 * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(i + 3, 2) /
 //				(2 * (1.0 * 1.0)))) + (1 / (0.4 * Math.sqrt(Math.PI * 2))) * Math.exp(-(
@@ -113,6 +113,7 @@ function divergence(div, ruler_div, mean, sd) {
 		for (var i = 0; i < data.divergence.length; i++) {
 			negsum -= data.divergence[i].y;
 		}
+		console.log(data.divergence[260]);
 		divergence_curve_plotter.plot_path([data.divergence], {
 			color: "darkgrey",
 			width: 0,

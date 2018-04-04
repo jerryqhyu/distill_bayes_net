@@ -34,7 +34,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             batch_size: param.batch_size
         });
         avg_loss = [];
-		last_10_samples = [];
+		last_training_samples = [];
         plot();
         this.stop();
         epoch_count = 0;
@@ -60,15 +60,19 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     var var_dist_data = new Array(param.var_n * param.var_m);
     var avg_loss = [];
     var samples = sample_from_seed("Toronto", this.num_samples, 2);
-    var last_10_samples = [];
+    
+    //define a neural network
+    var epoch_count = 0;
+    var net = make_preset_net();
+
+    var last_training_samples = new Array(param.train_points.length);
+    for (var i = 0; i < last_training_samples.length; i++) {
+        last_training_samples[i] = {x: net.getLayer(1).mu[0].w[0], y: net.getLayer(1).mu[1].w[0]};
+    }
     var isocontours = new Array(5);
     for (var i = 0; i < 5; i++) {
         isocontours[i] = new Array(Math.floor((Math.PI * 2 + param.step_size) / param.step_size + 1));
     }
-
-    //define a neural network
-    var epoch_count = 0;
-    var net = make_preset_net();
 
     var trainer = new net_lib.Trainer(net, {
         method: 'sgd',
@@ -88,6 +92,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         for (var j = 0; j < param.train_points.length; j++) {
             x = new net_lib.Vol([param.train_points[j]]);
             trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
+            last_training_samples[j] = {x: net.getLayer(1).sampled_w[0].w[0], y: net.getLayer(1).sampled_w[1].w[0]};
         }
         epoch_count++;
     }
@@ -187,22 +192,21 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             opacity: 0.75,
             id: "#mean"
         });
-        if (last_10_samples.length === 10) {
-            last_10_samples.shift();
-        }
-        last_10_samples.push({x: net.getLayer(1).sampled_w[0].w[0], y: net.getLayer(1).sampled_w[1].w[0]});
-        train_loss_plotter.plot_points(last_10_samples, {
+
+        train_loss_plotter.plot_points(last_training_samples, {
             stroke: "black",
             color: "darkgreen",
             size: 4,
             opacity: 0.5,
+            transition: 1,
             id: "#pts"
         });
-        valid_loss_plotter.plot_points(last_10_samples, {
+        valid_loss_plotter.plot_points(last_training_samples, {
             stroke: "black",
             color: "darkgreen",
             size: 4,
             opacity: 0.5,
+            transition: 1,
             id: "#pts"
         });
     }
