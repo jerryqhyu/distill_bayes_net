@@ -126,15 +126,11 @@
         First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output
         pairs. Then neural network training corresponds to the following optimization problem:
     </p>
-    <p>
-        $\underset{w}{\text{maximize}} \quad L_{\text{train}}(w)$
-    </p>
+    $$ \underset{w}{\text{maximize}} \quad L_{\text{train}}(w), $$
     <p>
         where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
     </p>
-    <p>
-        $L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right]$ .
-    </p>
+    $$ L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right].  $$
     <p>
         Here $\log p(\hat y(x) = y|w)$ represents the log likelihood
         <dt-fn>
@@ -176,20 +172,17 @@
 
     <h3>Exact Bayesian inference</h3>
     <p>
-        Bayes' rule tells us how to compute the posterior: $$ p(w | D) = \dfrac{p(D|w)p(w)}{p(D)} = \dfrac{p(D|w)p(w)}{\int_{w'} p(D|w')p(w') dw'} . $$ Computing the posterior in this way is sometimes called <i>exact inference</i>,
+        Bayes' rule tells us how to compute the posterior: 
+        $$ p(w | D) = \dfrac{p(D|w)p(w)}{p(D)} = \dfrac{p(D|w)p(w)}{\int_{w'} p(D|w')p(w') dw'} . $$ 
+        Computing the posterior in this way is sometimes called <i>exact inference</i>,
         simply to distinguishes it from approximations which we will later find to be more practical. Exact inference necessitates specifying both the <i>prior</i> $p(w)$, and the <i>likelihood</i> $p(D | w)$. While the posterior distribution
         is easily expressed, it is typically expensive to compute due to the pesky integral over all possible values of $w$. For most neural network we can't evaluate this integral analytically. We could instead approximate it numerically, but this will
         only be practical for small neural networks, since $w$ represents all the weights and biases, so it becomes very high dimensional for deep networks.
     </p>
     <p>
         So we will need to address this computational issue, which we do in the next section. In the meantime, let's consider another upside of using the posterior distribution over weights $p(w|D)$ instead of the estimate $w^*$ from standard neural
-        network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of new input $x$,
-    </p>
-    <p>
-        $p(\hat y(x)| D) = \int_{w} p(\hat y(x)| w) p(w | D) dw = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)]$,
-        <!-- why not p(w| D, x) here...-->
-    </p>
-    <p>
+        network training. In particular, knowing the posterior allows us to do probabilistic prediction by expressing a distribution over predicted output $\hat y$ as a function of the new input $x$,
+        $$ p(\hat y(x)| D) = \int_{w} p(\hat y(x)| w) p(w | D) dw = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)], $$
         which we call the <i>predictive distribution</i>. Notice that we can express this distribution as the expectation of the single network likelihood under the posterior $p(w|D)$. This yields a nice interpretation of the predictive distribution
         as an <i>infinite ensemble</i> of networks
         <dt-cite key="blundell2015weight"></dt-cite>, with each network's contribution to the overall prediction weighted by the posterior likelihood of its weights given the training data. Also, it implies that we can approximate this infinite ensemble using a finite number of Monte
@@ -218,7 +211,7 @@
         But as we will see, it is possible to approximately compute one or both of these objects via clever algorithms, which can be broadly categorized as either sampling-based or variational.
     </p>
     <p>
-           <i>Sampling methods</i> approximately compute $p(\hat y(x)|D) = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1  sampling-free.\ldots w_N\}$ whose empirial distribution matches $p(w|D)$ in the limit of large $N$.
+           <i>Sampling methods</i> approximately compute $p(\hat y(x)|D) = \mathbb{E}_{p(w|D)}[p(\hat y(x)|w)$ by genearting a finite set of network weights $\{w_1, \ldots, w_N\}$ whose empirial distribution matches $p(w|D)$ in the limit of large $N$.
             Loosely speaking, the algorithmic design challenge is to relatively quickly produce a modest number ($N$ not too big) of network samples that yield a decent approximation of $p(\hat y(x)| D)$
     </p>
     <p>
@@ -242,7 +235,7 @@
         In particular, they generate a set of neural networks asymtotically distributed according to $p(w|D)$ in order to approximate $p(\hat y(x)|D)$ as the empircal expectation of single-network predictions $p(\hat y(x)|w)$ under the sampled networks.
         Monte Carlo integration is widely applicable, but it isn't always practical.
         We can see this by deriving a naive approximation to one of our previously identified difficult integrals: the marginal data likelihood $p(D)$.
-        $$ p(D) = \int_{w} p(D|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(D|w) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(D|w_i).$$
+        $$ p(D) = \int_{w} p(D|w)p(w) dw = \mathbb{E}_{p(w)} \left[ p(D|w) \right]  \approx \frac{1}{N} \sum_{i=1}^{N} p(D|w_i). $$
         Here the sample set of network weights $\{w_1 \ldots w_N\}$ are drawn independently from the prior $p(w)$.
     </p>
 
@@ -264,7 +257,7 @@
         We use the Markov chain to generate candidate samples and then stochastically accept them with probability $a$, expressed as the acceptance rate <dt-fn>
             Here we assume a symmetric proposal distribution to simplify the expression of $a$, but this assumption is not necessary .
         </dt-fn> is defined as
-        $$ a = \frac{p(D, w')}{p(D, w_t)}$$
+        $$ a = \frac{p(D, w')}{p(D, w_t)} .$$
 
         The accept rate is also equivalent to the ratio of posterior probabilities under the proposed and most recent samples $\frac{p(w'|D)}{p(w_t| D)}$.
         This is because $p(D, w) = p(w|D)p(D)$ is equal to the posterior up to a multiplicative constant $p(D)$ that is the same for all $w$; here we've leveraged the fact that we can compute $p(D, w)$ but not $p(w|D)$.
