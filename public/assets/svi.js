@@ -60,7 +60,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     var var_dist_data = new Array(param.var_n * param.var_m);
     var avg_loss = [];
     var samples = sample_from_seed("Toronto", this.num_samples, 2);
-    
+
     //define a neural network
     var epoch_count = 0;
     var net = make_preset_net();
@@ -195,17 +195,17 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
 
         train_loss_plotter.plot_points(last_training_samples, {
             stroke: "black",
-            color: "darkgreen",
-            size: 4,
-            opacity: 0.5,
+            color: "darkgrey",
+            size: 2,
+            opacity: 1,
             transition: 1,
             id: "#pts"
         });
         valid_loss_plotter.plot_points(last_training_samples, {
             stroke: "black",
-            color: "darkgreen",
-            size: 4,
-            opacity: 0.5,
+            color: "darkgrey",
+            size: 2,
+            opacity: 1,
             transition: 1,
             id: "#pts"
         });

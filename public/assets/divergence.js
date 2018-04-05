@@ -41,14 +41,11 @@ function divergence(div, ruler_div, mean, sd) {
         var mus = [-2.0, 3.0];
         var sigmas = [0.5, 1.25];
         var pis = [0.6, 0.4];  // mixture coeffs; must sum to one
-		for (var i = -13; i < 13; i += step_size) {
+		for (var i = -20; i < 20; i += step_size) {
 			v = gaussianPdf(i, state_mean, state_sd);
 
             f = pis[0]*gaussianPdf(i, mus[0], sigmas[0]) + pis[1]*gaussianPdf(i, mus[1], sigmas[1])
-//			f = ((1 / (1.3 * Math.sqrt(Math.PI * 2))) * Math.exp(-(Math.pow(i + 3, 2) /
-//				(2 * (1.0 * 1.0)))) + (1 / (0.4 * Math.sqrt(Math.PI * 2))) * Math.exp(-(
-//				Math.pow(i - 1.5, 2) / (2 * (0.4 * 0.4)))) + (1 / (2 * Math.sqrt(Math.PI *
-//				2))) * Math.exp(-(Math.pow(i, 2) / (2 * (4))))) / 3;  // this is where the p distribution is definied
+
 			if (state === "KL") {
 				m = f * (Math.log(f) - Math.log(v));
 			} else if (state === "reverse KL") {
