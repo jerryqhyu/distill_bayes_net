@@ -27,9 +27,7 @@ function full_bnn_view(curve_div, graph_div) {
 	    samples = sample_from_seed("Toronto", 10, 144);
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
-            method: 'sgd',
             learning_rate: param.learning_rate * 2,
-            momentum: param.momentum,
             batch_size: param.validation_points.length * 2
         });
         plot();
@@ -46,9 +44,7 @@ function full_bnn_view(curve_div, graph_div) {
     var samples = sample_from_seed("Toronto", 10, 144);
 
     var trainer = new net_lib.Trainer(net, {
-        method: 'sgd',
         learning_rate: param.learning_rate * 2,
-        momentum: param.momentum,
         batch_size: param.validation_points.length * 2
     });
 

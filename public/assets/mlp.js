@@ -5,7 +5,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	this.start = function() {
 		if (!training_interval) {
 			training_interval = d3.timer(train_epoch, 50);
-			plot_interval = d3.timer(plot00);
+			plot_interval = d3.timer(plot);
 			if (obtaining_param) {
 				net.getLayer(1).freeze_weights();
 			} else {
@@ -30,23 +30,14 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	this.reset = function() {
 		deep_net = make_deep_net();
 		deep_trainer = new net_lib.Trainer(deep_net, {
-			method: 'sgd',
-			learning_rate: param.learning_rate,
-			momentum: param.momentum,
 			batch_size: param.batch_size
 		});
 		linear_net = make_linear_net();
 		linear_trainer = new net_lib.Trainer(linear_net, {
-			method: 'sgd',
-			learning_rate: param.learning_rate,
-			momentum: param.momentum,
 			batch_size: param.batch_size
 		});
 		shallow_net = make_shallow_net();
 		shallow_trainer = new net_lib.Trainer(shallow_net, {
-			method: 'sgd',
-			learning_rate: param.learning_rate,
-			momentum: param.momentum,
 			batch_size: param.batch_size
 		});
 		if (radio_button_state() === 'Linear') {
@@ -118,23 +109,14 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	//define a neural network
 	var deep_net = make_deep_net();
 	var deep_trainer = new net_lib.Trainer(deep_net, {
-		method: 'sgd',
-		learning_rate: param.learning_rate,
-		momentum: param.momentum,
 		batch_size: param.batch_size
 	});
 	var shallow_net = make_shallow_net();
 	var shallow_trainer = new net_lib.Trainer(shallow_net, {
-		method: 'sgd',
-		learning_rate: param.learning_rate,
-		momentum: param.momentum,
 		batch_size: param.batch_size
 	});
 	var linear_net = make_linear_net();
 	var linear_trainer = new net_lib.Trainer(linear_net, {
-		method: 'sgd',
-		learning_rate: param.learning_rate,
-		momentum: param.momentum,
 		batch_size: param.batch_size
 	});
 	var net = deep_net;
@@ -408,7 +390,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		train_loss_plotter.plot_points(data, {
 			stroke: "black",
 			color: "darkslategray",
-			size: 5,
+			size: 7,
 			opacity: 1,
 			transition: 10,
 			on_drag: on_drag,
@@ -418,7 +400,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		valid_loss_plotter.plot_points(data, {
 			stroke: "black",
 			color: "darkslategray",
-			size: 5,
+			size: 7,
 			opacity: 1,
 			transition: 10,
 			on_drag: on_drag,

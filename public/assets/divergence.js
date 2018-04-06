@@ -110,7 +110,6 @@ function divergence(div, ruler_div, mean, sd) {
 		for (var i = 0; i < data.divergence.length; i++) {
 			negsum -= data.divergence[i].y;
 		}
-		console.log(data.divergence[260]);
 		divergence_curve_plotter.plot_path([data.divergence], {
 			color: "darkgrey",
 			width: 0,

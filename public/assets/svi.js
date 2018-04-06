@@ -28,9 +28,6 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     this.reset = function() {
         net = make_preset_net();
         trainer = new net_lib.Trainer(net, {
-            method: 'sgd',
-            learning_rate: param.learning_rate,
-            momentum: param.momentum,
             batch_size: param.batch_size
         });
         avg_loss = [];
@@ -75,9 +72,6 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     }
 
     var trainer = new net_lib.Trainer(net, {
-        method: 'sgd',
-        learning_rate: param.learning_rate,
-        momentum: param.momentum,
         batch_size: param.batch_size,
         l2_decay: param.l2_decay
     });
