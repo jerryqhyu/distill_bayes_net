@@ -409,7 +409,7 @@
         TODO: opportunity to cite papers like normalizing flows here
     </p>
     <p>
-        Specifying $q$ as a diagonal-covariance Gaussian implies that all of the network weights $w$ are jointly distributed according to the multivariate Gaussian $q_{\mu, \sigma}(w) = \mathcal{N}(w; \mu, \sigma^2 I)$, which has log probability $\log q_{\mu, \sigma}(w) = -\frac{1}{2}(w-\mu)^T(\sigma^2 I)^{-1}(w - \mu)$
+        Specifying $q$ as a diagonal-covariance Gaussian implies that all of the network weights $w$ are jointly distributed according to the multivariate Gaussian $q_{\mu, \sigma}(w) = \mathcal{N}(\mu, \sigma^2 I)$, which has log probability $\log q_{\mu, \sigma}(w) = -\frac{1}{2}(w-\mu)^T(\sigma^2 I)^{-1}(w - \mu)$
         Note that we have chosen an notation that makes explicit the variational parameters comprising all the means and standard deviations $\phi = (\mu, \sigma)$.
         Due to the structure of the covariance matrix, we can equivalently think of each network weight $w_i$ as a random variable distributed according to its own Gaussian distirbution with mean $\mu_i$ and standard deviation $\sigma_i$.
     </p>
@@ -439,6 +439,7 @@
         &= \underbrace{\frac{1}{N} \sum_{i=1}^{N} \nabla_w \left[  \log p(\hat y(x_i) = y_i|w) + \log p(w) \right]}_{g_{\text{batch}}(w)}.
     \end{aligned}$$
     We call this computation of the exact gradient $g_{\text{batch}}(w)$ the <i>batch gradient</i> because it involves averaging over the entire batch of training data at once.
+    We used the independence of the data from the weights to move the gradient operator $\nabla_w$ inside the expectation over training data $\mathbb{E}_{x,y}$.
     Each $\nabla_w$ inside the sum can be computed efficiently with backpropagation, and the overall average is parallelizable.  
     The algoritm that iteratively updates the weights according to $w \leftarrow w + \nabla_{w}L(w)$ is thus called batch gradient ascent
     </p>
@@ -456,8 +457,32 @@
     </p>
 
    <h3>The reparameterization gradient estimator</h3>
+   <p>
+   Now lets turn our attention to the gradient-based optimization of the variational objective $\tilde L(\mu, \sigma)$.
+   $$ \tilde L(\mu, \sigma) = \mathbb{E}_{x, y \sim D} \left[ \mathbb{E}_{w \sim q_{\mu, \sigma}} \left[ \log p(\hat y(x) = y|w) + \log p(w) - \log q_{\mu, \sigma}(w) \right] \right] $$
+   We will need to compute the gradients of the objective with respect to the parameters, $\nabla_\mu \tilde L(\mu, \sigma)$ and $\nabla_\sigma \tilde L(\mu, \sigma)$
+   We saw earlier how the independence of the data from the weights lets us move the gradient operator $\nabla$ inside the outer-most expectation.
+   $$ \nabla_{\mu, \sigma} \tilde L(\mu, \sigma) = \frac{1}{N} \sum_{i=1}^{N} \left[\nabla_{\mu, \sigma} \mathbb{E}_{w \sim q_{\mu, \sigma}} \left[ \log p(\hat y(x_i) = y_i|w) + \log p(w) - \log q_{\mu, \sigma}(w) \right] \right] $$
+   Unfortunately, that's as far as we can move $\nabla$, since the next expectation is over a distribution that depends on the parameters $\mu$ and $\sigma$ that we're trying to optimize.
+   </p>
     <p style="color:red;">
-        TODO: finish reparam trick explanation, list the assumptions of the reparameterization estimator and mention what we can do if the variational distribution over weights is discrete (cite Luisoz work on binary nnets)
+        TODO: more explication here
+    </p>
+    <p>
+    $$ w \sim \mathcal{N}(\mu, \sigma I) $$
+    This can be reparameterized as $w = \mu + \sigma \epsilon$ with $\epsilon \sim \mathcal{N}(0, I)$.
+
+    <!-- $$ \nabla_{\mu, \sigma} \mathbb{E}_{w \sim q_{\mu, \sigma}} \left[ \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]  = $$ -->
+
+    Putting this all together (including the minibatch trick from before) yields the SVI gradient estimator:
+    $$ \nabla_{\mu, \sigma} \tilde L(\mu, \sigma) \approx \underbrace{\frac{M}{N} \sum_{i=1}^{N_m} \sum_{j=1}^{S} \nabla_w \left[  \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]}_{g_{\text{SVI}}(w)}. $$
+    Notice that we've introduced a new hyperparameter $S$ which sets the number of samples from $p(\epsilon)$ we draw to Monte Carlo estimate the expected log likelihood. 
+    We can think of this as the number of sampled networks we consider during training. 
+    Perhaps surprisingly, we can often get away with a small value of $S$ at training time ($S=1$ is commonly used).
+    At test time, however, we can increase the number of samples used to estimate the posterior predictive distribution.
+    </p>
+    <p style="color:red;">
+        TODO: list the exact assumptions of the reparameterization estimator and mention what we can do if the variational distribution over weights is discrete (cite Luisoz work on binary nnets)
     </p>
 
     <h3>Stochastic variational inference</h3>
