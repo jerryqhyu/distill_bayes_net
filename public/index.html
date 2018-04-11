@@ -79,7 +79,7 @@
                 <div class='table-cell-wrap'>
                     <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
                         The neural network objective $L$ is a function of both the weights and the dataset. Here we show $L_{\text{train}}$ and $L_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
-                        pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient descent. Notice how weight values affect both the training
+                        pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient ascent. Notice how weight values affect both the training
                         and test objectives (left, right) and the network predictions changes (below).
                     </figcaption>
                 </div>
@@ -397,7 +397,7 @@
         Variational inference reframes the computation of an integral (the marginal likelihood from exact inference) as the optimization of its lower bound.
         Notably, this implies that we can now use tools from the optimization literature to approximately solve our inference problem.
         This includes optimizing with minibatch (a.k.a. "stochastic") gradients, like we did with standard neural network training.
-        Thus, with a slight tweak, we can adapt SGD to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
+        Thus, with a slight tweak, we can adapt stochastic gradient ascent to variational inference in an algorithm called <i> Stochastic Variational Inference</i>.
     </p>
 
     <p>
@@ -425,19 +425,34 @@
     <p>
     We want to optimize the VI objective with gradients, which necessitates computing $\nabla_\mu \tilde L(\mu, \sigma)$ and $\nabla_\sigma \tilde L(\mu, \sigma)$, the vector of partial gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
         Note that whereas both the MAP and VI objectives involve an expecation over the data distribution, the VI objective additionally requires an expectation over the weights distribution.
-        We can use the standard stochastic gradient descent algorithm, which we discuss next, to compute gradients through the expectation over data $\mathbb{E}_{x, y \sim D}$ using minibatches.
+        We can use the standard stochastic gradient ascent algorithm, which we discuss next, to compute gradients through the expectation over data $\mathbb{E}_{x, y \sim D}$ using minibatches.
         The trouble is with the second expecation $\mathbb{E}_{w \sim q_{\mu, \sigma}}$ since the distribution $q_{\mu, \sigma}$ depends on the parameters $\mu$ and $\sigma$ that we want to optimize.
     </p>
 
-    <h3>Stochastic gradient descent</h3>
-    Let's revisit a detail we skipped over in earlier on: how to compute gradients through the expectation $\mathbb{E}_{x, y \sim D}$ over the training data using minibatches.
-    For $M$ minibatches $\{D^{m}\}$ of size $N$ we have
-    $$ \nabla_w L(w) = \frac{1}{M} \sum_{m=1}^{M} \nabla_w L^{m}(w) = \sum_{m=1}^{M} \nabla_w \mathbb{E}_{x,y \sim D^{m}} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right] $$
-    We can compute the minibatch gradient $\nabla_w L^{m}$ empirically for the $m$-th minibatch using backpropagation by averaging over the $N$ training examples comprising it, 
-    $$\nabla_w L^{m}(w) =  \frac{1}{N} \sum_{i}^{N} \nabla_{w} \left[  \log p(\hat y(x_i) = y_i | w)  + \log p(w) \right] $$
+    <h3>Stochastic gradient ascent</h3>
+    Let's revisit a detail we skipped over in earlier on: how to compute gradients with respect to $w$ of the single network log likeihood. 
+    The quantity we want to compute is $\nabla_w L(w)$. 
+    We can show that the gradient of the average over training examples is equivalent to the average over the $N$ training examples of individual gradients as follows: 
+    $$ \begin{aligned}
+        \nabla_w L(w) &= \nabla_w \mathbb{E}_{x,y \sim D} \left[ \log p(\hat y(x_i) = y_i|w) + \log p(w) \right] \\
+        &= \nabla_w \frac{1}{N} \sum_{i=1}^{N} \left[  \log p(\hat y(x_i) = y_i|w) + \log p(w) \right] \\
+        &= \underbrace{\frac{1}{N} \sum_{i=1}^{N} \nabla_w \left[  \log p(\hat y(x_i) = y_i|w) + \log p(w) \right]}_{g_{\text{batch}}(w)}.
+    \end{aligned}$$
+    We call this computation of the exact gradient $g_{\text{batch}}(w)$ the <i>batch gradient</i> because it involves averaging over the entire batch of training data at once.
     Each $\nabla_w$ inside the sum can be computed efficiently with backpropagation, and the overall average is parallelizable.  
-    In practice is is common to take a gradient step immediately after each computation of $\nabla_w L^{m}$. 
-    Formally this algorithm is called stochastic gradient descent (SGD).
+    The algoritm that iteratively updates the weights according to $w \leftarrow w + \nabla_{w}L(w)$ is thus called batch gradient ascent
+    </p>
+    <p>
+    Whereas batch gradient ascent requires iterating over the entire training data for every update to $w$, we might reasonably assume that the gradient $\nabla_w L(w)$ can be <i>estimated</i> by averaging over a smaller subset of training examples.
+    By dividing the training data into $M$ partitions called "minibatches" we can compute this approximate gradient by averaging over the $N_m$ samples of the $m$-th minibatch:
+    $$ \nabla_w L(w) \approx \underbrace{\frac{M}{N} \sum_{i=1}^{N_m} \nabla_w \left[  \log p(\hat y(x_i) = y_i|w) + \log p(w) \right]}_{g_{\text{SGA}}(w)}$$
+
+    Estimating the gradient in this way is called <i>stochastic gradient ascent</i> (SGA).
+    It speeds up the training by roughly a factor of $M$ so long as the minibatches are large enough so that $g_{\text{SGA}}(w)$ is a reasonably good approximation to $g_{\text{batch}}(w)$.
+    Interestingly, the deviation of the approximate gradient from the true gradient (a.k.a. gradient noise) can actually provide some additional benefits including mitigating overfitting.
+    </p>
+    <p style="color:red;">
+        TODO: cite papers on the theory of SGD here. also maybe talk more about the role of gradient noise as a regularizer, since we will use that concept later on
     </p>
 
    <h3>The reparameterization gradient estimator</h3>
@@ -459,7 +474,7 @@
 
     <pre id="hello-world-code">
         \begin{algorithmic}
-        \PROCEDURE{SGD}{$x, y, w$}
+        \PROCEDURE{SGA}{$x, y, w$}
             \WHILE {training not converged}
                 \STATE $g = \text{BACKPROP}(x, y, w)$
                 \STATE $w = w + \alpha g$
@@ -569,7 +584,7 @@
     To fix this, we argued that we should instead integrate over all possible parameter values.
     However, because this was too expensive to do exactly, we turned this integration problem into an optimization problem, with extra noise.
 
-    Why not just add noise to SGD in the first place, and skip all the math? [citations, e.g. dropout, and]
+    Why not just add noise to SGA in the first place, and skip all the math? [citations, e.g. dropout, and]
     The answer is that this theory tells us how to tune the amount of noise on a per-parameter basis, automatically.
 
     Also: Overfitting, small data, and uncertainty.
@@ -667,7 +682,7 @@
             });
         });
 
-        // SGD algo box
+        // SGA algo box
         var code = document.getElementById("hello-world-code").textContent;
         var code2 = document.getElementById("hello-world-code2").textContent;
         var parent_left = document.getElementById("svi-algo-box-left");
