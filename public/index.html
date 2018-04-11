@@ -226,10 +226,6 @@
         TODO: make the point (perhaps in a footnote that variational methods still typically evalute the posterior predictive via a Monte Carlo estimate, so they are not sampling-free.
     </p>
 
-    <p style="color:red;">
-    TODO: discuss how we compute gradients through the expectation $\mathbb{E}_{x, y \sim D}[ \cdot ]$ using minibatches.
-    </p>
-
 
     <h2>Sampling methods</h2>
 
@@ -427,15 +423,31 @@
     </p>
 
     <p>
-        We want to optimize the VI objective with gradients, which necessitates computing $\frac{\partial}{\partial \mu} \tilde L(\mu, \sigma)$ and $\frac{\partial}{\partial \sigma} \tilde L(\mu, \sigma)$, the partial gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
+    We want to optimize the VI objective with gradients, which necessitates computing $\nabla_\mu \tilde L(\mu, \sigma)$ and $\nabla_\sigma \tilde L(\mu, \sigma)$, the vector of partial gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
         Note that whereas both the MAP and VI objectives involve an expecation over the data distribution, the VI objective additionally requires an expectation over the weights distribution.
-        We previously discussed how to pass gradients through $\mathbb{E}_{x, y \sim D}[ \cdot ]$ using minibatches.
-        The trouble is with the second expecation, since the distribution depends on the parameters that we want to optimize.
+        We can use the standard stochastic gradient descent algorithm, which we discuss next, to compute gradients through the expectation over data $\mathbb{E}_{x, y \sim D}$ using minibatches.
+        The trouble is with the second expecation $\mathbb{E}_{w \sim q_{\mu, \sigma}}$ since the distribution $q_{\mu, \sigma}$ depends on the parameters $\mu$ and $\sigma$ that we want to optimize.
     </p>
 
-    <h3>The reparameterization gradient estimator</h3>
+    <h3>Stochastic gradient descent</h3>
+    Let's revisit a detail we skipped over in earlier on: how to compute gradients through the expectation $\mathbb{E}_{x, y \sim D}$ over the training data using minibatches.
+    For $M$ minibatches $\{D^{m}\}$ of size $N$ we have
+    $$ \nabla_w L(w) = \frac{1}{M} \sum_{m=1}^{M} \nabla_w L^{m}(w) = \sum_{m=1}^{M} \nabla_w \mathbb{E}_{x,y \sim D^{m}} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right] $$
+    We can compute the minibatch gradient $\nabla_w L^{m}$ empirically for the $m$-th minibatch using backpropagation by averaging over the $N$ training examples comprising it, 
+    $$\nabla_w L^{m}(w) =  \frac{1}{N} \sum_{i}^{N} \nabla_{w} \left[  \log p(\hat y(x_i) = y_i | w)  + \log p(w) \right] $$
+    Each $\nabla_w$ inside the sum can be computed efficiently with backpropagation, and the overall average is parallelizable.  
+    In practice is is common to take a gradient step immediately after each computation of $\nabla_w L^{m}$. 
+    Formally this algorithm is called stochastic gradient descent (SGD).
+    </p>
+
+   <h3>The reparameterization gradient estimator</h3>
     <p style="color:red;">
         TODO: finish reparam trick explanation, list the assumptions of the reparameterization estimator and mention what we can do if the variational distribution over weights is discrete (cite Luisoz work on binary nnets)
+    </p>
+
+    <h3>Stochastic variational inference</h3>
+    <p style="color:red;">
+        TODO: put it all together and segueway to the algo box
     </p>
 
     <figure style="position:relative; width:800px; height:200px;">
