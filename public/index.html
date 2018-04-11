@@ -118,27 +118,28 @@
                 </div>
             </div>
         </div>
-    </figure>
+    </figure->
 
 
 
     <p>
         First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output
         pairs. Then neural network training corresponds to the following optimization problem:
-    </p>
     $$ \underset{w}{\text{maximize}} \quad L_{\text{train}}(w), $$
-    <p>
         where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
-    $$ L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) \right].  $$
-        Here $\log p(\hat y(x) = y|w)$ represents the log likelihood
-        <dt-fn>
-            Adding weight decay to this objective is easy, we simply add a prior on $w$ to the log likelihood, expressed as $\log p(w) = \lambda ||w||_2^2$ (up to an additive constant).
-        </dt-fn>
-        of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples
+    $$ L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right].  $$
+        Here $\log p(\hat y(x) = y|w)$ represents the log likelihood of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples
         <dt-fn>
             We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
             (i.e., multinomial) distribution
-        </dt-fn>. Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
+        </dt-fn>. 
+        Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
+    </p>
+    <p>
+        The $\log p(w)$ term regularizes the optimization according to our prior belief about the values of $w$. 
+        For example we can realize weight decay by specifying $\log p(w) = -\lambda ||w||_2^2$ (plus an additive constant that doesn't depend on $w$).
+        Here $\lambda$ is a hyperparameter that sets the relative importance of achieveing a small-weights solution.
+        Incidentally this specification of $\log p(w)$ correpsonds to an a priori belief that $w$is distributed according to a spherical Gaussian with variance $\frac{2}{\lambda}$.
     </p>
     <p>
         During training we optimize $L_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $L_{\text{test}}(w)$. In the demo above, we plot these functions side-by-side
@@ -153,10 +154,6 @@
         </dt-fn>
         a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit. Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden
         layer ("shallow") or no activations ("linear") we see that $L_{\text{train}}$ looks similar to $L_{\text{test}}$, so there's little danger of overfitting.
-    </p>
-
-    <p style="color:red;">
-        TODO: add a small section about adding a prior on the weights (i.e., weight decay) so that the $p(w)$ term in the VI section doesn't come as a total surprise
     </p>
 
     <h2>Bayes to the rescue</h2>
@@ -412,6 +409,9 @@
         In order to explicate the learning algorithm we discuss a simple choice of variational distritbution: a diagonal-covariance Gaussian.
         However the practical import of appropriately specifying $q$ should be emphasized; in theory we want $q$ to be be sufficiently expressive to model the true posterior $p(w|D)$, which may not be true of the diagonal-convariance Gaussian for most interesting problems.
     </p>
+    <p style="color:red;">
+        TODO: opportunity to cite papers like normalizing flows here
+    </p>
     <p>
         Specifying $q$ as a diagonal-covariance Gaussian implies that all of the network weights $w$ are jointly distributed according to the multivariate Gaussian $q_{\mu, \sigma}(w) = \mathcal{N}(w; \mu, \sigma^2 I)$, which has log probability $\log q_{\mu, \sigma}(w) = -\frac{1}{2}(w-\mu)^T(\sigma^2 I)^{-1}(w - \mu)$
         Note that we have chosen an notation that makes explicit the variational parameters comprising all the means and standard deviations $\phi = (\mu, \sigma)$.
@@ -427,14 +427,15 @@
     </p>
 
     <p>
-        We want to optimize the VI objective with gradients, which necessitates computing $\frac{\partial}{\partial \mu} \tilde L(\mu, \sigma)$ and $\frac{\partial}{\partial \sigma} \tilde L(\mu, \sigma)$, the gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
+        We want to optimize the VI objective with gradients, which necessitates computing $\frac{\partial}{\partial \mu} \tilde L(\mu, \sigma)$ and $\frac{\partial}{\partial \sigma} \tilde L(\mu, \sigma)$, the partial gradients of the VI objective with respect to the model parmeters $(\mu, \sigma)$.
         Note that whereas both the MAP and VI objectives involve an expecation over the data distribution, the VI objective additionally requires an expectation over the weights distribution.
         We previously discussed how to pass gradients through $\mathbb{E}_{x, y \sim D}[ \cdot ]$ using minibatches.
-        The trouble is with the second expecation, since the distribution depends on the parameters that we want to optimize...
+        The trouble is with the second expecation, since the distribution depends on the parameters that we want to optimize.
     </p>
 
+    <h3>The reparameterization gradient estimator</h3>
     <p style="color:red;">
-        TODO: finish reparam trick explanation
+        TODO: finish reparam trick explanation, list the assumptions of the reparameterization estimator and mention what we can do if the variational distribution over weights is discrete (cite Luisoz work on binary nnets)
     </p>
 
     <figure style="position:relative; width:800px; height:200px;">
