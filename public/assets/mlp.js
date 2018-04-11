@@ -411,11 +411,6 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	function on_drag(d) {
 		d3.select(this).raise().classed("active", true);
-		var new_x = d3.event.x;
-		var new_y = d3.event.y;
-		console.log(this);
-		console.log(d3.event);
-		stop();
 	}
 
 	function dragging(d) {
