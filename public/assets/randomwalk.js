@@ -4,6 +4,8 @@ function randomwalk_view(curve_div, use_validation_data) {
 
 	this.start = function() {
         if (!walk_timer) {
+			sample();
+			plot();
             walk_timer = d3.timer(sample, 25);
             plot_timer = d3.timer(plot, 200);
         }

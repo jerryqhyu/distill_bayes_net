@@ -74,9 +74,9 @@ function full_bnn_view(curve_div, graph_div) {
     function make_preset_net() {
         var layer_defs = [];
         layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: 1});
-        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
-		layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
-        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-4});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-5});
+		layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-5});
+        layer_defs.push({type: 'variational', num_neurons: 8, activation: 'rbf', alpha: 1e-5});
         layer_defs.push({type: 'vregression', num_neurons: 1, alpha:1e-4});
         var new_net = new net_lib.Net();
         new_net.makeLayers(layer_defs);

@@ -15,7 +15,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	this.stop = function() {
-		if (training_interval) {
+		if (this.is_running()) {
 			training_interval.stop();
 			plot_interval.stop();
 			training_interval = undefined;
@@ -28,6 +28,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	this.reset = function() {
+		this.stop();
 		deep_net = make_deep_net();
 		deep_trainer = new net_lib.Trainer(deep_net, {
 			batch_size: param.batch_size
@@ -51,12 +52,11 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			trainer = shallow_trainer;
 		}
 		plot();
-		stop();
 		epoch_count = 0;
 	}
 
 	this.update = function() {
-		stop();
+		this.stop();
 		train_loss_plotter.svg.select("#contour").selectAll("*").remove();
 		valid_loss_plotter.svg.select("#contour").selectAll("*").remove();
 		if (radio_button_state() === 'Linear') {

@@ -1,4 +1,4 @@
-param = {
+var param = {
     w: 520,
     h: 300,
     w_loss: 300,

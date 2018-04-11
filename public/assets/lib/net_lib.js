@@ -1065,7 +1065,7 @@ var net_lib = net_lib || {
         var options = options || {};
         this.learning_rate = typeof options.learning_rate !== 'undefined'
             ? options.learning_rate
-            : params.learning_rate;
+            : param.learning_rate;
         this.l1_decay = typeof options.l1_decay !== 'undefined'
             ? options.l1_decay
             : 0.0;
@@ -1077,7 +1077,7 @@ var net_lib = net_lib || {
             : 1;
         this.momentum = typeof options.momentum !== 'undefined'
             ? options.momentum
-            : params.momentum;
+            : param.momentum;
         this.iter = 0; // iteration counter
         this.gsum = []; // last iteration gradients for momentum
     }
