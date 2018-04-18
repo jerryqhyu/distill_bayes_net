@@ -430,6 +430,7 @@
     </p>
 
     <h3>Stochastic gradient ascent</h3>
+    <p>
     Let's revisit a detail we skipped over in earlier on: how to compute gradients with respect to $w$ of the single network log likeihood. 
     The quantity we want to compute is $\nabla_w L(w)$. 
     We can show that the gradient of the average over training examples is equivalent to the average over the $N$ training examples of individual gradients as follows: 
@@ -450,7 +451,7 @@
 
     Estimating the gradient in this way is called <i>stochastic gradient ascent</i> (SGA).
     It speeds up the training by roughly a factor of $M$ so long as the minibatches are large enough so that $g_{\text{SGA}}(w)$ is a reasonably good approximation to $g_{\text{batch}}(w)$.
-    Interestingly, the deviation of the approximate gradient from the true gradient (a.k.a. gradient noise) can actually provide some additional benefits including mitigating overfitting.
+    Interestingly, stochastic gradient updates provide some additional benefits including mitigating overfitting.
     </p>
     <p style="color:red;">
         TODO: cite papers on the theory of SGD here. also maybe talk more about the role of gradient noise as a regularizer, since we will use that concept later on
@@ -475,7 +476,7 @@
     <!-- $$ \nabla_{\mu, \sigma} \mathbb{E}_{w \sim q_{\mu, \sigma}} \left[ \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]  = $$ -->
 
     Putting this all together (including the minibatch trick from before) yields the SVI gradient estimator:
-    $$ \nabla_{\mu, \sigma} \tilde L(\mu, \sigma) \approx \underbrace{\frac{M}{N} \sum_{i=1}^{N_m} \sum_{j=1}^{S} \nabla_w \left[  \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]}_{g_{\text{SVI}}(w)}. $$
+    $$ \nabla_{\mu, \sigma} \tilde L(\mu, \sigma) \approx \underbrace{\frac{M}{N} \sum_{i=1}^{N_m} \sum_{j=1}^{S} \nabla_{\mu, \sigma} \left[  \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]}_{g_{\text{SVI}}(\mu, \sigma)}. $$
     Notice that we've introduced a new hyperparameter $S$ which sets the number of samples from $p(\epsilon)$ we draw to Monte Carlo estimate the expected log likelihood. 
     We can think of this as the number of sampled networks we consider during training. 
     Perhaps surprisingly, we can often get away with a small value of $S$ at training time ($S=1$ is commonly used).
