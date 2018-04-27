@@ -392,7 +392,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 7,
 			opacity: 1,
-			transition: 10,
+			transition: 100,
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag
@@ -402,7 +402,7 @@ function mlp(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "darkslategray",
 			size: 7,
 			opacity: 1,
-			transition: 10,
+			transition: 100,
 			on_drag: on_drag,
 			dragging: dragging,
 			end_drag: end_drag
