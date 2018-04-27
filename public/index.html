@@ -132,11 +132,11 @@
         <dt-fn>
             We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
             (i.e., multinomial) distribution
-        </dt-fn>. 
+        </dt-fn>.
         Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
     </p>
     <p>
-        The $\log p(w)$ term regularizes the optimization according to our prior belief about the values of $w$. 
+        The $\log p(w)$ term regularizes the optimization according to our prior belief about the values of $w$.
         For example we can realize weight decay by specifying $\log p(w) = -\lambda ||w||_2^2$ (plus an additive constant that doesn't depend on $w$).
         Here $\lambda$ is a hyperparameter that sets the relative importance of achieveing a small-weights solution.
         Incidentally this specification of $\log p(w)$ correpsonds to an a priori belief that $w$is distributed according to a spherical Gaussian with variance $\frac{2}{\lambda}$.
@@ -273,24 +273,12 @@
     </p>
 
     <!-- Sampling from the posterior figures -->
-    <figure class='.l-screen' style="position:relative; width:100%; height:1100px;">
+    <figure class='.l-screen' style="position:relative; width:100%; height:400px;">
         <figcaption id="randomwalk_caption" class='little_caption'>
             Gaussian Random Walk Proposal on Training Data
         </figcaption>
-        <div id="rw_train_figure" class='.l-screen bordered' style="position:relative; width:100%; height:400px;"></div>
-
-        <div style="position:relative; width:100%; height:50px;"></div>
-
-        <figcaption id="randomwalk_caption" class='little_caption'>
-            Gaussian Random Walk Proposal on Validation Data
-        </figcaption>
-        <div id="rw_valid_figure" class='.l-screen bordered' style="position:relative; width:100%; height:400px;"></div>
-        <figcaption id="exact_caption" style="position:relative; width: 420px; height: 100px; left: 540px; top: 10px;">
-            Press the button to display the prediction function $\hat y_w(x)$ for successively "sampled" networks, whose weights are drawn from the true posterior: $w \sim p(w|D_{\text{train}})$. Once sampling begins, the running-average of the Monte Carlo
-            approximation to the predictive distribution X (using Y samples (HOW MANY?)) is displayed in red. Computing the posterior Z with exact inference is costly, but since we only need to sample from it we can use the Metropolis algorithm.
-        </figcaption>
-        <button type="button" onclick="rw_train.start(); rw_valid.start();" style="position:relative; left: 1040px; width: 150px; height: 30px;">Sample</button>
-        <!-- <button type="button" onclick="exact_inference_view.reset()">Clear</button> -->
+        <div id="rw_train_figure" class='.l-screen bordered' style="position:relative; width:100%; height:370px;"></div>
+        <button type="button" onclick="rw_train.start();" style="position:relative; left: 1040px; width: 150px; height: 30px;">Sample</button>
     </figure>
 
     <p>
@@ -431,9 +419,9 @@
 
     <h3>Stochastic gradient ascent</h3>
     <p>
-    Let's revisit a detail we skipped over in earlier on: how to compute gradients with respect to $w$ of the single network log likeihood. 
-    The quantity we want to compute is $\nabla_w L(w)$. 
-    We can show that the gradient of the average over training examples is equivalent to the average over the $N$ training examples of individual gradients as follows: 
+    Let's revisit a detail we skipped over in earlier on: how to compute gradients with respect to $w$ of the single network log likeihood.
+    The quantity we want to compute is $\nabla_w L(w)$.
+    We can show that the gradient of the average over training examples is equivalent to the average over the $N$ training examples of individual gradients as follows:
     $$ \begin{aligned}
         \nabla_w L(w) &= \nabla_w \mathbb{E}_{x,y \sim D} \left[ \log p(\hat y(x_i) = y_i|w) + \log p(w) \right] \\
         &= \nabla_w \frac{1}{N} \sum_{i=1}^{N} \left[  \log p(\hat y(x_i) = y_i|w) + \log p(w) \right] \\
@@ -441,7 +429,7 @@
     \end{aligned}$$
     We call this computation of the exact gradient $g_{\text{batch}}(w)$ the <i>batch gradient</i> because it involves averaging over the entire batch of training data at once.
     We used the independence of the data from the weights to move the gradient operator $\nabla_w$ inside the expectation over training data $\mathbb{E}_{x,y}$.
-    Each $\nabla_w$ inside the sum can be computed efficiently with backpropagation, and the overall average is parallelizable.  
+    Each $\nabla_w$ inside the sum can be computed efficiently with backpropagation, and the overall average is parallelizable.
     The algoritm that iteratively updates the weights according to $w \leftarrow w + \nabla_{w}L(w)$ is thus called batch gradient ascent
     </p>
     <p>
@@ -477,8 +465,8 @@
 
     Putting this all together (including the minibatch trick from before) yields the SVI gradient estimator:
     $$ \nabla_{\mu, \sigma} \tilde L(\mu, \sigma) \approx \underbrace{\frac{M}{N} \sum_{i=1}^{N_m} \sum_{j=1}^{S} \nabla_{\mu, \sigma} \left[  \log p(\hat y(x_i) = y_i|w(\mu, \sigma, \epsilon_j)) + \log p(w(\mu, \sigma, \epsilon_j)) \right]}_{g_{\text{SVI}}(\mu, \sigma)}. $$
-    Notice that we've introduced a new hyperparameter $S$ which sets the number of samples from $p(\epsilon)$ we draw to Monte Carlo estimate the expected log likelihood. 
-    We can think of this as the number of sampled networks we consider during training. 
+    Notice that we've introduced a new hyperparameter $S$ which sets the number of samples from $p(\epsilon)$ we draw to Monte Carlo estimate the expected log likelihood.
+    We can think of this as the number of sampled networks we consider during training.
     Perhaps surprisingly, we can often get away with a small value of $S$ at training time ($S=1$ is commonly used).
     At test time, however, we can increase the number of samples used to estimate the posterior predictive distribution.
     </p>
@@ -642,7 +630,6 @@
 
         // MCMC
         var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
-        var rw_valid = new randomwalk_view(d3.select("#rw_valid_figure"), true);
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), d3.select("#divergence_ruler"), 0, 1);
@@ -695,7 +682,6 @@
             "#bnn_figure" : full_bnn,
             "#mlp_figure" : mlp,
             "#rw_train_figure": rw_train,
-            "#rw_valid_figure": rw_valid,
             "#svi_figure": svi
         };
 

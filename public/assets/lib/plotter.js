@@ -193,17 +193,17 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
             ? 'none'
             : options.stroke
 
+        var contour;
         if (id) {
-            size_multiplier = this.width / n;
-            this.svg.select(id).selectAll('path').data(contour_scale(data)).enter().append('path').attr('d', d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr('fill', function(d) {
-                return color_scale(-d.value);
-            }).attr('opacity', opacity).attr('stroke', stroke);
+            contour = this.svg.select(id).selectAll('path').data(contour_scale(data));
+
         } else {
-            size_multiplier = this.width / n;
-            this.svg.selectAll('path').data(contour_scale(data)).enter().append('path').attr('d', d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr('fill', function(d) {
-                return color_scale(-d.value);
-            }).attr('opacity', opacity);
+            contour = this.svg.selectAll('path').data(contour_scale(data));
         }
+        var size_multiplier = this.width / n;
+        contour.enter().append('path').merge(contour).attr('d', d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr('fill', function(d) {
+            return color_scale(-d.value);
+        }).attr('opacity', opacity).attr('stroke', stroke);
     }
 
 	this.plot_axis = function(domain, ticks) {

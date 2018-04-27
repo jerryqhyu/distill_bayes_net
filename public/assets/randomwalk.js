@@ -31,6 +31,27 @@ function randomwalk_view(curve_div, use_validation_data) {
     var walk_timer;
     var plot_timer;
 
+	var bucket_row = 40;
+	var bucket_col = 100;
+	var bucket_col_count = Array.from({length: bucket_col}, (x, n) => 1);
+	var buckets = new Array(bucket_row);
+	for (var i = 0; i < bucket_row; i++) {
+		buckets[i] = new Array(bucket_col);
+		for (var j = 0; j < bucket_col; j++) {
+			buckets[i][j] = 0;
+		}
+	}
+	var num_samples = 0;
+	var bucket_col_scale = d3.scaleLinear().domain([0, curve_x_extended.length]).range([0, bucket_col - 1]);
+	bucket_col_scale.clamp(true);
+    var bucket_row_scale = d3.scaleLinear().domain(param.curve_domain_y).range([bucket_row - 1, 0]);
+	bucket_row_scale.clamp(true);
+
+	var bucket_color = d3.scaleLinear().domain([0, 2/bucket_row]).interpolate(function() {
+	    return d3.interpolateGreys;
+	});
+	var bucket_scale = d3.contours().size([bucket_col - 1, bucket_row - 2]).thresholds(d3.range(-0.5, 0.01, 0.005));
+
     var percentiles = new Array(100); // 1-100
     for (var i = 0; i < 100; i++) {
         percentiles[i] = new Array(curve_x_extended.length);
@@ -51,11 +72,13 @@ function randomwalk_view(curve_div, use_validation_data) {
 	});
 
     function initial_plot() {
+		curve_plotter.add_group("sq");
         curve_plotter.add_group("percentiles");
 		curve_plotter.add_group("lastproposal");
 		curve_plotter.add_group("lastsample");
-        curve_plotter.add_group("fixed");
+		curve_plotter.add_group("fixed");
         plot_training_data();
+		plot_buckets();
     }
 
     function sample() {
@@ -87,6 +110,13 @@ function randomwalk_view(curve_div, use_validation_data) {
                 predictions[n].push(last_net.forward(new net_lib.Vol([x])).w[0]);
             });
         }
+
+		for (var i = 0; i < predictions.length; i++) {
+			buckets[Math.floor(bucket_row_scale(predictions[i][num_samples]))][Math.floor(bucket_col_scale(i))]++;
+			bucket_col_count[Math.floor(bucket_col_scale(i))]++;
+		}
+
+		num_samples++;
     }
 
     function propose(sample_t, std) {
@@ -164,34 +194,26 @@ function randomwalk_view(curve_div, use_validation_data) {
 			id: "#lastproposal"
 		});
 
-        plot_sample_dist();
+		plot_buckets();
     }
 
-    function plot_sample_dist() {
-        // collect percentile for each point
-        curve_x_extended.forEach((x, n) => {
-            single_point_pred = predictions[n].sort((a, b) => {
-                return a - b;
-            });
+	function plot_buckets() {
+		// -2/-1 to not plot the last row/col
+		var data = new Array((bucket_row - 2) * (bucket_col - 1));
+		for (var i = 1; i < buckets.length - 1; i++) {
+			for (var j = 0; j < buckets[0].length - 1; j++) {
+				data[(i - 1) * (buckets[0].length - 1) + j] = -buckets[i][j] / bucket_col_count[j];
+			}
+		}
 
-            for (var j = 0; j < percentiles.length; j++) {
-                percentiles[j][n] = {
-                    x: x,
-                    y: single_point_pred[Math.floor(0.01 * j * (samples.length - 1))]
-                };
-            }
-        });
-
-        // plot the percentile of the samples
-        curve_plotter.plot_path(percentiles.slice(0, percentiles.length / 2).map((x, i) => {
-            return percentiles[i].concat(percentiles[percentiles.length - 1 - i].reverse());
-        }), {
-            color: "black",
-            fill: "black",
-            width: 1,
-            opacity: 1 / 100,
-            id: "#percentiles"
-        });
+		var identity = d3.scaleIdentity();
+		curve_plotter.plot_contour(data, {
+			n: bucket_col - 1,
+			m: bucket_row - 2,
+			id: '#sq',
+			color_scale: bucket_color,
+			contour_scale: bucket_scale
+		});
     }
 
     function loss(net) {
