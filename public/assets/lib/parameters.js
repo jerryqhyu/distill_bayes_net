@@ -36,7 +36,7 @@ var param = {
     loss_domain_y: [
         -0.5, 2.5
     ],
-	nn_domain: [
+    nn_domain: [
         0, 1
     ],
     progress_domain_x: [
@@ -562,6 +562,24 @@ var param = {
         ]
     ]
 };
+
+var train_xs = [
+    [0.98348382],
+    [0.33239784],
+    [1.31901198],
+    [-1.33424016],
+    [-2.49962207],
+    [2.671385]
+];
+
+var train_ys = [
+    [0.58331356],
+    [0.14089138],
+    [1.34585101],
+    [-0.80381079],
+    [-0.20494374],
+    [0.82565530]
+];
 
 // scales
 var divergence_fill_color = d3.scaleLinear().domain([-50, 0]).interpolate(function() {
