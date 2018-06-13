@@ -68,7 +68,7 @@ function randomwalk_view(curve_div, use_validation_data) {
 	var first_net = make_preset_net();
 	samples.push(unpack_net(first_net));
 	curve_x_extended.forEach((x, n) => {
-		predictions[n] = [first_net.forward(new net_lib.Vol([i])).w[0]];
+		predictions[n] = [first_net.forward(new net_lib.Vol([x])).w[0]];
 	});
 
     function initial_plot() {
