@@ -1,7 +1,7 @@
 function rw(curve_div, use_validation_data) {
 
     this.div_id = curve_div.attr('id');
-    var shape = tf.tensor([1, 10, 10, 1], [4], 'int32');
+    var shape = tf.tensor([1, 10, 10, 1], [4], 'int32').dataSync();
     var last_loss = 0;
 
     this.start = function() {
@@ -70,12 +70,17 @@ function rw(curve_div, use_validation_data) {
 
     var initial_sample = {
 <<<<<<< HEAD
+<<<<<<< HEAD
 		biases: tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten())),
 		weights: tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten())),
 =======
 		biases: tf.randomNormal(shape.slice([1]).sum().flatten().dataSync()),
 		weights: tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync()),
 >>>>>>> new tfjs rw, need to fix perf
+=======
+		biases: tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten())),
+		weights: tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten())),
+>>>>>>> added hero diagram implementation with tfjs
 	}
 	var last_sample = initial_sample;
     predictions = curve_x_extended.map(x => { return forward(initial_sample, tf.tanh, x); });
@@ -160,6 +165,9 @@ function rw(curve_div, use_validation_data) {
     function plot() {
         console.log(last_loss);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> added hero diagram implementation with tfjs
         var proposal_pts = curve_x_extended.map((x, n) => {
             return {x: x, y: proposal_pred[n]}
         });
@@ -180,6 +188,7 @@ function rw(curve_div, use_validation_data) {
         });
 
         plot_buckets();
+<<<<<<< HEAD
 =======
         // var proposal_pts = curve_x_extended.map((x, n) => {
         //     return {x: x, y: proposal_pred[n]}
@@ -202,6 +211,8 @@ function rw(curve_div, use_validation_data) {
 
         // plot_buckets();
 >>>>>>> new tfjs rw, need to fix perf
+=======
+>>>>>>> added hero diagram implementation with tfjs
     }
 
     function plot_buckets() {
@@ -223,6 +234,7 @@ function rw(curve_div, use_validation_data) {
         });
     }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
     function make_preset_net() {
@@ -253,6 +265,8 @@ function rw(curve_div, use_validation_data) {
     }
 
 >>>>>>> new tfjs rw, need to fix perf
+=======
+>>>>>>> added hero diagram implementation with tfjs
     function plot_training_data() {
         var pts = use_validation_data
             ? validation_points_data

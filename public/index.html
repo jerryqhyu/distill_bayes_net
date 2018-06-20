@@ -738,7 +738,7 @@
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
         
         // MCMC
-        var rw_train = new rw(d3.select("#rw_train_figure"), false);
+        var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), d3.select("#divergence_ruler"), 0, 1);
