@@ -1,7 +1,7 @@
 function rw(curve_div, use_validation_data) {
 
     this.div_id = curve_div.attr('id');
-    var shape = tf.tensor([1, 10, 10, 1], [4], 'int32');
+    var shape = tf.tensor([1, 10, 10, 1], [4], 'int32').dataSync();
     var last_loss = 0;
 
     this.start = function() {
@@ -69,8 +69,8 @@ function rw(curve_div, use_validation_data) {
     initial_plot();
 
     var initial_sample = {
-		biases: tf.randomNormal(shape.slice([1]).sum().flatten().dataSync()),
-		weights: tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync()),
+		biases: tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten())),
+		weights: tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten())),
 	}
 	var last_sample = initial_sample;
     predictions = curve_x_extended.map(x => { return forward(initial_sample, tf.tanh, x); });
@@ -154,26 +154,26 @@ function rw(curve_div, use_validation_data) {
 
     function plot() {
         console.log(last_loss);
-        // var proposal_pts = curve_x_extended.map((x, n) => {
-        //     return {x: x, y: proposal_pred[n]}
-        // });
-        // var pts = curve_x_extended.map((x, n) => {
-        //     return {x: x, y: predictions[n]}
-        // });
-        // curve_plotter.plot_path([pts], {
-        //     color: "green",
-        //     width: 2,
-        //     opacity: 1,
-        //     id: "#lastsample"
-        // });
-        // curve_plotter.plot_path([proposal_pts], {
-        //     color: "red",
-        //     width: 2,
-        //     opacity: 1,
-        //     id: "#lastproposal"
-        // });
+        var proposal_pts = curve_x_extended.map((x, n) => {
+            return {x: x, y: proposal_pred[n]}
+        });
+        var pts = curve_x_extended.map((x, n) => {
+            return {x: x, y: predictions[n]}
+        });
+        curve_plotter.plot_path([pts], {
+            color: "green",
+            width: 2,
+            opacity: 1,
+            id: "#lastsample"
+        });
+        curve_plotter.plot_path([proposal_pts], {
+            color: "red",
+            width: 2,
+            opacity: 1,
+            id: "#lastproposal"
+        });
 
-        // plot_buckets();
+        plot_buckets();
     }
 
     function plot_buckets() {
@@ -193,33 +193,6 @@ function rw(curve_div, use_validation_data) {
             color_scale: bucket_color,
             contour_scale: bucket_scale
         });
-    }
-
-    function make_preset_net() {
-        var layer_defs = new Array(4);
-        layer_defs[0] = {
-            type: 'input',
-            out_sx: 1,
-            out_sy: 1,
-            out_depth: 1
-        };
-        layer_defs[1] = {
-            type: 'fc',
-            num_neurons: 10,
-            activation: 'rbf'
-        };
-        layer_defs[2] = {
-            type: 'fc',
-            num_neurons: 10,
-            activation: 'rbf'
-        };
-        layer_defs[3] = {
-            type: 'regression',
-            num_neurons: 1
-        };
-        var new_net = new net_lib.Net();
-        new_net.makeLayers(layer_defs);
-        return new_net;
     }
 
     function plot_training_data() {
