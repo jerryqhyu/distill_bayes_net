@@ -103,7 +103,7 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
             ? 1
             : options.opacity;
         var transition = typeof(options.transition) === 'undefined'
-            ? 100
+            ? 10
             : options.transition;
         var id = typeof(options.id) === 'undefined'
             ? ''
