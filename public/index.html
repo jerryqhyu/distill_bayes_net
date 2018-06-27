@@ -69,17 +69,49 @@
     </p>
 
     <p>
-        First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output
-        pairs. Then neural network training corresponds to the following optimization problem:
-    $$ \underset{w}{\text{maximize}} \quad L_{\text{train}}(w), $$
-        where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as
-    $$ L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right].  $$
-        Here $\log p(\hat y(x) = y|w)$ represents the log likelihood of a particular output $y$ being predicted given the input $x$, which we want to be high on average across all of the training examples
-        <dt-fn>
-            We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
-            (i.e., multinomial) distribution
-        </dt-fn>.
-        Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear.
+      First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output pairs. Then neural
+      network training corresponds to the following optimization problem:
+    </p>
+    <!-- <figure id="max-Ltrain" style="width:530px; height:70px; display:block; margin-left:auto; margin-right:auto; position:relative">
+
+      <div style="position:relative; top:-35px">
+
+        <span style="position:absolute; left:150px; top:0px;">
+          <p>$$\underset{w}{\text{maximize}} \quad L_{\text{train}}(w)$$</p>
+        </span>
+        <figcaption style="position:absolute;left:280px;top: 60px;width:100px;">
+          <i>expected log likelihood</i> of the training data
+        </figcaption>
+      </div>
+    </figure>
+
+    <p>
+  	  where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as</p> -->
+
+     <figure id="Ltrain_def" style="width:530px; height:70px; display:block; margin-left:auto; margin-right:auto; position:relative">
+
+      <div style="position:relative; top:-35px">
+
+        <span style="position:absolute; left:-70px; top:0px;">
+        $$\underset{w}{\text{maximize}} \quad L_{\text{train}}(w) \coloneqq \mathbb{E}_{x, y \sim D_{\text{train}}} \left[ \log p(\hat y(x) = y|w) + \log p(w) \right] $$
+        </span>
+        <figcaption style="position:absolute;left:-60px;top: 60px;width:100px;">
+         find weights $w$ which maximizes
+        </figcaption>
+        <figcaption style="position:absolute;left:60px;top: 60px;width:100px;">
+          <i>expected log likelihood</i> of training data
+        </figcaption>
+        <figcaption style="position:absolute;left:290px;top: 60px;width:200px;">
+  	      <i>  log likelihood of predicting a particular output $y$ given $x$ </i>
+        </figcaption>
+        <figcaption style="position:absolute;left:490px;top: 60px;width:100px;">
+  	      <i>prior beliefs</i> about w </figcaption>
+      </div>
+    </figure>
+    <p> Since we'll use $p(\hat y(x) = y|w)$ often, let's name it the <i>single network likelihood</i>; we might write $p(\hat y|w)$ for short, when the context is clear. We want this to be high on average across all of the training examples.
+      <dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
+        (i.e., multinomial) distribution
+      </dt-fn>
     </p>
     <!-- Regular MLP objective surfaces -->
     <figure id='mlp_figure' style="position:relative; width:984px;">
@@ -138,10 +170,11 @@
 
 
     <p>
-        The $\log p(w)$ term regularizes the optimization according to our prior belief about the values of $w$.
-        For example we can realize weight decay by specifying $\log p(w) = -\lambda ||w||_2^2$ (plus an additive constant that doesn't depend on $w$).
+        Our prior beleifs about the weights, $\log p(w)$, regularizes this optimization.
+        Regularization occurs because weights that deviate from our prior beliefs are penalized in the objective.
+        For example, we might expect our weights to be small by specifying $\log p(w) = -\lambda ||w||_2^2$ (plus an additive constant that doesn't depend on $w$).
         Here $\lambda$ is a hyperparameter that sets the relative importance of achieving a small-weights solution.
-        Incidentally this specification of $\log p(w)$ corresponds to an a priori belief that $w$is distributed according to a spherical Gaussian with variance $\frac{2}{\lambda}$.
+        This prior gives us weight decay, or alternatively can be thought of as a belief that $w$ is distributed according to a spherical Gaussian with variance $\frac{2}{\lambda}$.
     </p>
     <p>
         During training we optimize $L_{\text{train}}(w)$ with respect to $w$, but we <i>actually</i> care about performing well on the test data, as measured by $L_{\text{test}}(w)$. In the demo above, we plot these functions side-by-side
