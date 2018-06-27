@@ -133,7 +133,6 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-<<<<<<< HEAD
         var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
         var curves = seed.map(s => {
             var d = [];
@@ -142,31 +141,20 @@ function hero(curve_div, graph_div) {
                     x: curve_x_extended[i],
                     y: y
                 });
-=======
-        const seed =  [1, 2, 3, 4, 5];
-        // const samples = seed.map(s => {
-        //     return {
-        //         weights: w_v.mul(tf.randomNormal([w_v.shape[0]], 0, 1, 'float32', s)).add(w),
-        //         biases: b_v.mul(tf.randomNormal([b_v.shape[0]], 0, 1, 'float32', s)).add(b),
-        //     }
-        // })
-        const samples = [{
-            weights: w,
-            biases: b,
-        }]
-        var curves = samples.map(sample => {
-            return curve_x_extended.map(x => {
-                return {x: x, y: predict(tf.tensor2d([x], [1, 1]), sample).dataSync()[0]};
->>>>>>> slow
-            })
-            return d;
-        });
         curve_plotter.plot_path(curves, {
             color: "red",
             width: 0.5,
             opacity: 0.75,
             id: "#float"
         });
+        // var curves = [curve_x_extended.map(x => {
+        //         return {x: x, y: predict(tf.tensor2d([x], [1, 1])).dataSync()[0]};];
+        // curve_plotter.plot_path(curves, {
+        //     color: "darkorange",
+        //     width: 2,
+        //     opacity: 0.5,
+        //     id: "#float"
+        // });
     }
 
     function plot_train_and_train_points() {
