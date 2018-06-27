@@ -10,7 +10,7 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.7"></script>
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -701,13 +701,14 @@
     <script src="assets/svi.js"></script>
     <script src="assets/full_bnn.js"></script>
     <script src="assets/hero.js"></script>
+    <script src="assets/hero-separate-layer.js"></script>
     <script src="assets/exact_inference.js"></script>
     <script src="assets/rwnew.js"></script>
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
         // BNN on top
-        var full_bnn = new hero(d3.select("#full_bnn"), d3.select("#bnn_graph"));
+        var full_bnn = new herosep(d3.select("#full_bnn"), d3.select("#bnn_graph"));
 
         // NN on sine
         var mlp = new mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
