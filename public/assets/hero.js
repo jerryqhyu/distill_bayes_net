@@ -1,18 +1,29 @@
 function hero(curve_div, graph_div) {
 
     this.div_id = curve_div.attr('id');
-
+    tf.setBackend('cpu');
+    const eps = tf.scalar(1e-9);
+    const minLogSigma = -0.5;
+    const maxLogSigma = -0;
     const shape = tf.tensor1d([1, 5, 5, 1], 'int32');
-    const w = tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync()));
-    const w_v = tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync()));
-    const b = tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten().dataSync()));
-    const b_v = tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten().dataSync()));
+    const w = tf.variable(tf.randomNormal(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync(), 0, 1, 'float32', 6787));
+    const w_v = tf.variable(tf.randomUniform(shape.slice([0], [shape.shape[0] - 1]).mul(shape.slice([1])).sum().flatten().dataSync(), minLogSigma, maxLogSigma, 'float32', 9876));
+    const b = tf.variable(tf.randomNormal(shape.slice([1]).sum().flatten().dataSync(), 0, 1, 'float32', 2942));
+    const b_v = tf.variable(tf.randomUniform(shape.slice([1]).sum().flatten().dataSync(), minLogSigma, maxLogSigma, 'float32', 1925));
+    const noise_w = tf.randomNormal([w_v.shape[0]]);
+    const noise_b = tf.randomNormal([b_v.shape[0]]);
+    // const weights = w;
+    const weights = w.add(noise_w.mul(tf.exp(w_v.add(eps))));
+    const biases = b;
+    // const biases = b.add(noise_b.mul(tf.exp(b_v.add(eps))));
 
-    this.start = function() {
+    this.start = async function() {
+        plot_interval = d3.timer(plot, 100);
         if (!training_interval) {
             console.log("started training");
-            training_interval = d3.timer(train, 100);
-            plot_interval = d3.timer(plot, 300);
+            while (true) {
+                await train();
+            }
         }
     }
 
@@ -38,7 +49,7 @@ function hero(curve_div, graph_div) {
             x = tf.transpose(x);
             const unpacked = unpack_sample(sample);
             for (var i = 0; i < unpacked.weights.length; i++) {
-                x = unpacked.weights[i].matMul(x).leakyRelu(0.1).add(unpacked.biases[i]);
+                x = unpacked.weights[i].matMul(x).elu(0.1).add(unpacked.biases[i]);
             }
             return tf.transpose(x);
         });
@@ -55,32 +66,19 @@ function hero(curve_div, graph_div) {
     var plot_interval;
     setup();
 
-    function train() {
-        return tf.tidy(() => {
-            const optimizer = tf.train.sgd(param.learning_rate);
-            for (let iter = 0; iter < 10; iter++) {
-                const noise_w = tf.randomNormal([w_v.shape[0]]);
-                const noise_b = tf.randomNormal([b_v.shape[0]]);
-                const sample = {
-                    weights: w,
-                    biases: b,
-                }
-                // const sample = {
-                //     weights: weights_dist.w,
-                //     biases: weights_dist.b,
-                // }
-                optimizer.minimize(() => {
-                    const predsYs = predict(tf.tensor2d(train_xs), sample); // input N*D
-                    return loss(predsYs, tf.tensor2d(train_ys));
-    
-                    // const predsYs = predict(tf.tensor2d(train_xs[iter], [1, 1]), sample);
-                    // return loss(predsYs, tf.tensor1d(train_ys[iter]));
-                });
-            }
-        })
+    async function train() {
+        const optimizer = tf.train.sgd(0.01);
+        for (let iter = 0; iter < 5; iter++) {
+            optimizer.minimize(() => {
+                const predsYs = predict(tf.tensor2d(train_xs), {weights: weights, biases: biases}); // input N*D
+                return loss(predsYs, tf.tensor2d(train_ys));
+            });
+        }
+        await tf.nextFrame();
     }
 
     function unpack_sample(sample) {
+        var shape = [1, 5, 5, 1]
         return tf.tidy(() => {
             var w_ind = 0;
             var b_ind = 0;
@@ -88,12 +86,11 @@ function hero(curve_div, graph_div) {
                 weights: [],
                 biases: []
             };
-            var size_arr = shape.dataSync();
-            for (var i = 0; i < shape.shape[0] - 1; i++) {
-                unpacked.weights.push(sample.weights.slice([w_ind], [size_arr[i] * size_arr[i + 1]]).reshape([size_arr[i + 1], size_arr[i]]));
-                unpacked.biases.push(sample.biases.slice([b_ind], [size_arr[i + 1]]).reshape([size_arr[i + 1], 1]));
-                w_ind += size_arr[i] * size_arr[i + 1];
-                b_ind += size_arr[i + 1];
+            for (var i = 0; i < shape.length - 1; i++) {
+                unpacked.weights.push(sample.weights.slice([w_ind], [shape[i] * shape[i + 1]]).reshape([shape[i + 1], shape[i]]));
+                unpacked.biases.push(sample.biases.slice([b_ind], [shape[i + 1]]).reshape([shape[i + 1], 1]));
+                w_ind += shape[i] * shape[i + 1];
+                b_ind += shape[i + 1];
             }
             return unpacked;
         });
@@ -114,28 +111,14 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-        const seed =  [1, 2, 3, 4, 5];
-        // const samples = seed.map(s => {
-        //     return {
-        //         weights: w_v.mul(tf.randomNormal([w_v.shape[0]], 0, 1, 'float32', s)).add(w),
-        //         biases: b_v.mul(tf.randomNormal([b_v.shape[0]], 0, 1, 'float32', s)).add(b),
-        //     }
-        // })
-        const samples = [{
-            weights: w,
-            biases: b,
-        }]
-        var curves = samples.map(sample => {
-            return curve_x_extended.map(x => {
-                return {x: x, y: predict(tf.tensor2d([x], [1, 1]), sample).dataSync()[0]};
-            })
-        });
-        curve_plotter.plot_path(curves, {
-            color: "darkorange",
-            width: 3,
-            opacity: 0.5,
-            id: "#float"
-        });
+        // var curves = [curve_x_extended.map(x => {
+        //         return {x: x, y: predict(tf.tensor2d([x], [1, 1])).dataSync()[0]};];
+        // curve_plotter.plot_path(curves, {
+        //     color: "darkorange",
+        //     width: 2,
+        //     opacity: 0.5,
+        //     id: "#float"
+        // });
     }
 
     function plot_train_and_valid_points() {
