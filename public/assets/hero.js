@@ -141,20 +141,14 @@ function hero(curve_div, graph_div) {
                     x: curve_x_extended[i],
                     y: y
                 });
-        curve_plotter.plot_path(curves, {
-            color: "red",
-            width: 0.5,
-            opacity: 0.75,
-            id: "#float"
+            curve_plotter.plot_path(curves, {
+                color: "red",
+                width: 0.5,
+                opacity: 0.75,
+                id: "#float"
+            });
+            }
         });
-        // var curves = [curve_x_extended.map(x => {
-        //         return {x: x, y: predict(tf.tensor2d([x], [1, 1])).dataSync()[0]};];
-        // curve_plotter.plot_path(curves, {
-        //     color: "darkorange",
-        //     width: 2,
-        //     opacity: 0.5,
-        //     id: "#float"
-        // });
     }
 
     function plot_train_and_train_points() {
