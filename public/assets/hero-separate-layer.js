@@ -27,19 +27,6 @@ function herosep(curve_div, graph_div) {
     const layer4BiasMu = tf.variable(tf.zeros([1]));
     const layer4BiasLogSigma = tf.variable(tf.randomUniform(layer4BiasMu.shape, minLogSigma, maxLogSigma));
 
- 
-
-    // const layer1Weights = layer1WeightsMu;
-    // const layer1Bias = layer1BiasMu;
-    // const layer2Weights = layer2WeightsMu;
-    // const layer2Bias = layer2BiasMu;
-    // const layer3Weights = layer3WeightsMu;
-    // const layer3Bias = layer3BiasMu;
-    // const layer4Weights = layer4WeightsMu;
-    // const layer4Bias = layer4BiasMu;
-
-   
-
     async function start() {
         plot();
         if (!training_interval) {
@@ -69,30 +56,36 @@ function herosep(curve_div, graph_div) {
     }
 
     function predict(x) { 
-        const layer1WeightsEpsilon = tf.randomNormal(layer1WeightsMu.shape);
-        const layer1BiasEpsilon = tf.randomNormal(layer1BiasMu.shape);
-        const layer1WeightsSigma = tf.exp(layer1WeightsLogSigma.add(eps));
-        const layer1BiasSigma = tf.exp(layer1BiasLogSigma.add(eps));
-        const layer2WeightsEpsilon = tf.randomNormal(layer2WeightsMu.shape);
-        const layer2BiasEpsilon = tf.randomNormal(layer2BiasMu.shape);
-        const layer2WeightsSigma = tf.exp(layer2WeightsLogSigma.add(eps));
-        const layer2BiasSigma = tf.exp(layer2BiasLogSigma.add(eps));
-        const layer3WeightsEpsilon = tf.randomNormal(layer2WeightsMu.shape);
-        const layer3BiasEpsilon = tf.randomNormal(layer2BiasMu.shape);
-        const layer3WeightsSigma = tf.exp(layer3WeightsLogSigma.add(eps));
-        const layer3BiasSigma = tf.exp(layer3BiasLogSigma.add(eps));
-        const layer4WeightsEpsilon = tf.randomNormal(layer4WeightsMu.shape);
-        const layer4BiasEpsilon = tf.randomNormal(layer4BiasMu.shape);
-        const layer4WeightsSigma = tf.exp(layer4WeightsLogSigma.add(eps));
-        const layer4BiasSigma = tf.exp(layer4BiasLogSigma.add(eps));
-        const layer1Weights = layer1WeightsMu.add(layer1WeightsSigma.mul(layer1WeightsEpsilon));
-        const layer1Bias = layer1BiasMu.add(layer1BiasSigma.mul(layer1BiasEpsilon));
-        const layer2Weights = layer2WeightsMu.add(layer2WeightsSigma.mul(layer2WeightsEpsilon));
-        const layer2Bias = layer2BiasMu.add(layer2BiasSigma.mul(layer2BiasEpsilon));
-        const layer3Weights = layer3WeightsMu.add(layer3WeightsSigma.mul(layer3WeightsEpsilon));
-        const layer3Bias = layer3BiasMu.add(layer3BiasSigma.mul(layer3BiasEpsilon));
-        const layer4Weights = layer4WeightsMu.add(layer4WeightsSigma.mul(layer4WeightsEpsilon));
-        const layer4Bias = layer4BiasMu.add(layer4BiasSigma.mul(layer4BiasEpsilon));
+        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape)));
+        const layer1Bias = layer1BiasMu.add(tf.exp(layer1BiasLogSigma.add(eps)).mul(tf.randomNormal(layer1BiasMu.shape)));
+        const layer2Weights = layer2WeightsMu.add(tf.exp(layer2WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape)));
+        const layer2Bias = layer2BiasMu.add(tf.exp(layer2BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape)));
+        const layer3Weights = layer3WeightsMu.add(tf.exp(layer3WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape)));
+        const layer3Bias = layer3BiasMu.add(tf.exp(layer3BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape)));
+        const layer4Weights = layer4WeightsMu.add(tf.exp(layer4WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer4WeightsMu.shape)));
+        const layer4Bias = layer4BiasMu.add(tf.exp(layer4BiasLogSigma.add(eps)).mul(tf.randomNormal(layer4BiasMu.shape)));
+        
+        const layer1 = tf.tidy(() => {
+            return x.matMul(layer1Weights).add(layer1Bias).elu(0.1);
+        });
+        const layer2 = tf.tidy(() => {
+            return layer1.matMul(layer2Weights).add(layer2Bias).elu(0.1);
+        });
+        const layer3 = tf.tidy(() => {
+            return layer2.matMul(layer3Weights).add(layer3Bias).elu(0.1);
+        });
+        return layer3.matMul(layer4Weights).add(layer4Bias);
+    }
+
+    function predict(x, seed) { 
+        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
+        const layer1Bias = layer1BiasMu.add(tf.exp(layer1BiasLogSigma.add(eps)).mul(tf.randomNormal(layer1BiasMu.shape, 0, 1, 'float32', seed)));
+        const layer2Weights = layer2WeightsMu.add(tf.exp(layer2WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape, 0, 1, 'float32', seed)));
+        const layer2Bias = layer2BiasMu.add(tf.exp(layer2BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape, 0, 1, 'float32', seed)));
+        const layer3Weights = layer3WeightsMu.add(tf.exp(layer3WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape, 0, 1, 'float32', seed)));
+        const layer3Bias = layer3BiasMu.add(tf.exp(layer3BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape, 0, 1, 'float32', seed)));
+        const layer4Weights = layer4WeightsMu.add(tf.exp(layer4WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer4WeightsMu.shape, 0, 1, 'float32', seed)));
+        const layer4Bias = layer4BiasMu.add(tf.exp(layer4BiasLogSigma.add(eps)).mul(tf.randomNormal(layer4BiasMu.shape, 0, 1, 'float32', seed)));
         
         const layer1 = tf.tidy(() => {
             return x.matMul(layer1Weights).add(layer1Bias).elu(0.1);
@@ -140,9 +133,14 @@ function herosep(curve_div, graph_div) {
     }
 
     function plot_path() {
-        var curves = [curve_x_extended.map(x => {
-                return {x: x, y: predict(tf.tensor2d([x], [1, 1])).dataSync()[0]};
-            })];
+        var seed = [1,2,3,4,5, 1234, 12478, 86534, 22, 176475653423];      
+        var curves = seed.map(s => {
+            var d = [];
+            predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
+                d.push({x: curve_x_extended[i], y: y});
+            })
+            return d;
+        });
         curve_plotter.plot_path(curves, {
             color: "darkorange",
             width: 2,
