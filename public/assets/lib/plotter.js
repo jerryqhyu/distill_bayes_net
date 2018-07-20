@@ -9,7 +9,6 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
 	this.width = div_dim.width - padding;
 	this.height = div_dim.height - padding;
     this.svg = div.append('svg').attr('width', div_dim.width).attr('height', div_dim.height);
-    var step_size = param.step_size;
 
     // scales from domain/range to width/height of the svg
     var x_scale = d3.scaleLinear().domain(domain_x).range([0, this.width]);
