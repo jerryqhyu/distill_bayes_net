@@ -1,28 +1,172 @@
-function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
+function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
-    this.div_id = curve_div.attr('id');
+	this.div_id = curve_div.attr('id');
 
-    this.start = function() {
-		if (!training_interval) {
-			training_interval = d3.timer(train_epoch, 50);
-			plot_interval = d3.timer(plot);
+	tf.setBackend('cpu')
+	const optimizerDeep = tf.train.sgd(param.learning_rate);
+	const optimizerShallow = tf.train.sgd(param.learning_rate);
+	const optimizerLinear = tf.train.sgd(param.learning_rate);
+
+	// 4 layer deep net
+	const layer1WeightsDeep = tf.variable(tf.tensor(param.layer1w));
+	const layer1BiasDeep = tf.tensor(param.layer1b);
+	const layer2WeightsDeep = tf.tensor(param.layer2w);
+	const layer2BiasDeep = tf.tensor(param.layer2b);
+	const layer3WeightsDeep = tf.tensor(param.layer3w);
+	const layer3BiasDeep = tf.tensor(param.layer3b);
+	const layer4WeightsDeep = tf.tensor(param.layer4w);
+	const layer4BiasDeep = tf.tensor(param.layer4b);
+
+	// 3 layer shallow net
+	const layer1WeightsShallow = tf.variable(tf.randomNormal([1, 2], 0, 0.5, 'float32', 1));
+	const layer1BiasShallow = tf.zeros([2]);
+	const layer2WeightsShallow = tf.randomNormal([2, 1], 0, 0.5, 'float32', 1);
+	const layer2BiasShallow = tf.zeros([1]);
+
+	// linear regression
+	const layer1WeightsLinear = tf.variable(tf.randomNormal([1, 1], 0, 0.5, 'float32', 1));
+	const layer1BiasLinear = tf.variable(tf.zeros([1]));
+
+	async function start() {
+		plot();
+		for (var i = 0; i < 1000; i++) {
+			await train();
+			plot();
 		}
 	}
 
-	this.stop = function() {
-		if (this.is_running()) {
-			training_interval.stop();
-			plot_interval.stop();
-			training_interval = undefined;
-			plot_interval = undefined;
+	function stop() {
+		if (false) {}
+	}
+
+	function is_running() {
+		return false;
+	}
+
+	function reset() {
+
+	}
+
+	var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
+		false, false);
+	var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x,
+		param.loss_domain_y, true, true);
+	var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x,
+		param.loss_domain_y, true, true);
+	var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, true);
+
+	var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
+	inv_x_scale.clamp(true);
+	var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
+	inv_y_scale.clamp(true);
+
+	var deep_train_contour_data = new Array(param.n * param.m);
+	var deep_valid_contour_data = new Array(param.n * param.m);
+	var shallow_train_contour_data = new Array(param.n * param.m);
+	var shallow_valid_contour_data = new Array(param.n * param.m);
+	var linear_train_contour_data = new Array(param.n * param.m);
+	var linear_valid_contour_data = new Array(param.n * param.m);
+	var pred = new Array(curve_x.length);
+
+	function predictDeep(x) {
+		const layer1 = tf.tidy(() => {
+			return x.matMul(layer1WeightsDeep).add(layer1BiasDeep).tanh();
+		});
+		const layer2 = tf.tidy(() => {
+			return layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
+		});
+		const layer3 = tf.tidy(() => {
+			return layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
+		});
+		return layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
+	}
+
+	function predictShallow(x) {
+		const layer1 = tf.tidy(() => {
+			return x.matMul(layer1WeightsShallow).add(layer1BiasShallow).tanh();
+		});
+		return layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
+	}
+
+	function predictLinear(x) {
+		return x.matMul(layer1WeightsLinear).add(layer1BiasLinear);
+	}
+
+	async function trainDeep() {
+		for (let iter = 0; iter < 4; iter++) {
+			console.log(3);
+			optimizerDeep.minimize(() => {
+				const predsYs = predictDeep(tf.tensor2d(train_xs)); // input N*D
+				const loss = tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
+				return loss;
+			});
+		}
+		await tf.nextFrame();
+	}
+
+	async function trainShallow() {
+		for (let iter = 0; iter < 4; iter++) {
+			console.log(1);
+			optimizerShallow.minimize(() => {
+				const shallowY = predictShallow(tf.tensor2d(train_xs)); // input N*D
+				const loss = tf.losses.meanSquaredError(shallowY, tf.tensor2d(train_ys))
+				return loss;
+			});
+		}
+		await tf.nextFrame();
+	}
+
+	async function trainLinear() {
+		for (let iter = 0; iter < 4; iter++) {
+			console.log(2);
+			optimizerLinear.minimize(() => {
+				const predsYs = predictLinear(tf.tensor2d(train_xs)); // input N*D
+				const loss = tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
+				return loss;
+			});
+		}
+		await tf.nextFrame();
+	}
+
+	var train = trainDeep;
+	var predict = predictDeep;
+	setup();
+
+	function plot() {
+		plot_path();
+		plot_weight();
+		// graph_plotter.plot_neural_net(net);
+	}
+
+	function radio_button_state() {
+		var radios = document.getElementsByName('net_type');
+		for (var i = 0, length = radios.length; i < length; i++) {
+			if (radios[i].checked) {
+				return radios[i].value;
+			}
 		}
 	}
 
-	this.is_running = function () {
-		return training_interval != null;
+	function setup() {
+		curve_x.forEach((x, i) => {
+			pred[i] = {
+				x: x,
+				y: 0
+			};
+		});
+
+		curve_plotter.add_group("training_points");
+		curve_plotter.add_group("validation_points");
+		train_loss_plotter.add_group("contour");
+		valid_loss_plotter.add_group("contour");
+		train_loss_plotter.add_x_axis_label("w1");
+		train_loss_plotter.add_y_axis_label("w2");
+		valid_loss_plotter.add_x_axis_label("w1");
+		valid_loss_plotter.add_y_axis_label("w2");
+		initial_plot();
 	}
 
-	this.reset = function() {
+	function reset() {
 		this.stop();
 		deep_net = make_deep_net();
 		deep_trainer = new net_lib.Trainer(deep_net, {
@@ -50,120 +194,77 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 		epoch_count = 0;
 	}
 
-	var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y,
-		false, false);
-	var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x,
-		param.loss_domain_y, true, true);
-	var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x,
-		param.loss_domain_y, true, true);
-	var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, true);
-
-	var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
-	inv_x_scale.clamp(true);
-
-	var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
-	inv_y_scale.clamp(true);
-
-	var deep_train_contour_data = new Array(param.n * param.m);
-	var deep_valid_contour_data = new Array(param.n * param.m);
-	var pred = new Array(curve_x.length);
-
-	//define a neural network
-	var deep_net = make_deep_net();
-	var deep_trainer = new net_lib.Trainer(deep_net, {
-		batch_size: param.batch_size
-	});
-	var shallow_net = make_shallow_net();
-	var shallow_trainer = new net_lib.Trainer(shallow_net, {
-		batch_size: param.batch_size
-	});
-	var linear_net = make_linear_net();
-	var linear_trainer = new net_lib.Trainer(linear_net, {
-		batch_size: param.batch_size
-	});
-	var net = deep_net;
-	var trainer = deep_trainer;
-
-	//interval controller
-	var training_interval;
-	var plot_interval;
-	var epoch_count = 0;
-	var obtaining_param = 0;
-
-	setup();
-
-	function plot() {
-		plot_path();
-		plot_weight();
-		graph_plotter.plot_neural_net(net);
-	}
-
-	function train_epoch() {
-		var x;
-		for (var j = 0; j < param.train_points.length; j++) {
-			x = new net_lib.Vol([param.train_points[j]]);
-			trainer.train(x, [Math.sin(param.train_points[j]) + param.train_noise[j]]);
+	function update() {
+		// this.stop();
+		train_loss_plotter.svg.select("#contour").selectAll("*").remove();
+		valid_loss_plotter.svg.select("#contour").selectAll("*").remove();
+		if (radio_button_state() === 'Linear') {
+			predict = predictLinear;
+			train = trainLinear;
+			plot_contour(train_loss_plotter, linear_train_contour_data,
+				train_contour_color, train_contour_scale);
+			plot_contour(valid_loss_plotter, linear_valid_contour_data,
+				valid_contour_color, valid_contour_scale);
+		} else if (radio_button_state() === 'Deep') {
+			predict = predictDeep;
+			train = trainDeep;
+			plot_contour(train_loss_plotter, deep_train_contour_data,
+				train_contour_color, train_contour_scale);
+			plot_contour(valid_loss_plotter, deep_valid_contour_data,
+				valid_contour_color, valid_contour_scale);
+		} else {
+			predict = predictShallow;
+			train = trainShallow;
+			plot_contour(train_loss_plotter, shallow_train_contour_data,
+				train_contour_color, train_contour_scale);
+			plot_contour(valid_loss_plotter, shallow_valid_contour_data,
+				valid_contour_color, valid_contour_scale);
 		}
-		if (obtaining_param) {
-			for (var j = 0; j < param.validation_points.length; j++) {
-				x = new net_lib.Vol([param.validation_points[j]]);
-				trainer.train(x, [Math.sin(param.validation_points[j]) + param.validation_noise[
-					j]]);
-			}
-		}
-		epoch_count++;
-	}
-
-	function radio_button_state() {
-		var radios = document.getElementsByName('net_type');
-		for (var i = 0, length = radios.length; i < length; i++) {
-			if (radios[i].checked) {
-				return radios[i].value;
-			}
-		}
-	}
-
-	function setup() {
-		var predicted_value;
-		var x_vol;
-		curve_x.forEach((x, i) => {
-			pred[i] = {
-				x: x,
-				y: 0
-			};
-		});
-
-		curve_plotter.add_group("training_points");
-		curve_plotter.add_group("validation_points");
-		train_loss_plotter.add_group("contour");
-		valid_loss_plotter.add_group("contour");
-		train_loss_plotter.add_x_axis_label("w1");
-		train_loss_plotter.add_y_axis_label("w2");
-		valid_loss_plotter.add_x_axis_label("w1");
-		valid_loss_plotter.add_y_axis_label("w2");
-		initial_plot();
-	}
-
-	function make_deep_net() {
-        const input = tf.input({shape: [1]});
-        const denseLayer1 = tf.layers.dense({units: 2, activation: 'softmax'});
-        const denseLayer2 = tf.layers.dense({units: 4, activation: 'softmax'});
-        const denseLayer3 = tf.layers.dense({units: 4, activation: 'softmax'});
-        const output = denseLayer3.apply(denseLayer2.apply(denseLayer1.apply(input)));
-		var layer_defs = [];
-        return tf.model({inputs: input, outputs: output});
+		plot();
 	}
 
 	function initial_plot() {
-		var deep_dummy_net = make_deep_net();
 		for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
 			for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-				deep_train_contour_data[k] = compute_training_loss(deep_dummy_net,
-					inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)
-				);
-				deep_valid_contour_data[k] = compute_validation_loss(deep_dummy_net,
-					inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)
-				);
+				const w1 = tf.tensor([
+					[inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)]
+				]);
+				const lw1 = tf.tensor([
+					[inv_x_scale(w_1 * param.scaling_factor)]
+				]);
+				const lb1 = tf.tensor([inv_y_scale(w_2 * param.scaling_factor)]);
+				deep_train_contour_data[k] = tf.tidy(() => {
+					const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasDeep).tanh();
+					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
+					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
+					const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+				});
+				deep_valid_contour_data[k] = tf.tidy(() => {
+					const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasDeep).tanh();
+					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
+					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
+					const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+				});
+				shallow_train_contour_data[k] = tf.tidy(() => {
+					const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasShallow).tanh();
+					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+				});
+				shallow_valid_contour_data[k] = tf.tidy(() => {
+					const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasShallow).tanh();
+					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+				});
+				linear_train_contour_data[k] = tf.tidy(() => {
+					const output = tf.tensor2d(train_xs).matMul(lw1).add(lb1);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+				});
+				linear_valid_contour_data[k] = tf.tidy(() => {
+					const output = tf.tensor2d(valid_xs).matMul(lw1).add(lb1);
+					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+				});
 			}
 		}
 		plot_contour(train_loss_plotter, deep_train_contour_data, train_contour_color,
@@ -201,43 +302,14 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 		});
 	}
 
-	function compute_validation_loss(dummy_net, w_1, w_2) {
-		var total_loss = 0;
-		var predicted;
-		var true_label;
-		var x_val;
-		dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
-		for (var j = 0; j < param.validation_points.length; j++) {
-			x_val = new net_lib.Vol([param.validation_points[j]]);
-			true_label = Math.sin(param.validation_points[j]) + param.validation_noise[j];
-			total_loss += dummy_net.getCostLoss(x_val, true_label);
-		}
-		return total_loss;
-	}
-
-	function compute_training_loss(dummy_net, w_1, w_2) {
-		var total_loss = 0;
-		var predicted;
-		var true_label;
-		var x_val;
-		dummy_net.getLayer(1).setWeights([[w_1], [w_2]]);
-		for (var i = 0; i < param.train_points.length; i++) {
-			x_val = new net_lib.Vol([param.train_points[i]]);
-			true_label = Math.sin(param.train_points[i]) + param.train_noise[i];
-			total_loss += dummy_net.getCostLoss(x_val, true_label);
-		}
-		return total_loss;
-	}
-
 	function plot_path() {
-		var predicted_value;
-		var x_val;
-		curve_x.forEach((x, i) => {
-			x_val = new net_lib.Vol([x]);
-			predicted_value = net.forward(x_val);
-			pred[i].y = predicted_value.w[0];
-		});
-
+		var pred = [];
+		predict(tf.tensor2d(curve_x, [curve_x.length, 1])).dataSync().forEach((y, i) => {
+			pred.push({
+				x: curve_x[i],
+				y: y
+			});
+		})
 		curve_plotter.plot_path([pred], {
 			color: "darkorange",
 			width: 3,
@@ -246,13 +318,24 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 	}
 
 	function plot_weight() {
-		data = [
-			{
-				x: net.getLayer(1).filters[0].w,
-				y: net.getLayer(1).filters[1].w
-            }
-        ];
-		train_loss_plotter.plot_points(data, {
+		var p;
+		if (radio_button_state() === 'Linear') {
+			p = [{
+				x: layer1WeightsLinear.dataSync()[0],
+				y: layer1BiasLinear.dataSync()[0],
+			}];
+		} else if (radio_button_state() === 'Deep') {
+			p = [{
+				x: layer1WeightsDeep.dataSync()[0],
+				y: layer1WeightsDeep.dataSync()[1],
+			}];
+		} else {
+			p = [{
+				x: layer1WeightsShallow.dataSync()[0],
+				y: layer1WeightsShallow.dataSync()[1],
+			}];
+		}
+		train_loss_plotter.plot_points(p, {
 			stroke: "black",
 			color: "darkslategray",
 			size: 7,
@@ -262,7 +345,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 			dragging: dragging,
 			end_drag: end_drag
 		});
-		valid_loss_plotter.plot_points(data, {
+		valid_loss_plotter.plot_points(p, {
 			stroke: "black",
 			color: "darkslategray",
 			size: 7,
@@ -282,12 +365,12 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 		var new_x = d3.mouse(this)[0];
 		var new_y = d3.mouse(this)[1];
 
-		d3.select(this).attr("cx", new_x).attr("cy", new_y);
-		net.getLayer(1).setWeights([
-            [inv_x_scale(new_x)],
-            [inv_y_scale(new_y)]
-        ]);
-		plot();
+		// d3.select(this).attr("cx", new_x).attr("cy", new_y);
+		// net.getLayer(1).setWeights([
+		//     [inv_x_scale(new_x)],
+		//     [inv_y_scale(new_y)]
+		// ]);
+		// plot();
 	}
 
 	function end_drag(d) {
@@ -301,4 +384,12 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 	function mouseout() {
 		d3.select(this).attr("r", 5);
 	}
+
+	return {
+		start: start,
+		stop: stop,
+		is_running: is_running,
+		update: update,
+		reset: reset
+	};
 }

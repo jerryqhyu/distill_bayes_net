@@ -40,7 +40,7 @@
     <script src="assets/utils.js"></script>
     <!-- <script src="assets/lib/lib.js"></script> -->
     <figure id='bnn_figure' style="width:100%; height:400px;">
-        <div id="full_bnn" class='.l-screen' style="width:100%; height:400px;"></div>
+        <div id="hero" class='.l-screen' style="width:100%; height:400px;"></div>
     </figure>
 
     <H1>Bayesian Neural Networks</H1>
@@ -51,8 +51,8 @@
 
     <figure>
         <div id="bnn_graph" style="position:relative; width:650px; height:200px;"></div>
-        <button type="button" onclick="full_bnn.start()">Train</button>
-        <button type="button" onclick="full_bnn.reset()">Reset</button>
+        <button type="button" onclick="hero.start()">Train</button>
+        <button type="button" onclick="hero.reset()">Reset</button>
     </figure>
 
     <dt-byline></dt-byline>
@@ -706,20 +706,21 @@
     <script src="assets/mlp.js"></script>
     <script src="assets/mlptfjs.js"></script>
     <script src="assets/svi.js"></script>
-    <script src="assets/full_bnn.js"></script>
     <script src="assets/hero.js"></script>
-    <script src="assets/hero-separate-layer.js"></script>
+    <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
     <script src="assets/rwnew.js"></script>
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
-        // BNN on top
-        var full_bnn = new herosep(d3.select("#full_bnn"), d3.select("#bnn_graph"));
+      
 
         // NN on sine
-        var mlp = new mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
+        var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
 
+        // BNN on top
+        var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
+        
         // MCMC
         var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
 
@@ -771,7 +772,7 @@
         }
 
         var active_views = {
-            "#bnn_figure" : full_bnn,
+            "#bnn_figure" : hero,
             "#mlp_figure" : mlp,
             "#rw_train_figure": rw_train,
             "#svi_figure": svi
