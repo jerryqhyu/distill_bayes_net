@@ -113,6 +113,51 @@
         (i.e., multinomial) distribution
       </dt-fn>
     </p>
+    <!--
+    w = \textcolor{#0074D9}{w}
+    y = \textcolor{#FF4136}{y}
+    x = \textcolor{#2ECC40}{x}
+    \lambda = \textcolor{#B10DC9}{\lambda}
+ -->
+    <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
+
+     <div style="position:relative; top:-35px">
+
+       <span style="position:absolute; left: 70px; top:0px;">
+       $$L(D,\textcolor{#0074D9}{\textcolor{#0074D9}{w}}) \coloneqq \sum_{i=1}^N (\textcolor{#FF4136}{y}_i - f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}))^2 + \textcolor{#B10DC9}{\lambda} \sum_d \textcolor{#0074D9}{w}_d^2$$
+       </span>
+
+       <figcaption style="position:absolute;left:60px;top: 90px;width:80px;">
+         Loss of our model on dataset $D$
+       </figcaption>
+       <figcaption style="position:absolute;left:170px;top: 90px;width:170px;">
+         is squared error between the target label $\textcolor{#FF4136}{y}_i$ and output of network with input $\textcolor{#2ECC40}{x}_i$ and weights $\textcolor{#0074D9}{w}$
+       </figcaption>
+       <figcaption style="position:absolute;left:350px;top: 90px;width:150px;">
+         hyperparameter $\textcolor{#B10DC9}{\lambda}$ sets importance of regularizing large weight values $\textcolor{#0074D9}{w}_d$.
+        </figcaption>
+     </div>
+   </figure>
+
+   <figure id="logprob_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
+
+    <div style="position:relative; top:-35px">
+
+      <span style="position:absolute; left:40px; top:0px;">
+      $$\log p(D,\textcolor{#0074D9}{\textcolor{#0074D9}{w}}) \coloneqq \sum_{i=1}^N \log \mathcal{N}(\textcolor{#FF4136}{y}_i | f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}),1) + \sum_d \log \mathcal{N}(\textcolor{#0074D9}{w}_d| 0, \tfrac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}})$$
+      </span>
+      <figcaption style="position:absolute;left:30px;top: 90px;width:100px;">
+        Log-likelihood of dataset $D$ under model
+      </figcaption>
+      <figcaption style="position:absolute;left:170px;top: 90px;width:210px;">
+        is log-probability of target label $\textcolor{#FF4136}{y}_i$ under gaussian distribution $\mathcal{N}$ with mean given by output of network $f(\textcolor{#2ECC40}{x}_i, \textcolor{#0074D9}{w})$ and variance $1$.
+      </figcaption>
+      <figcaption style="position:absolute;left:400px;top: 90px;width:200px;">
+        and prior belief about weights given by log-probability of $\textcolor{#0074D9}{w}_d$ under Gaussian $\mathcal{N}$ with $0$ mean and hyperparameter-controlled variance $\frac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}}$.
+       </figcaption>
+    </div>
+  </figure>
+
     <!-- Regular MLP objective surfaces -->
     <figure id='mlp_figure' style="position:relative; width:984px;">
         <div class="container">
