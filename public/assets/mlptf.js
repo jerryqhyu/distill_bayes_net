@@ -16,9 +16,9 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	// 3 layer shallow net
 	const layer1WeightsShallow = tf.variable(tf.randomNormal([1, 2], 0, 0.5, 'float32', 1));
-	const layer1BiasShallow = tf.zeros([2]);
-	const layer2WeightsShallow = tf.randomNormal([2, 1], 0, 0.5, 'float32', 1);
-	const layer2BiasShallow = tf.zeros([1]);
+	const layer1BiasShallow = tf.variable(tf.zeros([2]));
+	const layer2WeightsShallow = tf.variable(tf.randomNormal([2, 1], 0, 0.5, 'float32', 1));
+	const layer2BiasShallow = tf.variable(tf.zeros([1]));
 
 	// linear regression
 	const layer1WeightsLinear = tf.variable(tf.randomNormal([1, 1], 0, 0.5, 'float32', 1));
@@ -28,12 +28,15 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		plot();
 		for (var i = 0; i < 1000; i++) {
 			await train();
-			plot();
+			// plot();
+			const w1 = tf.variable(tf.tensor([
+				[0, 0]
+			]));
 			for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
 				for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-					const w1 = tf.tensor([
+					w1.assign(tf.tensor([
 						[inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)]
-					]);
+					]));
 					deep_train_contour_data[k] = tf.tidy(() => {
 						const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasDeep).tanh();
 						const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
@@ -48,12 +51,19 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 						const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
 						return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
 					});
+					shallow_train_contour_data[k] = tf.tidy(() => {
+						const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasShallow).tanh();
+						const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
+						return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+					});
+					shallow_valid_contour_data[k] = tf.tidy(() => {
+						const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasShallow).tanh();
+						const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
+						return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+					});
 				}
 			}
-			plot_contour(train_loss_plotter, deep_train_contour_data, train_contour_color,
-				train_contour_scale);
-			plot_contour(valid_loss_plotter, deep_valid_contour_data, valid_contour_color,
-				valid_contour_scale);
+			update();
 		}
 	}
 

@@ -167,8 +167,4 @@ function hero(curve_div, graph_div) {
         is_running: is_running,
         reset: reset
     };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> fixed where each figure would ruin the graph of the previous
