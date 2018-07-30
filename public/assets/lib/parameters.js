@@ -3,18 +3,14 @@ var param = {
     h: 300,
     w_progress: 650,
     h_progress: 300,
-    n: 50,
-    m: 50,
-    var_n: 60,
-    var_m: 60,
-    scaling_factor: 5.6,
-    var_scaling_factor: 4.6666,
+    n: 14,
+    m: 14,
+    scaling_factor: 20,
     step_size: 0.1,
     learning_rate: 5e-3,
     l1_decay: 0,
     l2_decay: 10.0,
     momentum: 0.95,
-    batch_size: 18,
     divergence_curve_domain_x: [
         -12, 12
     ],
@@ -52,20 +48,20 @@ var param = {
         -1.2, 1.2
     ],
     train_points: [
-        0.98348382,
-        0.33239784,
+        // 0.98348382,
+        // 0.33239784,
         1.31901198,
         -1.33424016,
-        -2.49962207,
-        2.671385
+        // -2.49962207,
+        // 2.671385
     ],
     train_noise: [
-        -0.24911933,
-        -0.18541917,
+        // -0.24911933,
+        // -0.18541917,
         0.37738159,
         0.16834003,
-        0.39383113,
-        0.37258389
+        // 0.39383113,
+        // 0.37258389
     ],
     validation_points: [
         0.0074539,
@@ -251,21 +247,21 @@ var param = {
 };
 
 var train_xs = [
-    [0.98348382],
-    [0.33239784],
+    // [0.98348382],
+    // [0.33239784],
     [1.31901198],
     [-1.33424016],
-    [-2.49962207],
-    [2.671385]
+    // [-2.49962207],
+    // [2.671385]
 ];
 
 var train_ys = [
-    [0.58331356],
-    [0.14089138],
+    // [0.58331356],
+    // [0.14089138],
     [1.34585101],
     [-0.80381079],
-    [-0.20494374],
-    [0.82565530]
+    // [-0.20494374],
+    // [0.82565530]
 ];
 
 var valid_xs = [
@@ -373,31 +369,18 @@ var valid_ys = [
     [-0.95887371712782976], 
     [-0.38669595845328064]
 ];
-
 // scales
 var divergence_fill_color = d3.scaleLinear().domain([-50, 0]).interpolate(function() {
     return d3.interpolateRdYlGn;
 });
 
-var train_contour_color = d3.scaleLinear().domain([-2.5, 0.05]).interpolate(function() {
+var train_contour_color = d3.scaleLinear().domain([-1, 0.02]).interpolate(function() {
     return d3.interpolateSpectral;
 });
 
-var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(- 0.05, 2.5, 0.05));
+var train_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.02, 1, 0.02));
 
-var valid_contour_color = d3.scaleLinear().domain([-20, 0.5]).interpolate(function() {
+var valid_contour_color = d3.scaleLinear().domain([-0.8, 0.02]).interpolate(function() {
     return d3.interpolateSpectral;
 });
-var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(- 0.5, 20, 0.5));
-
-var sample_from_seed = function(seed, rows, cols) {
-    var rng = new Math.seedrandom(seed);
-    var s = [];
-    for (var i = 0; i < rows; i++) {
-        s.push([]);
-        for (var j = 0; j < cols; j++) {
-            s[i].push(net_lib.seededGaussian(rng));
-        }
-    }
-    return s;
-};
+var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.02, 0.8, 0.02));

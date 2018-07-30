@@ -10,8 +10,8 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<script src="assets/lib/tfjs@0.11.7"></script>
-<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.7"></script> -->
+<!-- <script src="assets/lib/tfjs@0.12.0"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script>
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -720,22 +720,22 @@
     <script src="assets/iterates.js"></script>
     <script src="assets/divergence.js"></script>
     <script src="assets/mlp.js"></script>
-    <script src="assets/mlptfjs.js"></script>
+    <script src="assets/mlptf.js"></script>
     <script src="assets/svi.js"></script>
-    <script src="assets/hero.js"></script>
+    <script src="assets/svitf.js"></script>
     <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
     <script src="assets/rwnew.js"></script>
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
-      
+	    tf.setBackend('cpu')
+  
+        // BNN on top
+        var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
         // NN on sine
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
-
-        // BNN on top
-        var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
         
         // MCMC
         var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);

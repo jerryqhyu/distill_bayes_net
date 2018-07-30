@@ -1,21 +1,18 @@
 function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
-
 	this.div_id = curve_div.attr('id');
-
-	tf.setBackend('cpu')
-	const optimizerDeep = tf.train.sgd(param.learning_rate);
-	const optimizerShallow = tf.train.sgd(param.learning_rate);
-	const optimizerLinear = tf.train.sgd(param.learning_rate);
+	const optimizerDeep = tf.train.momentum(param.learning_rate, param.momentum);
+	const optimizerShallow = tf.train.momentum(param.learning_rate, param.momentum);
+	const optimizerLinear = tf.train.momentum(param.learning_rate, param.momentum);
 
 	// 4 layer deep net
 	const layer1WeightsDeep = tf.variable(tf.tensor(param.layer1w));
-	const layer1BiasDeep = tf.tensor(param.layer1b);
-	const layer2WeightsDeep = tf.tensor(param.layer2w);
-	const layer2BiasDeep = tf.tensor(param.layer2b);
-	const layer3WeightsDeep = tf.tensor(param.layer3w);
-	const layer3BiasDeep = tf.tensor(param.layer3b);
-	const layer4WeightsDeep = tf.tensor(param.layer4w);
-	const layer4BiasDeep = tf.tensor(param.layer4b);
+	const layer1BiasDeep = tf.variable(tf.tensor(param.layer1b));
+	const layer2WeightsDeep = tf.variable(tf.tensor(param.layer2w));
+	const layer2BiasDeep = tf.variable(tf.tensor(param.layer2b));
+	const layer3WeightsDeep = tf.variable(tf.tensor(param.layer3w));
+	const layer3BiasDeep = tf.variable(tf.tensor(param.layer3b));
+	const layer4WeightsDeep = tf.variable(tf.tensor(param.layer4w));
+	const layer4BiasDeep = tf.variable(tf.tensor(param.layer4b));
 
 	// 3 layer shallow net
 	const layer1WeightsShallow = tf.variable(tf.randomNormal([1, 2], 0, 0.5, 'float32', 1));
@@ -32,6 +29,31 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 		for (var i = 0; i < 1000; i++) {
 			await train();
 			plot();
+			for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
+				for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
+					const w1 = tf.tensor([
+						[inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)]
+					]);
+					deep_train_contour_data[k] = tf.tidy(() => {
+						const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasDeep).tanh();
+						const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
+						const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
+						const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
+						return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+					});
+					deep_valid_contour_data[k] = tf.tidy(() => {
+						const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasDeep).tanh();
+						const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
+						const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
+						const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
+						return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+					});
+				}
+			}
+			plot_contour(train_loss_plotter, deep_train_contour_data, train_contour_color,
+				train_contour_scale);
+			plot_contour(valid_loss_plotter, deep_valid_contour_data, valid_contour_color,
+				valid_contour_scale);
 		}
 	}
 
@@ -93,8 +115,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	}
 
 	async function trainDeep() {
-		for (let iter = 0; iter < 4; iter++) {
-			console.log(3);
+		for (let iter = 0; iter < 1; iter++) {
 			optimizerDeep.minimize(() => {
 				const predsYs = predictDeep(tf.tensor2d(train_xs)); // input N*D
 				const loss = tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
@@ -106,7 +127,6 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	async function trainShallow() {
 		for (let iter = 0; iter < 4; iter++) {
-			console.log(1);
 			optimizerShallow.minimize(() => {
 				const shallowY = predictShallow(tf.tensor2d(train_xs)); // input N*D
 				const loss = tf.losses.meanSquaredError(shallowY, tf.tensor2d(train_ys))
@@ -118,7 +138,6 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 
 	async function trainLinear() {
 		for (let iter = 0; iter < 4; iter++) {
-			console.log(2);
 			optimizerLinear.minimize(() => {
 				const predsYs = predictLinear(tf.tensor2d(train_xs)); // input N*D
 				const loss = tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
@@ -155,8 +174,8 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			};
 		});
 
-		curve_plotter.add_group("training_points");
-		curve_plotter.add_group("validation_points");
+		curve_plotter.add_group("training_point");
+		curve_plotter.add_group("validation_point");
 		train_loss_plotter.add_group("contour");
 		valid_loss_plotter.add_group("contour");
 		train_loss_plotter.add_x_axis_label("w1");
@@ -281,14 +300,14 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 			color: "red",
 			size: 4,
 			opacity: 1,
-			id: "#training_points"
+			id: "#training_point"
 		});
 		curve_plotter.plot_points(validation_points_data, {
 			stroke: "green",
 			color: "green",
 			size: 4,
 			opacity: 0.5,
-			id: "#validation_points"
+			id: "#validation_point"
 		});
 	}
 
