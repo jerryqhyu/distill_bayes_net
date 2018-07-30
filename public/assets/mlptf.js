@@ -14,6 +14,16 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div, graph_div) {
 	const layer4WeightsDeep = tf.variable(tf.tensor(param.layer4w));
 	const layer4BiasDeep = tf.variable(tf.tensor(param.layer4b));
 
+	// 4 layer deep net
+	// const layer1WeightsDeep = tf.variable(tf.randomNormal([1, 2], 0, 1));
+	// const layer1BiasDeep = tf.variable(tf.zeros([2]));
+	// const layer2WeightsDeep = tf.variable(tf.randomNormal([2, 4], 0, 1));
+	// const layer2BiasDeep = tf.variable(tf.zeros([4]));
+	// const layer3WeightsDeep = tf.variable(tf.randomNormal([4, 4], 0, 1));
+	// const layer3BiasDeep = tf.variable(tf.zeros([4]));
+	// const layer4WeightsDeep = tf.variable(tf.randomNormal([4, 1], 0, 1));
+	// const layer4BiasDeep = tf.variable(tf.zeros([1]));
+
 	// 3 layer shallow net
 	const layer1WeightsShallow = tf.variable(tf.randomNormal([1, 2], 0, 0.5, 'float32', 1));
 	const layer1BiasShallow = tf.variable(tf.zeros([2]));

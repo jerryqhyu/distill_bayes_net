@@ -54,7 +54,11 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     var pred = new Array(curve_x.length);
 
     function predict(x) {
-        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32')));
+        predict(x, 0);
+    }
+
+    function predict(x, seed) {
+        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
         const layer1 = tf.tidy(() => {
             return x.matMul(layer1Weights).add(layer1Bias).tanh();
         });
@@ -173,16 +177,20 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     }
 
     function plot_path() {
-        var pred = [];
-        predict(tf.tensor2d(curve_x, [curve_x.length, 1])).dataSync().forEach((y, i) => {
-            pred.push({
-                x: curve_x[i],
-                y: y
-            });
-        })
-        curve_plotter.plot_path([pred], {
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        var curves = seed.map(s => {
+            var d = [];
+            predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
+                d.push({
+                    x: curve_x_extended[i],
+                    y: y
+                });
+            })
+            return d;
+        });
+        curve_plotter.plot_path(curves, {
             color: "darkorange",
-            width: 3,
+            width: 1,
             opacity: 1,
         });
     }
