@@ -68,27 +68,12 @@
         sound surprising at first, but let's look at the training procedure both mathematically and graphically (for a toy problem) to build some intuition around why deep neural networks overfit.
     </p>
 
-    <p>
-      First, some notation: let's call inputs $x$ and outputs $y$ and the training set $D_{\text{train}}$, which is a finite collection of input-output pairs. Similarly we have a test set $D_{\text{test}}$ of <i>different</i> input-output pairs. Then neural
-      network training corresponds to the following optimization problem:
-    </p>
-    <!-- <figure id="max-Ltrain" style="width:530px; height:70px; display:block; margin-left:auto; margin-right:auto; position:relative">
-
-      <div style="position:relative; top:-35px">
-
-        <span style="position:absolute; left:150px; top:0px;">
-          <p>$$\underset{w}{\text{maximize}} \quad L_{\text{train}}(w)$$</p>
-        </span>
-        <figcaption style="position:absolute;left:280px;top: 60px;width:100px;">
-          <i>expected log likelihood</i> of the training data
-        </figcaption>
-      </div>
-    </figure>
 
     <p>
-  	  where $L_{\text{train}}$, the <i>expected log likelihood</i> of the training data, is a function of the weights $w$, and is defined as</p> -->
-
-     <figure id="Ltrain_def" style="width:530px; height:70px; display:block; margin-left:auto; margin-right:auto; position:relative">
+    In standard neural network training we want to learn an input-to-output mapping $y \approx f(x, w)$ via a network $f$ with weights $w$.
+    We use a dataset of labeled examples $D = \{x_i, y_i\}$ to minimize a loss function $L(D, w)$ with respect to the weights $w$:
+    <!--
+         <figure id="Ltrain_def" style="width:530px; height:70px; display:block; margin-left:auto; margin-right:auto; position:relative">
 
       <div style="position:relative; top:-35px">
 
@@ -112,11 +97,13 @@
       <dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
         (i.e., multinomial) distribution
       </dt-fn>
+      -->
     </p>
     <!--
     w = \textcolor{#0074D9}{w}
     y = \textcolor{#FF4136}{y}
     x = \textcolor{#2ECC40}{x}
+    D = \textcolor{#FFA500}{D}
     \lambda = \textcolor{#B10DC9}{\lambda}
  -->
     <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
@@ -124,11 +111,11 @@
      <div style="position:relative; top:-35px">
 
        <span style="position:absolute; left: 70px; top:0px;">
-       $$L(D,\textcolor{#0074D9}{\textcolor{#0074D9}{w}}) \coloneqq \sum_{i=1}^N (\textcolor{#FF4136}{y}_i - f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}))^2 + \textcolor{#B10DC9}{\lambda} \sum_d \textcolor{#0074D9}{w}_d^2$$
+           $$L(\textcolor{#FFA500}{D},\textcolor{#0074D9}{w}) \coloneqq \sum_{x_i,y_i \in D} (\textcolor{#FF4136}{y}_i - f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}))^2 + \textcolor{#B10DC9}{\lambda} \sum_d \textcolor{#0074D9}{w}_d^2$$
        </span>
 
        <figcaption style="position:absolute;left:60px;top: 90px;width:80px;">
-         Loss of our model on dataset $D$
+         Loss of our model on dataset $\textcolor{#FFA500}{D}$
        </figcaption>
        <figcaption style="position:absolute;left:170px;top: 90px;width:170px;">
          is squared error between the target label $\textcolor{#FF4136}{y}_i$ and output of network with input $\textcolor{#2ECC40}{x}_i$ and weights $\textcolor{#0074D9}{w}$
@@ -139,15 +126,19 @@
      </div>
    </figure>
 
+   <p>
+   This turns out to be equivalent to <i>maximum likelihood</i> training, in other words, maximizing the log probability of the data $D$ and weights $w$:
+   </p>
+
    <figure id="logprob_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
 
     <div style="position:relative; top:-35px">
 
       <span style="position:absolute; left:40px; top:0px;">
-      $$\log p(D,\textcolor{#0074D9}{\textcolor{#0074D9}{w}}) \coloneqq \sum_{i=1}^N \log \mathcal{N}(\textcolor{#FF4136}{y}_i | f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}),1) + \sum_d \log \mathcal{N}(\textcolor{#0074D9}{w}_d| 0, \tfrac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}})$$
+      $$\log p(\textcolor{#FFA500}{D},{\textcolor{#0074D9}{w}}) \coloneqq \sum_{x_i,y_i \in D} \log \mathcal{N}(\textcolor{#FF4136}{y}_i | f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}),I) + \sum_d \log \mathcal{N}(\textcolor{#0074D9}{w}_d| 0, \tfrac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}})$$
       </span>
       <figcaption style="position:absolute;left:30px;top: 90px;width:100px;">
-        Log-likelihood of dataset $D$ under model
+        Log-likelihood of dataset $\textcolor{#FFA500}{D}$ under model
       </figcaption>
       <figcaption style="position:absolute;left:170px;top: 90px;width:210px;">
         is log-probability of target label $\textcolor{#FF4136}{y}_i$ under gaussian distribution $\mathcal{N}$ with mean given by output of network $f(\textcolor{#2ECC40}{x}_i, \textcolor{#0074D9}{w})$ and variance $1$.
@@ -158,13 +149,26 @@
     </div>
   </figure>
 
+  <p>
+  We train on the training dataset $D_\text{train}$, but evaluate on the test dataset.
+  As we see in the demo below, the training objective function $\log p(D_\text{train})$ is different from the test objective function $\log p(D_\text{test})$. 
+  Overfitting happens when we choose network weights $w$ that do well on $\log p(D_\text{train})$ but poorly on $\log p(D_\text{test})$.
+  As we add more layers to the network, the problem gets worse.
+  </p>
+
+  <p>
+  Luckily, Bayesian neural networks address overfitting by modeling uncertainty in the weights.
+  Plus they can be trained using standard neural net tools using an algorithm called stochastic variational inference, which we cover at the end of this tutorial.
+  But first let's explore why being Bayesian helps with overfitting.
+  </p>
+
     <!-- Regular MLP objective surfaces -->
     <figure id='mlp_figure' style="position:relative; width:984px;">
         <div class="container">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
                     <figcaption id="nn_loss_train_title" class='little_caption'>
-                        Training likelihood $L_{\text{train}}(w_1, w_2)$
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1, w_2})$
                     </figcaption>
                     <div id="nn_loss_train" class='contour'> </div>
                 </div>
@@ -177,7 +181,7 @@
                 </div>
                 <div class="table-cell-wrap">
                     <figcaption id="nn_loss_test_title" class='little_caption'>
-                        Test likelihood $L_{\text{train}}(w_1, w_2)$
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1, w_2})$
                     </figcaption>
                     <div id="nn_loss_valid" class='contour'> </div>
                 </div>
@@ -213,6 +217,7 @@
     </figure>
 
 
+    <!--
 
     <p>
         Our prior beleifs about the weights, $\log p(w)$, regularizes this optimization.
@@ -235,6 +240,7 @@
         a model has, the better it is at finding local optima on the training loss, thus the more it will eventually overfit. Our demo also illustrates that overfitting is less of an issue for low-capacity models: if we restrict the network to have only one hidden
         layer ("shallow") or no activations ("linear") we see that $L_{\text{train}}$ looks similar to $L_{\text{test}}$, so there's little danger of overfitting.
     </p>
+    -->
 
     <h2>Bayes to the rescue</h2>
     <p>
