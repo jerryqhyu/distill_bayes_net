@@ -4,7 +4,7 @@ function hero(curve_div, graph_div) {
     const eps = tf.scalar(1e-9);
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
-    const optH = tf.train.momentum(param.learning_rate / 10, param.momentum);
+    const optH = tf.train.momentum(param.learning_rate / 5, param.momentum);
     const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 0.5));
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));
     const layer1BiasMu = tf.variable(tf.zeros([10]));
@@ -96,7 +96,7 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-        var seed = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
         var curves = seed.map(s => {
             var d = [];
             predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
