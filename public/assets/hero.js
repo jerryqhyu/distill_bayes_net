@@ -1,12 +1,10 @@
 function hero(curve_div, graph_div) {
     this.div_id = curve_div.attr('id');
-    tf.setBackend('cpu')
-
     var training = false;
     const eps = tf.scalar(1e-9);
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
-    const optimizer = tf.train.sgd(0.005);   
+    const optH = tf.train.momentum(param.learning_rate / 10, param.momentum);
     const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 0.5));
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));
     const layer1BiasMu = tf.variable(tf.zeros([10]));
@@ -46,7 +44,7 @@ function hero(curve_div, graph_div) {
 
     }
 
-    function predict(x) { 
+    function predict(x) {
         return predict(x, 0);
     }
 
@@ -57,12 +55,12 @@ function hero(curve_div, graph_div) {
         const layer2Bias = layer2BiasMu.add(tf.exp(layer2BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape, 0, 1, 'float32', seed)));
         const layer3Weights = layer3WeightsMu.add(tf.exp(layer3WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer3WeightsMu.shape, 0, 1, 'float32', seed)));
         const layer3Bias = layer3BiasMu.add(tf.exp(layer3BiasLogSigma.add(eps)).mul(tf.randomNormal(layer3BiasMu.shape, 0, 1, 'float32', seed)));
-   
+
         const layer1 = tf.tidy(() => {
-            return x.matMul(layer1Weights).add(layer1Bias).elu(1/10);
+            return x.matMul(layer1Weights).add(layer1Bias).elu(1 / 10);
         });
         const layer2 = tf.tidy(() => {
-            return layer1.matMul(layer2Weights).add(layer2Bias).elu(1/10);
+            return layer1.matMul(layer2Weights).add(layer2Bias).elu(1 / 10);
         });
         return layer2.matMul(layer3Weights).add(layer3Bias);
     }
@@ -75,15 +73,15 @@ function hero(curve_div, graph_div) {
 
     async function train() {
         for (let iter = 0; iter < 4; iter++) {
-            optimizer.minimize(() => {
+            optH.minimize(() => {
                 const predsYs = predict(tf.tensor2d(valid_xs)); // input N*D
-                const loss = tf.losses.meanSquaredError(predsYs, tf.tensor2d(valid_ys))
-                return loss;
-            });
+                const lossH = tf.losses.meanSquaredError(predsYs, tf.tensor2d(valid_ys));
+                return lossH;
+            }, false, [layer1WeightsMu, layer1WeightsLogSigma, layer1BiasMu, layer1BiasLogSigma, layer2WeightsMu, layer2WeightsLogSigma, layer2BiasMu, layer2BiasLogSigma, layer3WeightsMu, layer3WeightsLogSigma, layer3BiasMu, layer3BiasLogSigma]);
         }
         await tf.nextFrame();
     }
-    
+
     function setup() {
         curve_plotter.add_group("fixed");
         curve_plotter.add_group("float");
@@ -98,11 +96,14 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];      
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         var curves = seed.map(s => {
             var d = [];
             predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
-                d.push({x: curve_x_extended[i], y: y});
+                d.push({
+                    x: curve_x_extended[i],
+                    y: y
+                });
             })
             return d;
         });
@@ -124,5 +125,10 @@ function hero(curve_div, graph_div) {
         });
     }
 
-    return {start: start, stop: stop, is_running: is_running, reset: reset};
+    return {
+        start: start,
+        stop: stop,
+        is_running: is_running,
+        reset: reset
+    };
 }
