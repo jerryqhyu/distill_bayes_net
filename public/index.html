@@ -10,8 +10,8 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<!-- <script src="assets/lib/tfjs@0.12.0"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script>
+<script src="assets/lib/tfjs@0.11.7"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script> -->
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -713,7 +713,7 @@
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
-	    tf.setBackend('cpu')
+	    tf.setBackend('cpu');
   
         // BNN on top
         var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
