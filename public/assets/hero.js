@@ -5,6 +5,7 @@ function hero(curve_div, graph_div) {
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
 <<<<<<< HEAD
+<<<<<<< HEAD
     // const optimizer = tf.train.momentum(1e-12, 0.9);
     const optimizer = tf.train.sgd(1e-5);
     const layer1WeightsMu = tf.variable(tf.randomNormal([1, 15], 0, 0.25));
@@ -12,6 +13,11 @@ function hero(curve_div, graph_div) {
     const optH = tf.train.momentum(param.learning_rate / 5, param.momentum);
     const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 0.5));
 >>>>>>> samples for svi
+=======
+    // const optimizer = tf.train.momentum(1e-12, 0.9);
+    const optimizer = tf.train.sgd(1e-5);
+    const layer1WeightsMu = tf.variable(tf.randomNormal([1, 15], 0, 0.25));
+>>>>>>> fixed training for hero
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));
     const layer1BiasMu = tf.variable(tf.zeros([15]));
     const layer1BiasLogSigma = tf.variable(tf.randomUniform(layer1BiasMu.shape, minLogSigma, maxLogSigma));
@@ -139,10 +145,14 @@ function hero(curve_div, graph_div) {
 
     function plot_path() {
 <<<<<<< HEAD
+<<<<<<< HEAD
         var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
 =======
         var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 >>>>>>> samples for svi
+=======
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+>>>>>>> fixed training for hero
         var curves = seed.map(s => {
             var d = [];
             predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
@@ -150,6 +160,7 @@ function hero(curve_div, graph_div) {
                     x: curve_x_extended[i],
                     y: y
                 });
+<<<<<<< HEAD
             curve_plotter.plot_path(curves, {
                 color: "red",
                 width: 0.5,
@@ -157,6 +168,16 @@ function hero(curve_div, graph_div) {
                 id: "#float"
             });
             }
+=======
+            })
+            return d;
+        });
+        curve_plotter.plot_path(curves, {
+            color: "red",
+            width: 0.5,
+            opacity: 0.75,
+            id: "#float"
+>>>>>>> fixed training for hero
         });
     }
 
