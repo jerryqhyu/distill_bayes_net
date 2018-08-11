@@ -75,7 +75,7 @@ function hero(curve_div, graph_div) {
         for (let iter = 0; iter < 1; iter++) {
             optimizer.minimize(() => {
                 const logLik = tf.tidy(() => {
-                    var s = tf.randomUniform([20, 1], -100, 100).dataSync();
+                    var s = tf.randomUniform([10, 1], -100, 100).dataSync();
                     const loss1 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[0]), tf.tensor2d(experiment_ys));
                     const loss2 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[1]), tf.tensor2d(experiment_ys));
                     const loss3 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[2]), tf.tensor2d(experiment_ys));
@@ -86,17 +86,7 @@ function hero(curve_div, graph_div) {
                     const loss8 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[7]), tf.tensor2d(experiment_ys));
                     const loss9 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[8]), tf.tensor2d(experiment_ys));
                     const loss10 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[9]), tf.tensor2d(experiment_ys));
-                    const loss11 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[10]), tf.tensor2d(experiment_ys));
-                    const loss12 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[11]), tf.tensor2d(experiment_ys));
-                    const loss13 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[12]), tf.tensor2d(experiment_ys));
-                    const loss14 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[13]), tf.tensor2d(experiment_ys));
-                    const loss15 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[14]), tf.tensor2d(experiment_ys));
-                    const loss16 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[15]), tf.tensor2d(experiment_ys));
-                    const loss17 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[16]), tf.tensor2d(experiment_ys));
-                    const loss18 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[17]), tf.tensor2d(experiment_ys));
-                    const loss19 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[18]), tf.tensor2d(experiment_ys));
-                    const loss20 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[19]), tf.tensor2d(experiment_ys));
-                    return loss1.add(loss2).add(loss3).add(loss4).add(loss5).add(loss6).add(loss7).add(loss8).add(loss9).add(loss10).add(loss11).add(loss12).add(loss13).add(loss14).add(loss15).add(loss16).add(loss17).add(loss18).add(loss19).add(loss20).div(tf.scalar(20)).div(tf.scalar(1e-4));
+                    return loss1.add(loss2).add(loss3).add(loss4).add(loss5).add(loss6).add(loss7).add(loss8).add(loss9).add(loss10).div(tf.scalar(10)).div(tf.scalar(1e-4));
                 });
 
                 const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
@@ -133,7 +123,7 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         var curves = seed.map(s => {
             var d = [];
             predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
