@@ -4,33 +4,29 @@ function hero(curve_div, graph_div) {
     const eps = tf.scalar(1e-9);
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
-<<<<<<< HEAD
-<<<<<<< HEAD
-    // const optimizer = tf.train.momentum(1e-12, 0.9);
-    const optimizer = tf.train.sgd(1e-5);
-    const layer1WeightsMu = tf.variable(tf.randomNormal([1, 15], 0, 0.25));
-=======
-    const optH = tf.train.momentum(param.learning_rate / 5, param.momentum);
-    const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 0.5));
->>>>>>> samples for svi
-=======
-    // const optimizer = tf.train.momentum(1e-12, 0.9);
-    const optimizer = tf.train.sgd(1e-5);
-    const layer1WeightsMu = tf.variable(tf.randomNormal([1, 15], 0, 0.25));
->>>>>>> fixed training for hero
+    // const optimizer = tf.train.momentum(1e-4, 0.85);
+    const optimizer = tf.train.adam(0.08);
+
+    const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 1));
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));
-    const layer1BiasMu = tf.variable(tf.zeros([15]));
+    const layer1BiasMu = tf.variable(tf.zeros([10]));
     const layer1BiasLogSigma = tf.variable(tf.randomUniform(layer1BiasMu.shape, minLogSigma, maxLogSigma));
 
-    const layer2WeightsMu = tf.variable(tf.randomNormal([15, 15], 0, 0.25));
+    const layer2WeightsMu = tf.variable(tf.randomNormal([10, 10], 0, 1));
     const layer2WeightsLogSigma = tf.variable(tf.randomUniform(layer2WeightsMu.shape, minLogSigma, maxLogSigma));
-    const layer2BiasMu = tf.variable(tf.zeros([15]));
+    const layer2BiasMu = tf.variable(tf.zeros([10]));
     const layer2BiasLogSigma = tf.variable(tf.randomUniform(layer2BiasMu.shape, minLogSigma, maxLogSigma));
 
-    const layer3WeightsMu = tf.variable(tf.randomNormal([15, 1], 0, 0.25));
+    const layer3WeightsMu = tf.variable(tf.randomNormal([10, 1], 0, 1));
     const layer3WeightsLogSigma = tf.variable(tf.randomUniform(layer3WeightsMu.shape, minLogSigma, maxLogSigma));
     const layer3BiasMu = tf.variable(tf.zeros([1]));
     const layer3BiasLogSigma = tf.variable(tf.randomUniform(layer3BiasMu.shape, minLogSigma, maxLogSigma));
+
+    var curve_plotter = new Plotter(curve_div, param.curve_domain_x_extended, param.hero_domain_y, false, false);
+    var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
+
+    //interval controller
+    setup();
 
     async function start() {
         plot();
@@ -56,85 +52,64 @@ function hero(curve_div, graph_div) {
 
     }
 
-    function predict(x) {
-        return predict(x, 0);
-    }
-
     function predict(x, seed) {
-        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
-        const layer1Bias = layer1BiasMu.add(tf.exp(layer1BiasLogSigma.add(eps)).mul(tf.randomNormal(layer1BiasMu.shape, 0, 1, 'float32', seed)));
-        const layer2Weights = layer2WeightsMu.add(tf.exp(layer2WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape, 0, 1, 'float32', seed)));
-        const layer2Bias = layer2BiasMu.add(tf.exp(layer2BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape, 0, 1, 'float32', seed)));
-        const layer3Weights = layer3WeightsMu.add(tf.exp(layer3WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer3WeightsMu.shape, 0, 1, 'float32', seed)));
-        const layer3Bias = layer3BiasMu.add(tf.exp(layer3BiasLogSigma.add(eps)).mul(tf.randomNormal(layer3BiasMu.shape, 0, 1, 'float32', seed)));
-        const layer1 = tf.tidy(() => {
-            return x.matMul(layer1Weights).add(layer1Bias).elu(1 / 20);
+        return tf.tidy(() => {
+            const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
+            const layer1Bias = layer1BiasMu.add(tf.exp(layer1BiasLogSigma.add(eps)).mul(tf.randomNormal(layer1BiasMu.shape, 0, 1, 'float32', seed)));
+            const layer2Weights = layer2WeightsMu.add(tf.exp(layer2WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer2WeightsMu.shape, 0, 1, 'float32', seed)));
+            const layer2Bias = layer2BiasMu.add(tf.exp(layer2BiasLogSigma.add(eps)).mul(tf.randomNormal(layer2BiasMu.shape, 0, 1, 'float32', seed)));
+            const layer3Weights = layer3WeightsMu.add(tf.exp(layer3WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer3WeightsMu.shape, 0, 1, 'float32', seed)));
+            const layer3Bias = layer3BiasMu.add(tf.exp(layer3BiasLogSigma.add(eps)).mul(tf.randomNormal(layer3BiasMu.shape, 0, 1, 'float32', seed)));
+    
+            const l1 = tf.exp(x.matMul(layer1Weights).add(layer1Bias).pow(tf.scalar(2)).mul(tf.scalar(-1)));
+            // const l1 = x.mul(tf.sigmoid(x.matMul(layer1Weights).add(layer1Bias)));
+            // const l1 = x.matMul(layer1Weights).add(layer1Bias).elu(0.1);
+            // const l2 = l1.matMul(layer2Weights).add(layer2Bias).elu(0.1);
+            const l2 = tf.exp(l1.matMul(layer2Weights).add(layer2Bias).pow(tf.scalar(2)).mul(tf.scalar(-1)));
+            // const l2 = layer1.mul(tf.sigmoid(layer1.matMul(layer2Weights).add(layer2Bias)));
+            return l2.matMul(layer3Weights).add(layer3Bias);
         });
-        const layer2 = tf.tidy(() => {
-            return layer1.matMul(layer2Weights).add(layer2Bias).elu(1 / 20);
-        });
-        return layer2.matMul(layer3Weights).add(layer3Bias);
     }
-
-    var curve_plotter = new Plotter(curve_div, param.curve_domain_x_extended, param.curve_domain_y, false, false);
-    var graph_plotter = new Plotter(graph_div, param.nn_domain, param.nn_domain, false, false);
-
-    //interval controller
-    setup();
 
     async function train() {
         for (let iter = 0; iter < 1; iter++) {
             optimizer.minimize(() => {
-                const logLik = tf.tidy(() => {
-                    var s = tf.randomUniform([20, 1], -100, 100).dataSync();
-                    const loss1 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[0]), tf.tensor2d(experiment_ys));
-                    const loss2 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[1]), tf.tensor2d(experiment_ys));
-                    const loss3 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[2]), tf.tensor2d(experiment_ys));
-                    const loss4 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[3]), tf.tensor2d(experiment_ys));
-                    const loss5 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[4]), tf.tensor2d(experiment_ys));
-                    const loss6 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[5]), tf.tensor2d(experiment_ys));
-                    const loss7 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[6]), tf.tensor2d(experiment_ys));
-                    const loss8 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[7]), tf.tensor2d(experiment_ys));
-                    const loss9 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[8]), tf.tensor2d(experiment_ys));
-                    const loss10 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[9]), tf.tensor2d(experiment_ys));
-                    const loss11 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[10]), tf.tensor2d(experiment_ys));
-                    const loss12 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[11]), tf.tensor2d(experiment_ys));
-                    const loss13 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[12]), tf.tensor2d(experiment_ys));
-                    const loss14 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[13]), tf.tensor2d(experiment_ys));
-                    const loss15 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[14]), tf.tensor2d(experiment_ys));
-                    const loss16 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[15]), tf.tensor2d(experiment_ys));
-                    const loss17 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[16]), tf.tensor2d(experiment_ys));
-                    const loss18 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[17]), tf.tensor2d(experiment_ys));
-                    const loss19 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[18]), tf.tensor2d(experiment_ys));
-                    const loss20 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[19]), tf.tensor2d(experiment_ys));
-                    return loss1.add(loss2).add(loss3).add(loss4).add(loss5).add(loss6).add(loss7).add(loss8).add(loss9).add(loss10).add(loss11).add(loss12).add(loss13).add(loss14).add(loss15).add(loss16).add(loss17).add(loss18).add(loss19).add(loss20).div(tf.scalar(20)).div(tf.scalar(1e-4));
+                const elbo = tf.tidy(() => {
+                    var s = tf.randomUniform([5, 1], -100, 100).dataSync();
+                    const logLik = tf.stack([tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), 10, s[0]), tf.tensor2d(experiment_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[1]), tf.tensor2d(experiment_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[2]), tf.tensor2d(experiment_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[3]), tf.tensor2d(experiment_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[4]), tf.tensor2d(experiment_ys))]).sum().div(tf.scalar(5)).div(tf.scalar(1e-6));
+                    const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
+                    return lowerBound;
                 });
-
-                const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
-                lowerBound.print();
-                return lowerBound;
-            }, false, [layer1WeightsMu, layer1WeightsLogSigma, layer1BiasMu, layer1BiasLogSigma, layer2WeightsMu, layer2WeightsLogSigma, layer2BiasMu, layer2BiasLogSigma, layer3WeightsMu, layer3WeightsLogSigma, layer3BiasMu, layer3BiasLogSigma]);
+                return elbo;
+            });
         }
         await tf.nextFrame();
     }
 
     function entropy() {
-        const logSigmas = tf.concat([layer1WeightsLogSigma.flatten(), 
-            layer1BiasLogSigma.flatten(), 
-            layer2WeightsLogSigma.flatten(), 
-            layer2BiasLogSigma.flatten(), 
-            layer3WeightsLogSigma.flatten(), 
-            layer3BiasLogSigma.flatten()
-        ]);
-        const D = tf.scalar(logSigmas.shape[0]);
-        return tf.scalar(0.5).mul(D).mul(tf.scalar(1).add(tf.log(tf.scalar(2.0 * Math.PI)))).add(tf.sum(logSigmas));
+        var D = layer1WeightsLogSigma.shape[0] * layer1WeightsLogSigma.shape[1] + layer1BiasLogSigma.shape[0] +
+                layer2WeightsLogSigma.shape[0] * layer2WeightsLogSigma.shape[1] + layer2BiasLogSigma.shape[0] +
+                layer3WeightsLogSigma.shape[0] * layer3WeightsLogSigma.shape[1] + layer3BiasLogSigma.shape[0];
+        return tf.tidy(() => {
+            const onepluslogtwopi = tf.scalar(1).add(tf.log(tf.scalar(2 * Math.PI)));
+            const halfD = tf.scalar(0.5 * D);
+            const layer1entropy = tf.sum(layer1WeightsLogSigma).add(tf.sum(layer1BiasLogSigma));
+            const layer2entropy = tf.sum(layer2WeightsLogSigma).add(tf.sum(layer2BiasLogSigma));
+            const layer3entropy = tf.sum(layer3WeightsLogSigma).add(tf.sum(layer3BiasLogSigma));
+            layer1entropy.add(layer2entropy).add(layer3entropy).print();
+            return halfD.mul(onepluslogtwopi).mul(layer1entropy.add(layer2entropy).add(layer3entropy));
+        });
     }
 
     function setup() {
-        curve_plotter.add_group("fixed");
         curve_plotter.add_group("float");
-        graph_plotter.add_group("fixed");
+        curve_plotter.add_group("fixed");
         graph_plotter.add_group("float");
+        graph_plotter.add_group("fixed");
         plot_train_and_train_points();
         plot();
     }
@@ -144,45 +119,28 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_path() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
-=======
-        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
->>>>>>> samples for svi
-=======
-        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
->>>>>>> fixed training for hero
+        var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 19, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25];
         var curves = seed.map(s => {
             var d = [];
-            predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
+            tf.tidy(() => { return predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync() }).forEach((y, i) => {
                 d.push({
                     x: curve_x_extended[i],
                     y: y
                 });
-<<<<<<< HEAD
-            curve_plotter.plot_path(curves, {
-                color: "red",
-                width: 0.5,
-                opacity: 0.75,
-                id: "#float"
-            });
-            }
-=======
             })
             return d;
         });
+
         curve_plotter.plot_path(curves, {
-            color: "red",
-            width: 0.5,
+            color: "darkorange",
+            width: 1,
             opacity: 0.75,
             id: "#float"
->>>>>>> fixed training for hero
         });
     }
 
     function plot_train_and_train_points() {
-        curve_plotter.plot_points(experiment_points_date, {
+        curve_plotter.plot_points(experiment_points_data, {
             stroke: "black",
             color: "black",
             size: 3,
