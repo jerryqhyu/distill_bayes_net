@@ -14,6 +14,27 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     const layer4Bias = tf.tensor(param.layer4b);
     const optimizer = tf.train.momentum(1e-5, 0.95);
 
+    var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
+    var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
+    var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
+    var progress_plotter = new Plotter(progress_div, param.progress_domain_x, param.progress_domain_y, false, true);
+    var graph_plotter = new Plotter(graph_div, [
+        0, 1
+    ], [
+        0, 1
+    ], false, false);
+	let SCALING_FACTOR = train_loss_plotter.height / param.n;
+
+    var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
+    inv_x_scale.clamp(true);
+    var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
+    inv_y_scale.clamp(true);
+    var isocontours = new Array(5);
+    for (var i = 0; i < 5; i++) {
+        isocontours[i] = new Array(Math.floor((Math.PI * 2 + param.step_size) / param.step_size + 1));
+    }
+    var pred = new Array(curve_x.length);
+
     async function start() {
         plot();
         for (var i = 0; i < 1000; i++) {
@@ -33,26 +54,6 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     function reset() {
 
     }
-
-    var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
-    var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
-    var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
-    var progress_plotter = new Plotter(progress_div, param.progress_domain_x, param.progress_domain_y, false, true);
-    var graph_plotter = new Plotter(graph_div, [
-        0, 1
-    ], [
-        0, 1
-    ], false, false);
-
-    var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
-    inv_x_scale.clamp(true);
-    var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.loss_domain_y);
-    inv_y_scale.clamp(true);
-    var isocontours = new Array(5);
-    for (var i = 0; i < 5; i++) {
-        isocontours[i] = new Array(Math.floor((Math.PI * 2 + param.step_size) / param.step_size + 1));
-    }
-    var pred = new Array(curve_x.length);
 
     function predict(x) {
         predict(x, 0);
@@ -301,7 +302,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
             for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
                 const w1 = tf.tensor([
-                    [inv_x_scale(w_1 * param.scaling_factor), inv_y_scale(w_2 * param.scaling_factor)]
+                    [inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]
                 ]);
                 train_contour_data[k] = tf.tidy(() => {
                     const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1Bias).tanh();
@@ -372,15 +373,15 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     //     return avg_pred;
     // }
 
-    // function plot_contour(plotter, data, color, contours) {
-    //     plotter.plot_contour(data, {
-    //         n: param.n,
-    //         m: param.m,
-    //         color_scale: color,
-    //         contour_scale: contours,
-    //         id: "#contour"
-    //     });
-    // }
+    function plot_contour(plotter, data, color, contours) {
+        plotter.plot_contour(data, {
+            n: param.n,
+            m: param.m,
+            color_scale: color,
+            contour_scale: contours,
+            id: "#contour"
+        });
+    }
 
     // function get_test_loss_from_prediction(avg_prediction) {
     //     var total_loss = 0;
