@@ -4,8 +4,12 @@ function hero(curve_div, graph_div) {
     const eps = tf.scalar(1e-9);
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
+<<<<<<< HEAD
     // const optimizer = tf.train.momentum(1e-4, 0.85);
     const optimizer = tf.train.adam(0.08);
+=======
+    const optimizer = tf.train.momentum(1e-4, 0.75);
+>>>>>>> checkpoint
 
     const layer1WeightsMu = tf.variable(tf.randomNormal([1, 10], 0, 1));
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));

@@ -203,6 +203,7 @@ function Plotter(div, domain_x, domain_y, padded, clamp) {
         contour.enter().append('path').merge(contour).attr('d', d3.geoPath(d3.geoIdentity().scale(size_multiplier))).attr('fill', function(d) {
             return color_scale(-d.value);
         }).attr('opacity', opacity).attr('stroke', stroke);
+        contour.exit().remove();
     }
 
 	this.plot_axis = function(domain, ticks) {

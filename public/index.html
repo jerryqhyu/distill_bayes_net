@@ -726,7 +726,7 @@
     <script src="assets/hero.js"></script>
     <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
-    <script src="assets/rwnew.js"></script>
+    <script src="assets/rwtf.js"></script>
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
@@ -739,7 +739,7 @@
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
         
         // MCMC
-        var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
+        var rw_train = new rwtf(d3.select("#rw_train_figure"), false);
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), d3.select("#divergence_ruler"), 0, 1);
