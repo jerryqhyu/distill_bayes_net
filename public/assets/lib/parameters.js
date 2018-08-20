@@ -5,6 +5,8 @@ var param = {
     h_progress: 300,
     n: 40,
     m: 40,
+    n_cc: 20,
+    m_cc: 20,
     step_size: 0.1,
     learning_rate: 5e-3,
     l1_decay: 0,
@@ -426,3 +428,6 @@ var valid_contour_color = d3.scaleLinear().domain([-0.8, 0.02]).interpolate(func
     return d3.interpolateSpectral;
 });
 var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.02, 0.8, 0.02));
+
+var train_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 1, 0.05));
+var valid_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 0.8, 0.05));
