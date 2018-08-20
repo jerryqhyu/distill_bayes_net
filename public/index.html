@@ -234,6 +234,38 @@
         </div>
     </figure>
 
+    <p>
+        The last figure is somewhat deceptive however, in that the background heatmap is not changing during training. It only appear
+        so because we fixed every weights and biases except the first two. So the training is happening in a two-dimensional
+        space. If we freed all the weights, the 2D slice you see would be constantly changing.
+    </p>
+
+    <figure id='cc' style="position:relative; width:984px;">
+        <div class="container">
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="cc_train_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="cc_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="CCLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
+                        Observe how in actual training, the weights are (gradient) descending a constantly changing landscape.
+                    </figcaption>
+                </div>
+                <div class="table-cell-wrap">
+                    <figcaption id="cc_test_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="cc_valid" class='contour'> </div>
+                </div>
+            </div>
+            <button type="button" onclick="cc.start()">Train</button>
+            <button type="button" onclick="cc.reset()">Reset</button>
+        </div>
+    </figure>
+
 
     <!--
 
@@ -720,7 +752,7 @@
     <script src="assets/iterates.js"></script>
     <script src="assets/divergence.js"></script>
     <script src="assets/mlp.js"></script>
-    <script src="assets/mlptf.js"></script>
+    <script src="assets/cc.js"></script>
     <script src="assets/svi.js"></script>
     <script src="assets/svitf.js"></script>
     <script src="assets/hero.js"></script>
@@ -737,7 +769,10 @@
 
         // NN on sine
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
-        
+                
+        // NN on sine
+        var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
+
         // MCMC
         var rw_train = new rwtf(d3.select("#rw_train_figure"), false);
 
