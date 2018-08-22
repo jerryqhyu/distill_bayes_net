@@ -76,11 +76,11 @@ function hero(curve_div, graph_div) {
             optimizer.minimize(() => {
                 const elbo = tf.tidy(() => {
                     var s = tf.randomUniform([5, 1], -100, 100).dataSync();
-                    const logLik = tf.stack([tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), 10, s[0]), tf.tensor2d(experiment_ys)),
-                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[1]), tf.tensor2d(experiment_ys)),
-                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[2]), tf.tensor2d(experiment_ys)),
-                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[3]), tf.tensor2d(experiment_ys)),
-                    tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[4]), tf.tensor2d(experiment_ys))]).sum().div(tf.scalar(5)).div(tf.scalar(1e-6));
+                    const logLik = tf.stack([tf.losses.meanSquaredError(predict(tf.tensor2d(train_xs), 10, s[0]), tf.tensor2d(train_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(train_xs), s[1]), tf.tensor2d(train_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(train_xs), s[2]), tf.tensor2d(train_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(train_xs), s[3]), tf.tensor2d(train_ys)),
+                    tf.losses.meanSquaredError(predict(tf.tensor2d(train_xs), s[4]), tf.tensor2d(train_ys))]).sum().div(tf.scalar(5)).div(tf.scalar(1e-6));
                     const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
                     return lowerBound;
                 });
@@ -140,7 +140,7 @@ function hero(curve_div, graph_div) {
     }
 
     function plot_train_and_train_points() {
-        curve_plotter.plot_points(experiment_points_data, {
+        curve_plotter.plot_points(training_points_data, {
             stroke: "black",
             color: "black",
             size: 3,
