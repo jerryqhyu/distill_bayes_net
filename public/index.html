@@ -97,7 +97,7 @@
       <dt-fn>We could equivalently write down the optimization problem as minimizing an expected loss instead of maximizing an expected log likelihood. In classification, using cross entropy loss is equivalent to modeling output predictions according to a Categorical
         (i.e., multinomial) distribution
       </dt-fn>
-      -->
+-->
     </p>
     <!--
     w = \textcolor{#0074D9}{w}
@@ -106,12 +106,27 @@
     D = \textcolor{#FFA500}{D}
     \lambda = \textcolor{#B10DC9}{\lambda}
  -->
-    <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
+ $$
+ \newcommand{\niceblue}[1]{\textcolor{#0074D9}{#1}}
+ \newcommand{\nicered}[1]{\textcolor{#FF4136}{#1}}	
+\newcommand{\nicegreen}[1]{\textcolor{#2ECC40}{#1}}
+\newcommand{\niceorange}[1]{\textcolor{#FFA50}{#1}}
+\newcommand{\nicepurple}[1]{\textcolor{#B10DC}{#1}}
+ $$
+
+ $$
+ \newcommand{\w}{\niceblue{w}}
+ \newcommand{\y}{\nicered{y}}	
+\newcommand{\x}{\nicegreen{x}}	
+\newcommand{\D}{\niceorange{D}}	
+\newcommand{\mylambda}{\nicepurple{\lambda}}	
+ $$
+ <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
 
      <div style="position:relative; top:-35px">
 
        <span style="position:absolute; left: 70px; top:0px;">
-           $$L(\textcolor{#FFA500}{D},\textcolor{#0074D9}{w}) \coloneqq \sum_{x_i,y_i \in D} (\textcolor{#FF4136}{y}_i - f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}))^2 + \textcolor{#B10DC9}{\lambda} \sum_d \textcolor{#0074D9}{w}_d^2$$
+	       $$L(\textcolor{#FFA500}{D},\textcolor{#0074D9}{w}) \coloneqq \sum_{\textcolor{#2ECC40}{x}_i,\textcolor{#FF4136}{y}_i \in D} (\textcolor{#FF4136}{y}_i - f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}))^2 + \textcolor{#B10DC9}{\lambda} \sum_d \textcolor{#0074D9}{w}_d^2$$
        </span>
 
        <figcaption style="position:absolute;left:60px;top: 90px;width:80px;">
@@ -135,7 +150,8 @@
     <div style="position:relative; top:-35px">
 
       <span style="position:absolute; left:40px; top:0px;">
-      $$\log p(\textcolor{#FFA500}{D},{\textcolor{#0074D9}{w}}) \coloneqq \sum_{x_i,y_i \in D} \log \mathcal{N}(\textcolor{#FF4136}{y}_i | f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}),I) + \sum_d \log \mathcal{N}(\textcolor{#0074D9}{w}_d| 0, \tfrac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}})$$
+      $$\log p(\textcolor{#FFA500}{D},{\textcolor{#0074D9}{w}}) \coloneqq \sum_{\textcolor{#2ECC40}{x}_i,\textcolor{#FF4136}{
+    y}_i \in D} \log \mathcal{N}(\textcolor{#FF4136}{y}_i | f(\textcolor{#2ECC40}{x}_i,\textcolor{#0074D9}{w}),I) + \sum_d \log \mathcal{N}(\textcolor{#0074D9}{w}_d| 0, \tfrac{1}{\sqrt{\textcolor{#B10DC9}{\lambda}}})$$
       </span>
       <figcaption style="position:absolute;left:30px;top: 90px;width:100px;">
         Log-likelihood of dataset $\textcolor{#FFA500}{D}$ under model
