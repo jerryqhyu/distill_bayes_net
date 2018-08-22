@@ -190,29 +190,20 @@
             </div>
         </div>
 
-        <div class="container" style="height: 250px; top: 40px;">
+        <div class="container" style="height: 250px;">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
                     <figcaption id="nn_full_title" class='little_caption'>
                         Prediction function $\hat y_w(x)$. Red dots are training data, green are test.
                     </figcaption>
-                    <div id="nn_full" class='bordered' style="width:440px; height: 200px;"></div>
+                    <div id="nn_full" class='bordered' style="width:800px; height: 250px;"></div>
                 </div>
-                <div class='table-cell-wrap'>
-                    <figcaption id="nn_graph_title" class='little_caption'>
-                        Neural net architecture with the edge between neurons colored according to their shared weight value. In this demo all weights except the first two are fixed.
-                        <!-- Notice how the choice of architecture affects the contours of the $L_{\text{train}}$ and $L_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
-                    </figcaption>
-                    <div id="nn_graph" style="width:440px; height: 200px;"></div>
-                </div>
-                <div class='table-cell-wrap' style="width: 100px;">
+                <div class='table-cell-wrap' style="width: 100px; left: 50px">
                     <form onclick="mlp.update()" style="top: 50px;">
                         <input type="radio" name="net_type" value="Deep" checked> Deep<br>
                         <input type="radio" name="net_type" value="Shallow"> Shallow<br>
                         <input type="radio" name="net_type" value="Linear"> Linear<br>
                     </form>
-                    <button type="button" onclick="mlp.start()">Train</button>
-                    <button type="button" onclick="mlp.reset()">Reset</button>
                 </div>
             </div>
         </div>
@@ -751,7 +742,7 @@
         var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
         // NN on sine
-        var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
+        var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
                 
         // NN on sine
         var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
@@ -807,8 +798,8 @@
         }
 
         var active_views = {
-            "#bnn_figure" : hero,
-            "#mlp_figure" : mlp,
+            "#hero" : hero,
+            "#cc_train" : cc,
             "#rw_train_figure": rw_train,
             "#svi_figure": svi
         };
