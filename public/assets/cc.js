@@ -1,5 +1,6 @@
 function changingContour(train_loss_div, valid_loss_div) {
-	this.div_id = train_loss_div.attr('id');
+    this.div_id = train_loss_div.attr('id');
+    var training = false;
 	const optimizer = tf.train.momentum(param.learning_rate, param.momentum);
 
 	// 4 layer deep net
@@ -17,9 +18,9 @@ function changingContour(train_loss_div, valid_loss_div) {
 	var valid_loss_plotter = new Plotter(valid_loss_div, param.loss_domain_x,
 		param.loss_domain_y, true, true);
 
-	var deep_train_contour_data = new Array(param.n_cc * param.m_cc);
-	var deep_valid_contour_data = new Array(param.n_cc * param.m_cc);
-
+	var train_contour = new Array(param.n_cc * param.m_cc);
+    var valid_contour = new Array(param.n_cc * param.m_cc);
+    
 	const contourY = tf.range(0, param.m_cc)
 				.expandDims(1)
 				.tile([1, param.n_cc])
@@ -33,22 +34,27 @@ function changingContour(train_loss_div, valid_loss_div) {
 				.mul(tf.scalar((param.loss_domain_x[1] - param.loss_domain_x[0]) / param.n_cc))
 				.add(tf.scalar(param.loss_domain_x[0]));
 
-	const contourWeights = tf.stack([contourX, contourY]).transpose().reshape([param.n_cc * param.m_cc, 1, 2]);
+    const contourWeights = tf.stack([contourX, contourY]).transpose().reshape([param.n_cc * param.m_cc, 1, 2]);
+    setup();
 	
 	async function start() {
-		for (var i = 0; i < 1000; i++) {
-			update_contour();
+        training = true;
+		while (training) {
+            update_contour();
 			plot();
 			await trainStep();
 		}
 	}
 
 	function stop() {
-		if (false) {}
+		if (training) {
+            console.log("stopped");
+            training = false;
+        }
 	}
 
 	function is_running() {
-		return false;
+		return training;
 	}
 
 	function reset() {
@@ -56,16 +62,16 @@ function changingContour(train_loss_div, valid_loss_div) {
 	}
 
 	function update_contour() {
-		deep_train_contour_data = tf.stack(contourWeights.unstack().map(w => {
-			return tf.tidy(() => {
+		train_contour = tf.tidy(() => {
+            return tf.stack(contourWeights.unstack().map(w => {
 				return predict(tf.tensor2d(train_xs), w).squaredDifference(tf.tensor2d(train_ys)).mean();
-			});
-		})).dataSync();
-		deep_valid_contour_data = tf.stack(contourWeights.unstack().map(w => {
-			return tf.tidy(() => {
+            })).dataSync();
+        });
+        valid_contour = tf.tidy(() => {
+            return tf.stack(contourWeights.unstack().map(w => {
 				return predict(tf.tensor2d(valid_xs), w).squaredDifference(tf.tensor2d(valid_ys)).mean();
-			});
-		})).dataSync();
+            })).dataSync();
+        });
 	}
 
 	function predict(x, layer1Weight) {
@@ -79,18 +85,18 @@ function changingContour(train_loss_div, valid_loss_div) {
 
 	async function trainStep() {
 		optimizer.minimize(() => {
-			const predsYs = predict(tf.tensor2d(train_xs), layer1WeightsDeep); // input N*D
-			return tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
+            return tf.tidy(() => {
+                const predsYs = predict(tf.tensor2d(train_xs), layer1WeightsDeep); // input N*D
+                return tf.losses.meanSquaredError(predsYs, tf.tensor2d(train_ys))
+            });
 		});
 		await tf.nextFrame();
 	}
 
-	setup();
-
 	function plot() {
-		plot_contour(train_loss_plotter, deep_train_contour_data,
+		plot_contour(train_loss_plotter, train_contour,
 			train_contour_color, train_contour_scale_cc);
-		plot_contour(valid_loss_plotter, deep_valid_contour_data,
+		plot_contour(valid_loss_plotter, valid_contour,
 			valid_contour_color, valid_contour_scale_cc);
 		plot_weight();
 	}

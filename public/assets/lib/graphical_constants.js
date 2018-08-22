@@ -16,9 +16,9 @@ for (var i = 0; i < training_points_data.length; i++) {
     };
 }
 
-var experiment_points_date = new Array(experiment_xs.length);
+var experiment_points_data = new Array(experiment_xs.length);
 for (var i = 0; i < experiment_xs.length; i++) {
-    experiment_points_date[i] = {
+    experiment_points_data[i] = {
         x: experiment_xs[i],
         y: experiment_ys[i]
     };
