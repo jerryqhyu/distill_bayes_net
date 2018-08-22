@@ -5,8 +5,8 @@ var param = {
     h_progress: 300,
     n: 40,
     m: 40,
-    n_cc: 20,
-    m_cc: 20,
+    n_cc: 14,
+    m_cc: 14,
     step_size: 0.1,
     learning_rate: 5e-3,
     l1_decay: 0,
@@ -25,7 +25,7 @@ var param = {
         -10, 10
     ],
     hero_domain_y: [
-        -8, 8
+        -2, 2
     ],
     curve_domain_y: [
         -2, 2
@@ -44,12 +44,6 @@ var param = {
     ],
     progress_domain_y: [
         0, 8
-    ],
-    uncertain_domain_x: [
-        -7.5, 7.5
-    ],
-    uncertain_domain_y: [
-        -1.2, 1.2
     ],
     train_points: [
         0.98348382,
@@ -268,45 +262,45 @@ var train_ys = [
     [0.82565530]
 ];
 
-// var experiment_xs = [
-//     [2.58348382],
-//     [1.03239784],
-//     [1.6239784],
-//     [-2.91901198],
-//     [-2.33424016],
-//     [-1.51812853],
-//     [-1.01824016],
-// ];
-
-// var experiment_ys = [
-//     [4.48331356],
-//     [2.74089138],
-//     [3.88426848783],
-//     [-4.65818255],
-//     [-4.30381079],
-//     [-3.085124009],
-//     [-1.61681914858],
-// ];
-
 var experiment_xs = [
-    [4.58348382],
-    [3.03239784],
-    [3.6239784],
-    [-4.91901198],
-    [-4.33424016],
-    [-3.51812853],
-    [-3.01824016],
+    [0.98348382],
+    [0.33239784],
+    [0.6239784],
+    [-1.91901198],
+    [-1.33424016],
+    [-0.51812853],
+    [-0.01824016],
 ];
 
 var experiment_ys = [
-    [0],
-    [0],
-    [0],
-    [0],
-    [0],
-    [0],
-    [0],
+    [0.58331356],
+    [0.14089138],
+    [0.58426848783],
+    [-0.95818255],
+    [-0.80381079],
+    [-0.485124009],
+    [-0.01681914858],
 ];
+
+// var experiment_xs = [
+//     [0.98348382],
+//     [0.33239784],
+//     [0.6239784],
+//     [-1.91901198],
+//     [-1.33424016],
+//     [-0.51812853],
+//     [-0.01824016],
+// ];
+
+// var experiment_ys = [
+//     [0.58331356],
+//     [0.14089138],
+//     [0.58426848783],
+//     [-0.95818255],
+//     [-0.80381079],
+//     [-0.485124009],
+//     [-0.01681914858],
+// ];
 
 var valid_xs = [
     [0.0074539],
@@ -429,5 +423,5 @@ var valid_contour_color = d3.scaleLinear().domain([-0.8, 0.02]).interpolate(func
 });
 var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.range(-0.02, 0.8, 0.02));
 
-var train_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 1, 0.05));
-var valid_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 0.8, 0.05));
+var train_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 1, 0.1));
+var valid_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 0.8, 0.1));
