@@ -1,7 +1,8 @@
 function changingContour(train_loss_div, valid_loss_div) {
     this.div_id = train_loss_div.attr('id');
     var training = false;
-	const optimizer = tf.train.momentum(param.learning_rate, param.momentum);
+	// const optimizer = tf.train.momentum(param.learning_rate, param.momentum);
+	const optimizer = tf.train.adam(0.005);
 
 	// 4 layer deep net
 	const layer1WeightsDeep = tf.variable(tf.tensor(param.layer1w));

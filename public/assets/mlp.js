@@ -128,14 +128,8 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 	function initial_plot() {
 		for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
 			for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-				const w1 = tf.tensor([
-					[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]
-				]);
-				const lw1 = tf.tensor([
-					[inv_x_scale(w_1 * SCALING_FACTOR)]
-				]);
-				const lb1 = tf.tensor([inv_y_scale(w_2 * SCALING_FACTOR)]);
 				deep_train_contour_data[k] = tf.tidy(() => {
+					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasDeep).tanh();
 					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
 					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
@@ -143,6 +137,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
 				});
 				deep_valid_contour_data[k] = tf.tidy(() => {
+					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasDeep).tanh();
 					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
 					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
@@ -150,20 +145,26 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
 				});
 				shallow_train_contour_data[k] = tf.tidy(() => {
+					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasShallow).tanh();
 					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
 					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
 				});
 				shallow_valid_contour_data[k] = tf.tidy(() => {
+					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasShallow).tanh();
 					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
 					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
 				});
 				linear_train_contour_data[k] = tf.tidy(() => {
+					const lw1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR)]]);
+					const lb1 = tf.tensor([inv_y_scale(w_2 * SCALING_FACTOR)]);
 					const output = tf.tensor2d(train_xs).matMul(lw1).add(lb1);
 					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
 				});
 				linear_valid_contour_data[k] = tf.tidy(() => {
+					const lw1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR)]]);
+					const lb1 = tf.tensor([inv_y_scale(w_2 * SCALING_FACTOR)]);
 					const output = tf.tensor2d(valid_xs).matMul(lw1).add(lb1);
 					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
 				});
@@ -239,9 +240,9 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 			}];
 		}
 		train_loss_plotter.plot_points(p, {
-			stroke: "black",
+			stroke: "white",
 			color: "darkslategray",
-			size: 7,
+			size: 8,
 			opacity: 1,
 			transition: 25,
 			on_drag: on_drag,
@@ -251,9 +252,9 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 			mouseout: mouseout
 		});
 		valid_loss_plotter.plot_points(p, {
-			stroke: "black",
+			stroke: "white",
 			color: "darkslategray",
-			size: 7,
+			size: 8,
 			opacity: 1,
 			transition: 25,
 			on_drag: on_drag,
@@ -288,11 +289,11 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 	}
 
 	function mouseover() {
-		d3.select(this).attr("r", 10);
+		d3.select(this).attr("r", 8);
 	}
 
 	function mouseout() {
-		d3.select(this).attr("r", 5);
+		d3.select(this).attr("r", 8);
 	}
 
 	return {

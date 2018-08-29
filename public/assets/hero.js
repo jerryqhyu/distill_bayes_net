@@ -66,7 +66,7 @@ function hero(curve_div, graph_div) {
             // const l1 = x.matMul(layer1Weights).add(layer1Bias).elu(0.1);
             // const l2 = l1.matMul(layer2Weights).add(layer2Bias).elu(0.1);
             const l2 = tf.exp(l1.matMul(layer2Weights).add(layer2Bias).pow(tf.scalar(2)).mul(tf.scalar(-1)));
-            // const l2 = layer1.mul(tf.sigmoid(layer1.matMul(layer2Weights).add(layer2Bias)));
+            // const l2 = l1.mul(tf.sigmoid(layer1.matMul(layer2Weights).add(layer2Bias)));
             return l2.matMul(layer3Weights).add(layer3Bias);
         });
     }
