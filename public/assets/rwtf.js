@@ -34,7 +34,9 @@ function rwtf(curve_div, use_validation_data) {
 
     initial_plot();
 
-    var predictions = [predict(last_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1])).dataSync()];
+    var predictions = [tf.tidy(() => {
+        return predict(last_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1])).dataSync()
+    })];
 
     function initial_plot() {
         curve_plotter.add_group("lastproposal");
@@ -47,15 +49,22 @@ function rwtf(curve_div, use_validation_data) {
         var std = 1;
         var new_sample = propose(last_sample, std);
         plot_new_sample(new_sample);
-        var transition_prob = Math.min(1, tf.exp(tf.losses.meanSquaredError(predict(last_sample, tf.tensor2d(train_xs)), tf.tensor2d(train_ys))).dataSync() - tf.exp(tf.losses.meanSquaredError(predict(new_sample, tf.tensor2d(train_xs)), tf.tensor2d(train_ys))).dataSync());
+        var transition_prob = tf.tidy(() => {
+            const last_loss = tf.exp(tf.losses.meanSquaredError(predict(last_sample, tf.tensor2d(train_xs)), tf.tensor2d(train_ys)));
+            const new_loss = tf.exp(tf.losses.meanSquaredError(predict(new_sample, tf.tensor2d(train_xs)), tf.tensor2d(train_ys)));
+            return Math.min(1, last_loss.dataSync() - new_loss.dataSync())
+        });
 
         if (Math.random() <= transition_prob) {
-            var prediction = tf.tidy(() => {return predict(new_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1])).dataSync()});
+            var prediction = tf.tidy(() => {
+                const p = predict(new_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]));
+                return p.dataSync()
+            });
 			predictions.push(prediction);
-			last_sample = new_sample;
+            last_sample.forEach(w => w.dispose());
+            last_sample = new_sample;
         }
         
-        new_sample.forEach(w => w.dispose());
         await tf.nextFrame();
     }
 
@@ -77,7 +86,10 @@ function rwtf(curve_div, use_validation_data) {
     }
 
     function plot_new_sample(new_sample) {
-        var new_sample_pred = predict(new_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1])).dataSync();
+        var new_sample_pred = tf.tidy(() => {
+            const p = predict(new_sample, tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]));
+            return p.dataSync()
+        });
         var pts = [curve_x_extended.map((p, n) => {
             return {
                 x: p,

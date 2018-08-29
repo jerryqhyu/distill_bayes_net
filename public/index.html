@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1080">
+<meta name="viewport" content="width=1000">
 
 <!-- <script src="https://distill.pub/template.v1.js"></script> -->
 <script src="assets/lib/template.v1.js"></script>
@@ -257,6 +257,32 @@
         </div>
     </figure>
 
+    <figure id='classification_figure' style="position:relative; width:984px; height:1000px">
+        <div id="classification_full" class='bordered' style="width:600px; height: 600px;"></div>
+        <div class="container" style="top:30px;">
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="classification_train_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="classification_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="ClassificationLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
+                        Observe how in actual training, the weights are (gradient) descending a constantly changing landscape.
+                    </figcaption>
+                </div>
+                <div class="table-cell-wrap">
+                    <figcaption id="classification_test_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="classification_valid" class='contour'> </div>
+                </div>
+            </div>
+            <button type="button" onclick="classification.start()">Train</button>
+            <button type="button" onclick="classification.reset()">Reset</button>
+        </div>
+    </figure>
 
     <!--
 
@@ -428,8 +454,9 @@
     Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an asymptotically exact solution is worth the computational cost. As network and dataset size grow, however, so grows
     the cost of estimating the posterior via sampling. In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training;
     we'll pose the problem now and discuss the learning algorithm in the next section.
-    <h3>Modeling the approximate posterior</h3>
     </p>
+
+    <h3>Modeling the approximate posterior</h3>
     <p>
         Generally speaking, when faced with an intractable distribution like the posterior $p(w|D)$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i>            $q_\phi(w)$
         <dt-fn>
@@ -744,6 +771,7 @@
     <script src="assets/divergence.js"></script>
     <script src="assets/mlp.js"></script>
     <script src="assets/cc.js"></script>
+    <script src="assets/classification.js"></script>
     <script src="assets/svi.js"></script>
     <script src="assets/svitf.js"></script>
     <script src="assets/hero.js"></script>
@@ -754,16 +782,14 @@
     <script>
 	    tf.setBackend('cpu');
   
-        // BNN on top
         var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
-        // NN on sine
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
                 
-        // NN on sine
         var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
 
-        // MCMC
+        var classification = new classification(d3.select("#classification_full"), d3.select("#classification_train"), d3.select("#classification_valid"));
+
         var rw_train = new rwtf(d3.select("#rw_train_figure"), false);
 
         //DIVERGENCES

@@ -1,5 +1,7 @@
 function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div) {
     this.div_id = curve_div.attr('id');
+    var training;
+
     const eps = tf.scalar(1e-9);
     const minLogSigma = -1.0;
     const maxLogSigma = -0.5;
@@ -12,7 +14,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     const layer3Bias = tf.tensor(param.layer3b);
     const layer4Weights = tf.tensor(param.layer4w);
     const layer4Bias = tf.tensor(param.layer4b);
-    const optimizer = tf.train.momentum(1e-5, 0.95);
+    const optimizer = tf.train.adam(0.05);
 
     var curve_plotter = new Plotter(curve_div, param.curve_domain_x, param.curve_domain_y, false, false);
     var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x, param.loss_domain_y, true, true);
@@ -23,7 +25,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     ], [
         0, 1
     ], false, false);
-	let SCALING_FACTOR = train_loss_plotter.height / param.n;
+    let SCALING_FACTOR = train_loss_plotter.height / param.n;
 
     var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.loss_domain_x);
     inv_x_scale.clamp(true);
@@ -36,19 +38,19 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     var pred = new Array(curve_x.length);
 
     async function start() {
-        plot();
-        for (var i = 0; i < 1000; i++) {
+        training = true;
+        while (training) {
             await train();
             plot();
         }
     }
 
     function stop() {
-        if (false) {}
+        training = false;
     }
 
     function is_running() {
-        return false;
+        return training;
     }
 
     function reset() {
@@ -60,59 +62,39 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     }
 
     function predict(x, seed) {
-        const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
-        const layer1 = tf.tidy(() => {
-            return x.matMul(layer1Weights).add(layer1Bias).tanh();
+        return tf.tidy(() => {
+            const layer1Weights = layer1WeightsMu.add(tf.exp(layer1WeightsLogSigma.add(eps)).mul(tf.randomNormal(layer1WeightsMu.shape, 0, 1, 'float32', seed)));
+            const l1 = x.matMul(layer1Weights).add(layer1Bias).tanh();
+            const l2 = l1.matMul(layer2Weights).add(layer2Bias).tanh();
+            const l3 = l2.matMul(layer3Weights).add(layer3Bias).tanh();
+            return l3.matMul(layer4Weights).add(layer4Bias);
         });
-        const layer2 = tf.tidy(() => {
-            return layer1.matMul(layer2Weights).add(layer2Bias).tanh();
-        });
-        const layer3 = tf.tidy(() => {
-            return layer2.matMul(layer3Weights).add(layer3Bias).tanh();
-        });
-        return layer3.matMul(layer4Weights).add(layer4Bias);
     }
 
     async function train() {
         for (let iter = 0; iter < 1; iter++) {
             optimizer.minimize(() => {
-                const logLik = tf.tidy(() => {
-                    var s = tf.randomUniform([20, 1], -100, 100).dataSync();
+                return tf.tidy(() => {
+                    var s = tf.randomUniform([5, 1], -100, 100).dataSync();
                     const loss1 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[0]), tf.tensor2d(experiment_ys));
                     const loss2 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[1]), tf.tensor2d(experiment_ys));
                     const loss3 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[2]), tf.tensor2d(experiment_ys));
                     const loss4 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[3]), tf.tensor2d(experiment_ys));
                     const loss5 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[4]), tf.tensor2d(experiment_ys));
-                    const loss6 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[5]), tf.tensor2d(experiment_ys));
-                    const loss7 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[6]), tf.tensor2d(experiment_ys));
-                    const loss8 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[7]), tf.tensor2d(experiment_ys));
-                    const loss9 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[8]), tf.tensor2d(experiment_ys));
-                    const loss10 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[9]), tf.tensor2d(experiment_ys));
-                    const loss11 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[10]), tf.tensor2d(experiment_ys));
-                    const loss12 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[11]), tf.tensor2d(experiment_ys));
-                    const loss13 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[12]), tf.tensor2d(experiment_ys));
-                    const loss14 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[13]), tf.tensor2d(experiment_ys));
-                    const loss15 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[14]), tf.tensor2d(experiment_ys));
-                    const loss16 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[15]), tf.tensor2d(experiment_ys));
-                    const loss17 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[16]), tf.tensor2d(experiment_ys));
-                    const loss18 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[17]), tf.tensor2d(experiment_ys));
-                    const loss19 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[18]), tf.tensor2d(experiment_ys));
-                    const loss20 = tf.losses.meanSquaredError(predict(tf.tensor2d(experiment_xs), s[19]), tf.tensor2d(experiment_ys));
-                    return loss1.add(loss2).add(loss3).add(loss4).add(loss5).add(loss6).add(loss7).add(loss8).add(loss9).add(loss10).add(loss11).add(loss12).add(loss13).add(loss14).add(loss15).add(loss16).add(loss17).add(loss18).add(loss19).add(loss20).div(tf.scalar(20)).div(tf.scalar(1e-2));
+                    const logLik = loss1.add(loss2).add(loss3).add(loss4).add(loss5).div(tf.scalar(5)).div(tf.scalar(1e-2));
+                    return logLik.add(entropy().mul(tf.scalar(-1)));
                 });
-
-                const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
-                lowerBound.print();
-                return lowerBound;
             });
         }
         await tf.nextFrame();
     }
 
     function entropy() {
-        const logSigmas = tf.concat([layer1WeightsLogSigma.flatten()]);
-        const D = tf.scalar(logSigmas.shape[0]);
-        return tf.scalar(0.5).mul(D).mul(tf.scalar(1).add(tf.log(tf.scalar(2.0 * Math.PI)))).add(tf.sum(logSigmas));
+        return tf.tidy(() => {
+            const logSigmas = tf.concat([layer1WeightsLogSigma.flatten()]);
+            const D = tf.scalar(logSigmas.shape[0]);
+            return tf.scalar(0.5).mul(D).mul(tf.scalar(1).add(tf.log(tf.scalar(2.0 * Math.PI)))).add(tf.sum(logSigmas));
+        });
     }
 
     setup();
@@ -154,31 +136,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
 
 
     function reset() {
-        this.stop();
-        _net = make__net();
-        _trainer = new net_lib.Trainer(_net, {
-            batch_size: param.batch_size
-        });
-        linear_net = make_linear_net();
-        linear_trainer = new net_lib.Trainer(linear_net, {
-            batch_size: param.batch_size
-        });
-        shallow_net = make_shallow_net();
-        shallow_trainer = new net_lib.Trainer(shallow_net, {
-            batch_size: param.batch_size
-        });
-        if (radio_button_state() === 'Linear') {
-            net = linear_net;
-            trainer = linear_trainer;
-        } else if (radio_button_state() === '') {
-            net = _net;
-            trainer = _trainer;
-        } else {
-            net = shallow_net;
-            trainer = shallow_trainer;
-        }
-        plot();
-        epoch_count = 0;
+
     }
 
     function plot_train_and_valid_points() {
@@ -212,7 +170,9 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         var seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         var curves = seed.map(s => {
             var d = [];
-            predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync().forEach((y, i) => {
+            tf.tidy(() => {
+                return predict(tf.tensor2d(curve_x_extended, [curve_x_extended.length, 1]), s).dataSync()
+            }).forEach((y, i) => {
                 d.push({
                     x: curve_x_extended[i],
                     y: y
@@ -256,22 +216,24 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
     }
 
     function plot_variational_distribution() {
-        var mean = [
-            layer1WeightsMu.dataSync()[0],
-            layer1WeightsMu.dataSync()[1],
-        ];
-        var std = [
-            tf.exp(layer1WeightsLogSigma.add(eps)).dataSync()[0],
-            tf.exp(layer1WeightsLogSigma.add(eps)).dataSync()[1],
-        ];
-        for (var i = 0; i < 5; i++) {
-            for (var t = 0, n = 0; t <= Math.PI * 2 + param.step_size; t += param.step_size, n++) {
-                isocontours[i][n] = {
-                    x: mean[0] + i * std[0] * Math.cos(t),
-                    y: mean[1] + i * std[1] * Math.sin(t)
-                };
+        tf.tidy(() => {
+            var mean = [
+                layer1WeightsMu.dataSync()[0],
+                layer1WeightsMu.dataSync()[1],
+            ];
+            var std = [
+                tf.exp(layer1WeightsLogSigma.add(eps)).dataSync()[0],
+                tf.exp(layer1WeightsLogSigma.add(eps)).dataSync()[1],
+            ];
+            for (var i = 0; i < 5; i++) {
+                for (var t = 0, n = 0; t <= Math.PI * 2 + param.step_size; t += param.step_size, n++) {
+                    isocontours[i][n] = {
+                        x: mean[0] + i * std[0] * Math.cos(t),
+                        y: mean[1] + i * std[1] * Math.sin(t)
+                    };
+                }
             }
-        }
+        });
 
         train_loss_plotter.plot_path(isocontours, {
             color: "black",
@@ -301,10 +263,10 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
         var valid_contour_data = new Array(param.n * param.m);
         for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
             for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                const w1 = tf.tensor([
-                    [inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]
-                ]);
                 train_contour_data[k] = tf.tidy(() => {
+                    const w1 = tf.tensor([
+                        [inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]
+                    ]);
                     const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1Bias).tanh();
                     const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).tanh();
                     const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).tanh();
@@ -312,6 +274,9 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
                     return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
                 });
                 valid_contour_data[k] = tf.tidy(() => {
+                    const w1 = tf.tensor([
+                        [inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]
+                    ]);
                     const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1Bias).tanh();
                     const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).tanh();
                     const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).tanh();

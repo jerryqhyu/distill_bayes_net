@@ -18,6 +18,8 @@ var param = {
     divergence_curve_domain_y: [
         -0.15, 0.5
     ],
+    classification_domain_x:[-2,2],
+    classification_domain_y:[-2,2],
     curve_domain_x: [
         -5, 5
     ],
@@ -425,3 +427,8 @@ var valid_contour_scale = d3.contours().size([param.n, param.m]).thresholds(d3.r
 
 var train_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 1, 0.1));
 var valid_contour_scale_cc = d3.contours().size([param.n_cc, param.m_cc]).thresholds(d3.range(-0.02, 0.8, 0.1));
+
+var classification_contour_scale_cc = d3.contours().size([100, 100]).thresholds(d3.range(0, 3, 0.1));
+var classification_contour_color = d3.scaleLinear().domain([-2.5, -0.5]).interpolate(function() {
+    return d3.interpolateSpectral;
+});
