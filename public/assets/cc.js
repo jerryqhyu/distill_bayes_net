@@ -1,8 +1,6 @@
 function changingContour(train_loss_div, valid_loss_div) {
     this.div_id = train_loss_div.attr('id');
     var training = false;
-	// const optimizer = tf.train.momentum(param.learning_rate, param.momentum);
-	const optimizer = tf.train.adam(0.005);
 
 	// 4 layer deep net
 	const layer1WeightsDeep = tf.variable(tf.tensor(param.layer1w));
@@ -13,6 +11,7 @@ function changingContour(train_loss_div, valid_loss_div) {
 	const layer3BiasDeep = tf.variable(tf.tensor(param.layer3b));
 	const layer4WeightsDeep = tf.variable(tf.tensor(param.layer4w));
 	const layer4BiasDeep = tf.variable(tf.tensor(param.layer4b));
+    const optimizer = tf.train.adam(param.learning_rate);
 
 	var train_loss_plotter = new Plotter(train_loss_div, param.loss_domain_x,
 		param.loss_domain_y, true, true);
@@ -56,10 +55,6 @@ function changingContour(train_loss_div, valid_loss_div) {
 
 	function is_running() {
 		return training;
-	}
-
-	function reset() {
-
 	}
 
 	function update_contour() {
@@ -149,6 +144,5 @@ function changingContour(train_loss_div, valid_loss_div) {
 		start: start,
 		stop: stop,
 		is_running: is_running,
-		reset: reset
 	};
 }

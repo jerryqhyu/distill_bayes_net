@@ -8,7 +8,7 @@ var param = {
     n_cc: 14,
     m_cc: 14,
     step_size: 0.1,
-    learning_rate: 5e-3,
+    learning_rate: 2e-2,
     l1_decay: 0,
     l2_decay: 10.0,
     momentum: 0.95,
@@ -32,7 +32,7 @@ var param = {
         -5, 5
     ],
     curve_domain_x_extended: [
-        -10, 10
+        -7.5, 7.5
     ],
     hero_domain_y: [
         -2, 2
@@ -53,7 +53,7 @@ var param = {
         0, 1
     ],
     progress_domain_y: [
-        0, 8
+        0, 0.2
     ],
     train_points: [
         0.98348382,

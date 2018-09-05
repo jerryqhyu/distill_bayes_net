@@ -8,13 +8,12 @@ for (var i = -10, n = 0; i <= 10; i += param.step_size * 2, n++) {
 	curve_x_extended[n] = i;
 }
 
-var training_points_data = new Array(param.train_points.length);
-for (var i = 0; i < training_points_data.length; i++) {
-    training_points_data[i] = {
-        x: param.train_points[i],
-        y: Math.sin(param.train_points[i]) + param.train_noise[i]
+var training_points_data = train_xs.map((x, i) => {
+	return {
+        x: train_xs[i],
+        y: train_ys[i]
     };
-}
+})
 
 var experiment_points_data = new Array(experiment_xs.length);
 for (var i = 0; i < experiment_xs.length; i++) {
