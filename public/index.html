@@ -397,10 +397,15 @@
     <p>
         Given a good estimate for $p(D)$ then we could again use Monte Carlo integration using network samples $\{w_i\}$ from the prior to approximate the predictive posterior:
         $$\begin{aligned}
-        p(\hat y(x)|D) &= \mathbb{E}_{p(w|D)} \left[ p(\hat y(x)|w) \right] = \mathbb{E}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(D|w)}{p(D)} \right]\\
-        &\approx \frac{1}{N} \sum_{i=1}^{N} p(\hat y(x)|w_i) \frac{p(D|w_i)}{p(D)}
+        p(\hat y(x)|d) &= \mathbb{e}_{p(w|d)} \left[ p(\hat y(x)|w) \right] = \mathbb{e}_{p(w)} \left[ p(\hat y(x)|w) \frac{p(d|w)}{p(d)} \right]\\
+        &\approx \frac{1}{n} \sum_{i=1}^{n} p(\hat y(x)|w_i) \frac{p(d|w_i)}{p(d)}
         \end{aligned}$$
-        The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
+         $$\begin{aligned}
+        p(\hat y(x)|D) &= \mathbb{E}_{p(w|d)} \left[ p(\hat y(x)|w) \right]\\
+	&\approx \frac{1}{N} \sum_{i=1}^{n} p(\hat y(x)|w_i) \quad \text{where} \quad w_i \sim p(w|D) 
+	\end{aligned}$$
+        
+	The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
 
     </p>
     <h3>Markov Chain Monte Carlo</h3>
