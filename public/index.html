@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1080">
+<meta name="viewport" content="width=1000">
 
 <!-- <script src="https://distill.pub/template.v1.js"></script> -->
 <script src="assets/lib/template.v1.js"></script>
@@ -10,6 +10,8 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
+<script src="assets/lib/tfjs@0.12.5"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script> -->
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -38,7 +40,7 @@
     <script src="assets/utils.js"></script>
     <!-- <script src="assets/lib/lib.js"></script> -->
     <figure id='bnn_figure' style="width:100%; height:400px;">
-        <div id="full_bnn" class='.l-screen' style="width:100%; height:400px;"></div>
+        <div id="hero" class='.l-screen' style="width:100%; height:400px;"></div>
     </figure>
 
     <H1>Bayesian Neural Networks</H1>
@@ -49,8 +51,8 @@
 
     <figure>
         <div id="bnn_graph" style="position:relative; width:650px; height:200px;"></div>
-        <button type="button" onclick="full_bnn.start()">Train</button>
-        <button type="button" onclick="full_bnn.reset()">Reset</button>
+        <button type="button" onclick="hero.start()">Train</button>
+        <button type="button" onclick="hero.reset()">Reset</button>
     </figure>
 
     <dt-byline></dt-byline>
@@ -108,7 +110,7 @@
  -->
  $$
  \newcommand{\niceblue}[1]{\textcolor{#0074D9}{#1}}
- \newcommand{\nicered}[1]{\textcolor{#FF4136}{#1}}	
+ \newcommand{\nicered}[1]{\textcolor{#FF4136}{#1}}
 \newcommand{\nicegreen}[1]{\textcolor{#2ECC40}{#1}}
 \newcommand{\niceorange}[1]{\textcolor{#FFA50}{#1}}
 \newcommand{\nicepurple}[1]{\textcolor{#B10DC}{#1}}
@@ -116,10 +118,10 @@
 
  $$
  \newcommand{\w}{\niceblue{w}}
- \newcommand{\y}{\nicered{y}}	
-\newcommand{\x}{\nicegreen{x}}	
-\newcommand{\D}{\niceorange{D}}	
-\newcommand{\mylambda}{\nicepurple{\lambda}}	
+ \newcommand{\y}{\nicered{y}}
+\newcommand{\x}{\nicegreen{x}}
+\newcommand{\D}{\niceorange{D}}
+\newcommand{\mylambda}{\nicepurple{\lambda}}
  $$
  <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
 
@@ -167,7 +169,7 @@
 
   <p>
   We train on the training dataset $D_\text{train}$, but evaluate on the test dataset.
-  As we see in the demo below, the training objective function $\log p(D_\text{train})$ is different from the test objective function $\log p(D_\text{test})$. 
+  As we see in the demo below, the training objective function $\log p(D_\text{train})$ is different from the test objective function $\log p(D_\text{test})$.
   Overfitting happens when we choose network weights $w$ that do well on $\log p(D_\text{train})$ but poorly on $\log p(D_\text{test})$.
   As we add more layers to the network, the problem gets worse.
   </p>
@@ -191,7 +193,7 @@
                 <div class='table-cell-wrap'>
                     <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
                         The neural network objective $L$ is a function of both the weights and the dataset. Here we show $L_{\text{train}}$ and $L_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
-                        pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient ascent. Notice how weight values affect both the training
+                        pre-trained values. Redder is better. Use your mouse to change the values of the weights for these neurons. Notice how weight values affect both the training
                         and test objectives (left, right) and the network predictions changes (below).
                     </figcaption>
                 </div>
@@ -204,34 +206,87 @@
             </div>
         </div>
 
-        <div class="container" style="height: 250px; top: 40px;">
+        <div class="container" style="height: 250px;">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
                     <figcaption id="nn_full_title" class='little_caption'>
                         Prediction function $\hat y_w(x)$. Red dots are training data, green are test.
                     </figcaption>
-                    <div id="nn_full" class='bordered' style="width:440px; height: 200px;"></div>
+                    <div id="nn_full" class='bordered' style="width:800px; height: 250px;"></div>
                 </div>
-                <div class='table-cell-wrap'>
-                    <figcaption id="nn_graph_title" class='little_caption'>
-                        Neural net architecture with the edge between neurons colored according to their shared weight value. In this demo all weights except the first two are fixed.
-                        <!-- Notice how the choice of architecture affects the contours of the $L_{\text{train}}$ and $L_{\text{test}}$, and that simpler architectures make the two functions more similar. -->
-                    </figcaption>
-                    <div id="nn_graph" style="width:440px; height: 200px;"></div>
-                </div>
-                <div class='table-cell-wrap' style="width: 100px;">
+                <div class='table-cell-wrap' style="width: 100px; left: 50px">
                     <form onclick="mlp.update()" style="top: 50px;">
                         <input type="radio" name="net_type" value="Deep" checked> Deep<br>
                         <input type="radio" name="net_type" value="Shallow"> Shallow<br>
                         <input type="radio" name="net_type" value="Linear"> Linear<br>
                     </form>
-                    <button type="button" onclick="mlp.start()">Train</button>
-                    <button type="button" onclick="mlp.reset()">Reset</button>
                 </div>
             </div>
         </div>
     </figure>
 
+    <p>
+        When it comes to describe training, the last figure is somewhat deceptive, in that the background heatmap appear to be fixed. It only appear
+        so because we fixed every weights and biases except the first two. Only two weights are being adjusted here. If we freed all the weights, the colourful background you see would be constantly changing.
+    </p>
+
+    <figure id='cc' style="position:relative; width:984px;">
+        <div class="container">
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="cc_train_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="cc_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="CCLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
+                        Observe how in actual training, the weights are (gradient) descending a constantly changing landscape.
+                    </figcaption>
+                </div>
+                <div class="table-cell-wrap">
+                    <figcaption id="cc_test_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="cc_valid" class='contour'> </div>
+                </div>
+            </div>
+            <button type="button" onclick="cc.start()">Train</button>
+            <button type="button" onclick="cc.reset()">Reset</button>
+        </div>
+    </figure>
+
+    <figure id='classification_figure' style="position:relative; width:984px; height:1000px">
+        <div id="classification_full" class='bordered' style="width:500px; height: 500px;";></div>
+        <figcaption id="ClassificationTrainCaption" style="position: absolute; width: 250px; left: 530px; top: 115px;">
+            Validation Set
+        </figcaption>
+        <figcaption id="ClassificationValidCaption" style="position: absolute; width: 250px; left: 530px; top: 365px;">
+            Training Set
+        </figcaption>
+        <div class="container" style="top:30px;">
+            <div style="display: table; height: 100%">
+                <div class='table-cell-wrap'>
+                    <figcaption id="classification_train_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="classification_train" class='contour'> </div>
+                </div>
+                <div class='table-cell-wrap'>
+                    <figcaption id="ClassificationLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
+                        The same discrepancy happens in classification tasks. Notice how the contours differ.
+                    </figcaption>
+                </div>
+                <div class="table-cell-wrap">
+                    <figcaption id="classification_test_title" class='little_caption'>
+                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1, w_2})$
+                    </figcaption>
+                    <div id="classification_valid" class='contour'> </div>
+                </div>
+            </div>
+            <button type="button" onclick="classification.start()">Train</button>
+        </div>
+    </figure>
 
     <!--
 
@@ -408,8 +463,9 @@
     Sampling-based inference is good enough for many applications, especially where the sample space is reasonable and achieving an asymptotically exact solution is worth the computational cost. As network and dataset size grow, however, so grows
     the cost of estimating the posterior via sampling. In these cases we can instead solve a distinct but closely related inference problem that admits a learning algorithm very similar algorithm to what we used for standard neural network training;
     we'll pose the problem now and discuss the learning algorithm in the next section.
-    <h3>Modeling the approximate posterior</h3>
     </p>
+
+    <h3>Modeling the approximate posterior</h3>
     <p>
         Generally speaking, when faced with an intractable distribution like the posterior $p(w|D)$, we can appeal to <i>variational methods</i>, which first define a parametrized and tractable stand-in distribution, here called the <i>approximate posterior</i>            $q_\phi(w)$
         <dt-fn>
@@ -723,20 +779,27 @@
     <script src="assets/iterates.js"></script>
     <script src="assets/divergence.js"></script>
     <script src="assets/mlp.js"></script>
+    <script src="assets/cc.js"></script>
+    <script src="assets/classification.js"></script>
     <script src="assets/svi.js"></script>
-    <script src="assets/full_bnn.js"></script>
+    <script src="assets/svitf.js"></script>
+    <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
+    <script src="assets/rwtf.js"></script>
     <script src="assets/randomwalk.js"></script>
     <script src="assets/hamiltonian.js"></script>
     <script>
-        // BNN on top
-        var full_bnn = new full_bnn_view(d3.select("#full_bnn"), d3.select("#bnn_graph"));
+	    tf.setBackend('cpu');
 
-        // NN on sine
-        var mlp = new mlp(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"), d3.select('#nn_graph'));
+        var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
-        // MCMC
-        var rw_train = new randomwalk_view(d3.select("#rw_train_figure"), false);
+        var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
+
+        var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
+
+        var classification = new classification(d3.select("#classification_full"), d3.select("#classification_train"), d3.select("#classification_valid"));
+
+        var rw_train = new rwtf(d3.select("#rw_train_figure"), false);
 
         //DIVERGENCES
         var divergence_curve = divergence(d3.select("#curve"), d3.select("#divergence_ruler"), 0, 1);
@@ -786,8 +849,9 @@
         }
 
         var active_views = {
-            "#bnn_figure" : full_bnn,
-            "#mlp_figure" : mlp,
+            "#hero" : hero,
+            "#cc_train" : cc,
+            "#classification_figure" : classification,
             "#rw_train_figure": rw_train,
             "#svi_figure": svi
         };
