@@ -21,7 +21,7 @@ function changingContour(train_loss_div, valid_loss_div) {
 
 	var train_contour = new Array(param.n_cc * param.m_cc);
     var valid_contour = new Array(param.n_cc * param.m_cc);
-    
+
 	const contourY = tf.range(0, param.m_cc)
 				.expandDims(1)
 				.tile([1, param.n_cc])
@@ -29,7 +29,7 @@ function changingContour(train_loss_div, valid_loss_div) {
 				.squeeze()
 				.mul(tf.scalar((param.loss_domain_y[0] - param.loss_domain_y[1]) / param.m_cc))
 				.add(tf.scalar(param.loss_domain_y[1]));
-				
+
 	const contourX = tf.range(0, param.n_cc)
 				.tile([param.m_cc])
 				.mul(tf.scalar((param.loss_domain_x[1] - param.loss_domain_x[0]) / param.n_cc))
@@ -37,7 +37,7 @@ function changingContour(train_loss_div, valid_loss_div) {
 
     const contourWeights = tf.stack([contourX, contourY]).transpose().reshape([param.n_cc * param.m_cc, 1, 2]);
     setup();
-	
+
 	async function start() {
         training = true;
 		while (training) {
@@ -65,12 +65,12 @@ function changingContour(train_loss_div, valid_loss_div) {
 	function update_contour() {
 		train_contour = tf.tidy(() => {
             return tf.stack(contourWeights.unstack().map(w => {
-				return predict(tf.tensor2d(train_xs), w).squaredDifference(tf.tensor2d(train_ys)).mean();
+				return tf.exp(predict(tf.tensor2d(train_xs), w).squaredDifference(tf.tensor2d(train_ys)).mean().mul(tf.scalar(-1)));
             })).dataSync();
         });
         valid_contour = tf.tidy(() => {
             return tf.stack(contourWeights.unstack().map(w => {
-				return predict(tf.tensor2d(valid_xs), w).squaredDifference(tf.tensor2d(valid_ys)).mean();
+				return tf.exp(predict(tf.tensor2d(valid_xs), w).squaredDifference(tf.tensor2d(valid_ys)).mean().mul(tf.scalar(-1)));
             })).dataSync();
         });
 	}
@@ -119,6 +119,7 @@ function changingContour(train_loss_div, valid_loss_div) {
 			m: param.m_cc,
 			color_scale: color,
 			contour_scale: contours,
+            flip_color: true,
 			id: "#contour"
 		});
 	}

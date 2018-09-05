@@ -271,7 +271,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
                     const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).tanh();
                     const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).tanh();
                     const output = layer3.matMul(layer4Weights).add(layer4Bias);
-                    return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+                    return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).mul(tf.scalar(-1))).dataSync();
                 });
                 valid_contour_data[k] = tf.tidy(() => {
                     const w1 = tf.tensor([
@@ -281,7 +281,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
                     const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).tanh();
                     const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).tanh();
                     const output = layer3.matMul(layer4Weights).add(layer4Bias);
-                    return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+                    return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).mul(tf.scalar(-1))).dataSync();
                 });
             }
         }
@@ -344,6 +344,7 @@ function svi(curve_div, train_loss_div, valid_loss_div, progress_div, graph_div)
             m: param.m,
             color_scale: color,
             contour_scale: contours,
+            flip_color: true,
             id: "#contour"
         });
     }

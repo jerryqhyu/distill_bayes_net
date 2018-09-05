@@ -121,7 +121,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 			plot_contour(valid_loss_plotter, shallow_valid_contour_data,
 				valid_contour_color, valid_contour_scale);
 		}
-		
+
 		plot();
 	}
 
@@ -134,7 +134,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
 					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
 					const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 				deep_valid_contour_data[k] = tf.tidy(() => {
 					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
@@ -142,31 +142,31 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 					const layer2 = layer1.matMul(layer2WeightsDeep).add(layer2BiasDeep).tanh();
 					const layer3 = layer2.matMul(layer3WeightsDeep).add(layer3BiasDeep).tanh();
 					const output = layer3.matMul(layer4WeightsDeep).add(layer4BiasDeep);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 				shallow_train_contour_data[k] = tf.tidy(() => {
 					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(train_xs).matMul(w1).add(layer1BiasShallow).tanh();
 					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 				shallow_valid_contour_data[k] = tf.tidy(() => {
 					const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
 					const layer1 = tf.tensor2d(valid_xs).matMul(w1).add(layer1BiasShallow).tanh();
 					const output = layer1.matMul(layer2WeightsShallow).add(layer2BiasShallow);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 				linear_train_contour_data[k] = tf.tidy(() => {
 					const lw1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR)]]);
 					const lb1 = tf.tensor([inv_y_scale(w_2 * SCALING_FACTOR)]);
 					const output = tf.tensor2d(train_xs).matMul(lw1).add(lb1);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(train_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 				linear_valid_contour_data[k] = tf.tidy(() => {
 					const lw1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR)]]);
 					const lb1 = tf.tensor([inv_y_scale(w_2 * SCALING_FACTOR)]);
 					const output = tf.tensor2d(valid_xs).matMul(lw1).add(lb1);
-					return tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).dataSync();
+					return tf.exp(tf.losses.meanSquaredError(output, tf.tensor2d(valid_ys)).mul(tf.tensor(-1))).dataSync();
 				});
 			}
 		}
@@ -201,6 +201,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 			m: param.m,
 			color_scale: color,
 			contour_scale: contours,
+			flip_color: true,
 			id: "#contour"
 		});
 	}
@@ -279,7 +280,7 @@ function mlptfjs(curve_div, train_loss_div, valid_loss_div) {
 		} else if (radio_button_state() === 'Deep') {
 			layer1WeightsDeep.assign(tf.tensor2d([[inv_x_scale(new_x), inv_y_scale(new_y)]]));
 		} else {
-			layer1WeightsShallow.assign(tf.tensor2d([[inv_x_scale(new_x), inv_y_scale(new_y)]]));			
+			layer1WeightsShallow.assign(tf.tensor2d([[inv_x_scale(new_x), inv_y_scale(new_y)]]));
 		}
 		plot();
 	}

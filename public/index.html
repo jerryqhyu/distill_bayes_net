@@ -10,7 +10,7 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<script src="assets/lib/tfjs@0.11.7"></script>
+<script src="assets/lib/tfjs@0.12.5"></script>
 <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script> -->
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
@@ -110,7 +110,7 @@
  -->
  $$
  \newcommand{\niceblue}[1]{\textcolor{#0074D9}{#1}}
- \newcommand{\nicered}[1]{\textcolor{#FF4136}{#1}}	
+ \newcommand{\nicered}[1]{\textcolor{#FF4136}{#1}}
 \newcommand{\nicegreen}[1]{\textcolor{#2ECC40}{#1}}
 \newcommand{\niceorange}[1]{\textcolor{#FFA50}{#1}}
 \newcommand{\nicepurple}[1]{\textcolor{#B10DC}{#1}}
@@ -118,10 +118,10 @@
 
  $$
  \newcommand{\w}{\niceblue{w}}
- \newcommand{\y}{\nicered{y}}	
-\newcommand{\x}{\nicegreen{x}}	
-\newcommand{\D}{\niceorange{D}}	
-\newcommand{\mylambda}{\nicepurple{\lambda}}	
+ \newcommand{\y}{\nicered{y}}
+\newcommand{\x}{\nicegreen{x}}
+\newcommand{\D}{\niceorange{D}}
+\newcommand{\mylambda}{\nicepurple{\lambda}}
  $$
  <figure id="Ltrain_def_col®®" style="width:530px; height:150px; display:block; margin-left:auto; margin-right:auto; position:relative">
 
@@ -169,7 +169,7 @@
 
   <p>
   We train on the training dataset $D_\text{train}$, but evaluate on the test dataset.
-  As we see in the demo below, the training objective function $\log p(D_\text{train})$ is different from the test objective function $\log p(D_\text{test})$. 
+  As we see in the demo below, the training objective function $\log p(D_\text{train})$ is different from the test objective function $\log p(D_\text{test})$.
   Overfitting happens when we choose network weights $w$ that do well on $\log p(D_\text{train})$ but poorly on $\log p(D_\text{test})$.
   As we add more layers to the network, the problem gets worse.
   </p>
@@ -193,7 +193,7 @@
                 <div class='table-cell-wrap'>
                     <figcaption id="NNLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
                         The neural network objective $L$ is a function of both the weights and the dataset. Here we show $L_{\text{train}}$ and $L_{\text{test}}$ as a function of only two of the neuron weights, with the remaining weights fixed to
-                        pre-trained values. Bluer is better. Use your mouse to change the values of the weights for these neurons, or press 'Train' to automatically learn their values using gradient ascent. Notice how weight values affect both the training
+                        pre-trained values. Redder is better. Use your mouse to change the values of the weights for these neurons. Notice how weight values affect both the training
                         and test objectives (left, right) and the network predictions changes (below).
                     </figcaption>
                 </div>
@@ -257,7 +257,13 @@
     </figure>
 
     <figure id='classification_figure' style="position:relative; width:984px; height:1000px">
-        <div id="classification_full" class='bordered' style="width:500px; height: 500px;"></div>
+        <div id="classification_full" class='bordered' style="width:500px; height: 500px;";></div>
+        <figcaption id="ClassificationTrainCaption" style="position: absolute; width: 250px; left: 530px; top: 115px;">
+            Validation Set
+        </figcaption>
+        <figcaption id="ClassificationValidCaption" style="position: absolute; width: 250px; left: 530px; top: 365px;">
+            Training Set
+        </figcaption>
         <div class="container" style="top:30px;">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
@@ -268,7 +274,7 @@
                 </div>
                 <div class='table-cell-wrap'>
                     <figcaption id="ClassificationLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
-                        Observe how in actual training, the weights are (gradient) descending a constantly changing landscape.
+                        The same discrepancy happens in classification tasks. Notice how the contours differ.
                     </figcaption>
                 </div>
                 <div class="table-cell-wrap">
@@ -779,11 +785,11 @@
     <script src="assets/hamiltonian.js"></script>
     <script>
 	    tf.setBackend('cpu');
-  
+
         var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
         var mlp = new mlptfjs(d3.select("#nn_full"), d3.select("#nn_loss_train"), d3.select("#nn_loss_valid"));
-                
+
         var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
 
         var classification = new classification(d3.select("#classification_full"), d3.select("#classification_train"), d3.select("#classification_valid"));
@@ -840,6 +846,7 @@
         var active_views = {
             "#hero" : hero,
             "#cc_train" : cc,
+            "#classification_figure" : classification,
             "#rw_train_figure": rw_train,
             "#svi_figure": svi
         };
