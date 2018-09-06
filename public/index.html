@@ -4,14 +4,13 @@
 
 <!-- <script src="https://distill.pub/template.v1.js"></script> -->
 <script src="assets/lib/template.v1.js"></script>
-<script src="assets/lib/d3.v4.min.js"></script>
-<script src="assets/lib/d3-contour.v1.min.js"></script>
-<script src="assets/lib/d3-scale-chromatic.v1.min.js"></script>
+<script src="assets/lib/d3.v5.min.js"></script>
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
 <script src="assets/lib/tfjs@0.12.5"></script>
-<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"></script> -->
+
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <link rel="stylesheet" type="text/css" href="assets/widgets.css">
@@ -205,22 +204,16 @@
             </div>
         </div>
 
-        <div class="container" style="height: 250px;">
-            <div style="display: table; height: 100%">
-                <div class='table-cell-wrap'>
-                    <figcaption id="nn_full_title" class='little_caption'>
-                        Prediction function $\hat y_w(x)$. Red dots are training data, green are test.
-                    </figcaption>
-                    <div id="nn_full" class='bordered' style="width:800px; height: 250px;"></div>
-                </div>
-                <div class='table-cell-wrap' style="width: 100px; left: 50px">
-                    <form onclick="mlp.update()" style="top: 50px;">
-                        <input type="radio" name="net_type" value="Deep" checked> Deep<br>
-                        <input type="radio" name="net_type" value="Shallow"> Shallow<br>
-                        <input type="radio" name="net_type" value="Linear"> Linear<br>
-                    </form>
-                </div>
-            </div>
+        <div class="container" style="height: 280px;">
+            <figcaption id="nn_full_title" class='little_caption'>
+                Prediction function $\hat y_w(x)$. Red dots are training data, green are test.
+            </figcaption>
+            <div id="nn_full" class='bordered' style="display: inline-block; width:800px; height: 250px;"></div>
+            <form onclick="mlp.update()" style="display: inline-block;">
+                <input type="radio" name="net_type" value="Deep" checked> Deep<br>
+                <input type="radio" name="net_type" value="Shallow"> Shallow<br>
+                <input type="radio" name="net_type" value="Linear"> Linear<br>
+            </form>
         </div>
     </figure>
 
@@ -255,13 +248,7 @@
     </figure>
 
     <figure id='classification_figure' style="position:relative; width:984px; height:1000px">
-        <div id="classification_full" class='bordered' style="width:500px; height: 500px;";></div>
-        <figcaption id="ClassificationTrainCaption" style="position: absolute; width: 250px; left: 530px; top: 115px;">
-            Validation Set
-        </figcaption>
-        <figcaption id="ClassificationValidCaption" style="position: absolute; width: 250px; left: 530px; top: 365px;">
-            Training Set
-        </figcaption>
+        <div id="classification_full" class='bordered' style="width:450px; height: 450px; display: inline-block;"></div>
         <div class="container" style="top:30px;">
             <div style="display: table; height: 100%">
                 <div class='table-cell-wrap'>
@@ -402,9 +389,9 @@
         \end{aligned}$$
          $$\begin{aligned}
         p(\hat y(x)|D) &= \mathbb{E}_{p(w|d)} \left[ p(\hat y(x)|w) \right]\\
-	&\approx \frac{1}{N} \sum_{i=1}^{n} p(\hat y(x)|w_i) \quad \text{where} \quad w_i \sim p(w|D) 
+	&\approx \frac{1}{N} \sum_{i=1}^{n} p(\hat y(x)|w_i) \quad \text{where} \quad w_i \sim p(w|D)
 	\end{aligned}$$
-        
+
 	The law of large numbers assures us that our both Monte Carlo estimates will eventually converge to the true quantities given sufficient number of samples, but in this naive setup $N$ will need to be huge due to the large dimensionality of $w$.
 
     </p>
@@ -784,8 +771,8 @@
     <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
     <script src="assets/rwtf.js"></script>
-    <script src="assets/randomwalk.js"></script>
-    <script src="assets/hamiltonian.js"></script>
+    <!-- <script src="assets/randomwalk.js"></script> -->
+    <!-- <script src="assets/hamiltonian.js"></script> -->
     <script>
 	    tf.setBackend('cpu');
 

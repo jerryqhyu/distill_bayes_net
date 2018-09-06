@@ -20,13 +20,13 @@ var param = {
     divergence_curve_domain_y: [
         -0.15, 0.5
     ],
-    classification_domain_x:[-2,2],
-    classification_domain_y:[-1,1],
+    classification_domain_x:[-1.5, 2.5],
+    classification_domain_y:[-0.2, 1.2],
     classification_loss_domain_x: [
-        -40, 120
+        -100, 300
     ],
     classification_loss_domain_y: [
-        -120, 40
+        -300, 100
     ],
     curve_domain_x: [
         -5, 5

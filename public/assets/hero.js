@@ -75,7 +75,7 @@ function hero(curve_div, graph_div) {
                     tf.losses.meanSquaredError(predict(train_x, s[2]), train_y),
                     tf.losses.meanSquaredError(predict(train_x, s[3]), train_y),
                     tf.losses.meanSquaredError(predict(train_x, s[4]), train_y)
-                ]).sum().div(tf.scalar(5)).div(tf.scalar(1e-5));
+                ]).sum().div(tf.scalar(5)).div(tf.scalar(1e-6));
                 const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
                 return lowerBound;
             });
