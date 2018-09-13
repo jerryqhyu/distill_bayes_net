@@ -69,11 +69,20 @@ function rwtf(curve_div, use_validation_data) {
     }
 
     function propose(last, std) {
-        return tf.tidy(() => {
+        var norm = 0;
+        var p = tf.tidy(() => {
             return last.map(w => {
-                return w.add(tf.randomNormal(w.shape, 0, std));
+                const wp = tf.randomNormal(w.shape, 0, std);
+                norm += wp.pow(2).sum();
+                return wp;
             });
         });
+        
+        for (var i = 0; i < step_count; i++) {
+			p = increment(p, scale(training_grads(q), -param.step_size / 2));
+			q = increment(q, scale(p, param.step_size));
+			p = increment(p, scale(training_grads(q), -param.step_size / 2));
+		}
     }
 
 	function predict(ws, x) {
