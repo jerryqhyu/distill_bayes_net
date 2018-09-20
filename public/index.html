@@ -9,7 +9,7 @@
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
 <!-- <script src="assets/lib/tfjs@0.12.5"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@0.12.18"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@0.13.0"></script>
 
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
@@ -288,7 +288,7 @@
         </div>
     </figure>
 
-    <figure id='classification_figure' style="position:relative; width:984px; height:1000px">
+    <figure id='classification_figure' style="position:relative; width:984px; height:820px">
         <div id="classification_full" class='bordered' style="width:450px; height: 450px; display: inline-block;"></div>
         <div class="container" style="top:30px;">
             <div style="display: table; height: 100%">
@@ -316,10 +316,11 @@
         </div>
     </figure>
 
-    <figure id='bnnmnist_figure' style="position:relative; width:984px; height:1000px">
-        <div id="bnnmnist_full" class='bordered' style="width:450px; height: 450px; display: inline-block;"></div>
-        <button type="button" onclick="mnist.start()">Train</button>
-        <button type="button" onclick="mnist.sample()">Sample</button>
+    <figure id='bnnmnist_figure' style="position:relative; width:984px; height:480px">
+        <div id="bnnmnist_full" class='bordered' style="width:280px; height: 280px; display: inline-block;"></div>
+        <div id="bnnmnist_pred"></div>
+        <button type="button" onclick="mnist.start()" style="width:50px; height: 20px; display: inline-block;">Train</button>
+        <button type="button" onclick="mnist.sample()" style="width:50px; height: 20px; display: inline-block;">Sample</button>
     </figure>
 
     <!--
@@ -996,7 +997,7 @@
 
         var classification = new classification(d3.select("#classification_full"), d3.select("#classification_train"), d3.select("#classification_valid"));
 
-        var mnist = new bnnMNIST(d3.select("#bnnmnist_figure"));
+        var mnist = new bnnMNIST(d3.select("#bnnmnist_full"), d3.select("#bnnmnist_pred"));
 
         var rw_train = new rwtf(d3.select("#rw_train_figure"), false);
 
