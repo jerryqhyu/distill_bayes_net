@@ -6,20 +6,20 @@ function bnnMNIST(train_loss_div, pred_div) {
     const maxLogSigma = -0.5;
     const data = new mnistData();
 
-    const layer1WeightsMu = tf.variable(tf.randomNormal([784, 8], 0, 0.05));
+    const layer1WeightsMu = tf.variable(tf.randomNormal([784, 256], 0, 0.025));
     const layer1WeightsLogSigma = tf.variable(tf.randomUniform(layer1WeightsMu.shape, minLogSigma, maxLogSigma));
-    const layer1BiasMu = tf.variable(tf.zeros([8]));
+    const layer1BiasMu = tf.variable(tf.zeros([256]));
     const layer1BiasLogSigma = tf.variable(tf.randomUniform(layer1BiasMu.shape, minLogSigma, maxLogSigma));
-    const layer2WeightsMu = tf.variable(tf.randomNormal([8, 8], 0, 0.05));
+    const layer2WeightsMu = tf.variable(tf.randomNormal([256, 256], 0, 0.025));
     const layer2WeightsLogSigma = tf.variable(tf.randomUniform(layer2WeightsMu.shape, minLogSigma, maxLogSigma));
-    const layer2BiasMu = tf.variable(tf.zeros([8]));
+    const layer2BiasMu = tf.variable(tf.zeros([256]));
     const layer2BiasLogSigma = tf.variable(tf.randomUniform(layer2BiasMu.shape, minLogSigma, maxLogSigma));
-    const layer3WeightsMu = tf.variable(tf.randomNormal([8, 10], 0, 0.05));
+    const layer3WeightsMu = tf.variable(tf.randomNormal([256, 10], 0, 0.025));
     const layer3WeightsLogSigma = tf.variable(tf.randomUniform(layer3WeightsMu.shape, minLogSigma, maxLogSigma));
     const layer3BiasMu = tf.variable(tf.zeros([10]));
     const layer3BiasLogSigma = tf.variable(tf.randomUniform(layer3BiasMu.shape, minLogSigma, maxLogSigma));
 
-    const optimizer = tf.train.adam(param.learning_rate / 5);
+    const optimizer = tf.train.adam(0.1);
 
     const canvas = train_loss_div.append("canvas")
                     .attr("width", 280)
@@ -29,10 +29,10 @@ function bnnMNIST(train_loss_div, pred_div) {
   
 
     async function start() {
-        pred_div.text("training");
         await data.load();
+        sample();
         training = true;
-        for (var i = 0; i < 500; i++) {
+        for (var i = 0; i < 100; i++) {
             await train();
         }
         pred_div.text("done");
@@ -44,14 +44,19 @@ function bnnMNIST(train_loss_div, pred_div) {
             const batch = data.nextTestBatch(1);
             const image = batch.xs.slice([0, 0], [1, batch.xs.shape[1]]);
             draw(image.flatten(), canvas.node().getContext("2d"));
-            var s = tf.randomUniform([5, 1], -100, 100).dataSync();
+            var s = tf.randomUniform([10, 1], -100, 100).dataSync();
             const e1 = predict(batch.xs, s[0]);
             const e2 = predict(batch.xs, s[1]);
             const e3 = predict(batch.xs, s[2]);
             const e4 = predict(batch.xs, s[3]);
             const e5 = predict(batch.xs, s[4]);
-            const pred = tf.stack([e1, e2, e3, e4, e5]).round().mul(tf.range(0, 10, 1)).squeeze().sum(1);
-            pred_div.text(pred.dataSync());
+            const e6 = predict(batch.xs, s[5]);
+            const e7 = predict(batch.xs, s[6]);
+            const e8 = predict(batch.xs, s[7]);
+            const e9 = predict(batch.xs, s[8]);
+            const e10 = predict(batch.xs, s[9]);
+            const pred = tf.stack([e1, e2, e3, e4, e5, e6, e7, e8, e9, e10]).argMax(1).sum(1);
+            pred_div.text("true value: " + batch.labels.argMax(1).dataSync() + "\n Samples:" + pred.dataSync());
         });
     }
 
@@ -94,20 +99,13 @@ function bnnMNIST(train_loss_div, pred_div) {
     async function train() {
         optimizer.minimize(() => {
             return tf.tidy(() => {
-                const batch = data.nextTrainBatch(8);
-                var s = tf.randomUniform([10, 1], -100, 100).dataSync();
+                const batch = data.nextTrainBatch(32);
+                var s = tf.randomUniform([3, 1], -100, 100).dataSync();
                 const logLik = tf.stack([
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[0])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[1])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[2])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[3])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[4])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[5])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[6])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[7])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[8])).mean(),
-                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[9])).mean(),
-                ]).sum().div(tf.scalar(1e-10));
+                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[0])),
+                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[1])),
+                    tf.losses.softmaxCrossEntropy(batch.labels, predict(batch.xs, s[2])),
+                ]).sum().div(tf.scalar(1e-15));
                 const lowerBound = logLik.add(entropy().mul(tf.scalar(-1)));
                 lowerBound.print();
                 return lowerBound;
