@@ -8,8 +8,8 @@
 <script src="assets/lib/katex.min.js"></script>
 <script src="assets/lib/auto-render.min.js"></script>
 <script src="assets/lib/pseudocode.min.js"></script>
-<!-- <script src="assets/lib/tfjs@0.12.5"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@0.13.0"></script>
+<script src="assets/lib/tfjs@0.12.5"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@0.13.0"></script> -->
 
 <link rel="stylesheet" type="text/css" href="assets/lib/katex.min.css">
 <link rel="stylesheet" type="text/css" href="styles.css">
@@ -290,30 +290,7 @@
 
     <figure id='classification_figure' style="position:relative; width:984px; height:820px">
         <div id="classification_full" class='bordered' style="width:450px; height: 450px; display: inline-block;"></div>
-        <div class="container" style="top:30px;">
-            <div style="display: table; height: 100%">
-                <div class='table-cell-wrap'>
-                    <figcaption id="classification_train_title" class='little_caption'>
-                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{train}}},\textcolor{#0074D9}{w_1,
-                        w_2})$
-                    </figcaption>
-                    <div id="classification_train" class='contour'> </div>
-                </div>
-                <div class='table-cell-wrap'>
-                    <figcaption id="ClassificationLosscaption" style="position: relative; width: 250px; left: 30px; right: 30px; top: 10px;">
-                        The same discrepancy happens in classification tasks. Notice how the contours differ.
-                    </figcaption>
-                </div>
-                <div class="table-cell-wrap">
-                    <figcaption id="classification_test_title" class='little_caption'>
-                        Training log likelihood $\log p({\textcolor{#FFA500}{D_\text{test}}},\textcolor{#0074D9}{w_1,
-                        w_2})$
-                    </figcaption>
-                    <div id="classification_valid" class='contour'> </div>
-                </div>
-            </div>
-            <button type="button" onclick="classification.start()">Train</button>
-        </div>
+        <button type="button" onclick="classification.start()">Train</button>
     </figure>
 
     <figure id='bnnmnist_figure' style="position:relative; width:984px; height:480px">
@@ -984,10 +961,8 @@
     <script src="assets/hero.js"></script>
     <script src="assets/exact_inference.js"></script>
     <script src="assets/rwtf.js"></script>
-    <!-- <script src="assets/randomwalk.js"></script> -->
-    <!-- <script src="assets/hamiltonian.js"></script> -->
     <script>
-        tf.setBackend('cpu');
+        // tf.setBackend('cpu');
 
         var hero = new hero(d3.select("#hero"), d3.select("#bnn_graph"));
 
@@ -995,7 +970,7 @@
 
         var cc = new changingContour(d3.select("#cc_train"), d3.select("#cc_valid"));
 
-        var classification = new classification(d3.select("#classification_full"), d3.select("#classification_train"), d3.select("#classification_valid"));
+        var classification = new classification(d3.select("#classification_full"));
 
         var mnist = new bnnMNIST(d3.select("#bnnmnist_full"), d3.select("#bnnmnist_pred"));
 

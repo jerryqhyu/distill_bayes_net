@@ -1,39 +1,31 @@
-function classification(curve_div, train_loss_div, valid_loss_div) {
-    this.div_id = train_loss_div.attr('id');
+function classification(curve_div) {
+    this.div_id = curve_div.attr('id');
     var training = false;
 
-    const optimizer = tf.train.adam(param.learning_rate * 50);
+    const optimizer = tf.train.adam(param.learning_rate);
 
 	// 4 layer net
-	const layer1Weights = tf.variable(tf.tensor2d([[100, 0]]));
-	const layer1Bias = tf.randomNormal([2], 0, 0.5, 'float32', 2);
-	const layer2Weights = tf.randomNormal([2, 4], 0, 0.5, 'float32', 2);
-	const layer2Bias = tf.randomNormal([4], 0, 0.5, 'float32', 2);
-	const layer3Weights = tf.randomNormal([4, 4], 0, 0.5, 'float32', 2);
-	const layer3Bias = tf.randomNormal([4], 0, 0.5, 'float32', 2);
-	const layer4Weights = tf.randomNormal([4, 2], 0, 0.5, 'float32', 2);
-    const layer4Bias = tf.randomNormal([2], 0, 0.5, 'float32', 2);
+	const layer1Weights = tf.variable(tf.tensor2d([[0, 0]]));
+	const layer1Bias = tf.variable(tf.randomNormal([2], 0, 0.5, 'float32', 2));
+	const layer2Weights = tf.variable(tf.randomNormal([2, 16], 0, 0.5, 'float32', 2));
+	const layer2Bias = tf.variable(tf.randomNormal([16], 0, 0.5, 'float32', 2));
+	const layer3Weights = tf.variable(tf.randomNormal([16, 16], 0, 0.5, 'float32', 2));
+	const layer3Bias = tf.variable(tf.randomNormal([16], 0, 0.5, 'float32', 2));
+	const layer4Weights = tf.variable(tf.randomNormal([16, 2], 0, 0.5, 'float32', 2));
+    const layer4Bias = tf.variable(tf.randomNormal([2], 0, 0.5, 'float32', 2));
 
-    var classification_train_points = tf.randomNormal([param.classification_num_train_samples, 1], 0, 0.1, 'float32', 9).add(tf.tensor1d([-0.5])).concat(tf.randomNormal([param.classification_num_train_samples, 1], 0, 0.1, 'float32', 9).add(tf.tensor1d([1.5])));
-    var classification_train_labels = tf.oneHot(tf.tile(tf.tensor2d([[0,1]], [1,2], 'int32'), [param.classification_num_train_samples,1]).transpose().reshape([1, param.classification_num_train_samples*2]).squeeze(), 2).cast('float32');
-
-    var classification_valid_points = tf.randomNormal([param.classification_num_valid_samples, 1], 0, 0.55, 'float32', 687).add(tf.tensor1d([-0.5])).concat(tf.randomNormal([param.classification_num_valid_samples, 1], 0, 0.55, 'float32', 687).add(tf.tensor1d([1.5])));
-    var classification_valid_labels = tf.oneHot(tf.tile(tf.tensor2d([[0,1]], [1,2], 'int32'), [param.classification_num_valid_samples,1]).transpose().reshape([1,param.classification_num_valid_samples*2]).squeeze(), 2).cast('float32');
-
+    var classification_train_points = tf.randomNormal([param.classification_num_train_samples, 1], 0, 0.1, 'float32', 9).add(tf.tensor1d([-0.5]))
+                                    .concat(tf.randomNormal([param.classification_num_train_samples, 1], 0, 0.1, 'float32', 9).add(tf.tensor1d([1.5])))
+                                    .concat(tf.randomNormal([param.classification_num_train_samples, 1], 0, 0.1, 'float32', 9).add(tf.tensor1d([2])));
+    var classification_train_labels = tf.oneHot(tf.tile(tf.tensor2d([[0,1]], [1,2], 'int32'), [param.classification_num_train_samples,1])
+                            .transpose().reshape([1, param.classification_num_train_samples*2]).squeeze(), 2).concat(tf.tensor2d([[1,0],[1,0],[1,0],[1,0],[1,0]])).cast('float32');
+                            classification_train_labels.print();
     var curve_plotter = new Plotter(curve_div, param.classification_domain_x, param.classification_domain_y, false, false);
-    var train_loss_plotter = new Plotter(train_loss_div, param.classification_loss_domain_x, param.classification_loss_domain_y, true, true);
-    var valid_loss_plotter = new Plotter(valid_loss_div, param.classification_loss_domain_x, param.classification_loss_domain_y, true, true);
 
 	const allX = tf.range(0, 100)
 				.mul(tf.scalar((param.classification_domain_x[1] - param.classification_domain_x[0]) / 100))
 				.add(tf.scalar(param.classification_domain_x[0]));
     const allInput = allX.transpose().reshape([100, 1]);
-
-    let SCALING_FACTOR = train_loss_plotter.height / param.n;
-    var inv_x_scale = d3.scaleLinear().domain([0, train_loss_plotter.width]).range(param.classification_loss_domain_x);
-    inv_x_scale.clamp(true);
-    var inv_y_scale = d3.scaleLinear().domain([train_loss_plotter.height, 0]).range(param.classification_loss_domain_y);
-    inv_y_scale.clamp(true);
 
     async function start() {
         training = true;
@@ -60,6 +52,18 @@ function classification(curve_div, train_loss_div, valid_loss_div) {
         });
     }
 
+    function l2_loss() {
+        return tf.tidy(() => {
+            const l1 = layer1Weights.pow(2).sum().add(layer1Bias.pow(2).sum());
+            const l2 = layer2Weights.pow(2).sum().add(layer2Bias.pow(2).sum());
+            const l3 = layer3Weights.pow(2).sum().add(layer3Bias.pow(2).sum());
+            const l4 = layer4Weights.pow(2).sum().add(layer4Bias.pow(2).sum());
+            const total = l1.add(l2).add(l3).add(l4).mul(0.01);
+            total.print();
+            return total;
+        });
+    }
+
     async function train() {
         optimizer.minimize(() => {
             return tf.tidy(() => {
@@ -79,17 +83,6 @@ function classification(curve_div, train_loss_div, valid_loss_div) {
         curve_plotter.add_group("train_class2");
         curve_plotter.add_group("valid_class1");
         curve_plotter.add_group("valid_class2");
-
-        train_loss_plotter.add_group("contour");
-        valid_loss_plotter.add_group("contour");
-
-        train_loss_plotter.add_group("pts");
-        valid_loss_plotter.add_group("pts");
-
-        train_loss_plotter.add_x_axis_label("w1");
-        train_loss_plotter.add_y_axis_label("w2");
-        valid_loss_plotter.add_x_axis_label("w1");
-        valid_loss_plotter.add_y_axis_label("w2");
         initial_plot();
     }
 
@@ -97,20 +90,13 @@ function classification(curve_div, train_loss_div, valid_loss_div) {
     function plot() {
         plot_prob();
         plot_pred();
-        plot_weight();
     }
 
     function plot_train_and_valid_points() {
-        var train_class1 = tf.tidy(() => {return classification_train_points.slice([0, 0], [param.classification_num_train_samples, 1]).unstack().map(x => {
+        var train_class1 = tf.tidy(() => {return classification_train_points.slice([0, 0], [param.classification_num_train_samples, 1]).concat(classification_train_points.slice([param.classification_num_train_samples*2, 0], [param.classification_num_train_samples, 1])).unstack().map(x => {
             return {x: x.dataSync()[0], y: 0};
         })});
         var train_class2 = tf.tidy(() => {return classification_train_points.slice([param.classification_num_train_samples, 0], [param.classification_num_train_samples, 1]).unstack().map(x => {
-            return {x: x.dataSync()[0], y: 1};
-        })});
-        var valid_class1 = tf.tidy(() => {return classification_valid_points.slice([0, 0], [param.classification_num_valid_samples, 1]).unstack().map(x => {
-            return {x: x.dataSync()[0], y: 0};
-        })});
-        var valid_class2 = tf.tidy(() => {return classification_valid_points.slice([param.classification_num_valid_samples, 0], [param.classification_num_valid_samples, 1]).unstack().map(x => {
             return {x: x.dataSync()[0], y: 1};
         })});
         curve_plotter.plot_points(train_class1, {
@@ -120,26 +106,12 @@ function classification(curve_div, train_loss_div, valid_loss_div) {
             opacity: 1,
             id: "#train_class1"
         });
-        curve_plotter.plot_points(valid_class1, {
-            stroke: "white",
-            color: "red",
-            size: 4,
-            opacity: 0.1,
-            id: "#valid_class1"
-        });
         curve_plotter.plot_points(train_class2, {
             stroke: "white",
             color: "blue",
             size: 4,
             opacity: 1,
             id: "#train_class2"
-        });
-        curve_plotter.plot_points(valid_class2, {
-            stroke: "white",
-            color: "blue",
-            size: 4,
-            opacity: 0.2,
-            id: "#valid_class2"
         });
     }
 
@@ -171,70 +143,9 @@ function classification(curve_div, train_loss_div, valid_loss_div) {
         });
     }
 
-    function plot_weight() {
-        var p = [{
-            x: layer1Weights.dataSync()[0],
-            y: layer1Weights.dataSync()[1],
-        }];
-
-        train_loss_plotter.plot_points(p, {
-            stroke: "black",
-            color: "darkslategray",
-            size: 5,
-            opacity: 1,
-            transition: 25,
-        });
-        valid_loss_plotter.plot_points(p, {
-            stroke: "black",
-            color: "darkslategray",
-            size: 5,
-            opacity: 1,
-            transition: 25,
-        });
-    }
-
     function initial_plot() {
-        plot_contours();
         plot_train_and_valid_points();
         plot();
-    }
-
-    function plot_contours() {
-        var train_contour_data = new Array(param.n * param.m);
-        var valid_contour_data = new Array(param.n * param.m);
-        for (var w_2 = 0, k = 0; w_2 < param.m; w_2++) {
-            for (var w_1 = 0; w_1 < param.n; w_1++, k++) {
-                train_contour_data[k] = tf.tidy(() => {
-                    const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
-                    const layer1 = classification_train_points.matMul(w1).add(layer1Bias).relu();
-                    const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).relu();
-                    const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).relu();
-                    const output = layer3.matMul(layer4Weights).add(layer4Bias).softmax();
-                    return tf.exp(tf.losses.meanSquaredError(output, classification_train_labels).mean().mul(tf.scalar(-1))).dataSync();
-                });
-                valid_contour_data[k] = tf.tidy(() => {
-                    const w1 = tf.tensor([[inv_x_scale(w_1 * SCALING_FACTOR), inv_y_scale(w_2 * SCALING_FACTOR)]]);
-                    const layer1 = classification_valid_points.matMul(w1).add(layer1Bias).relu();
-                    const layer2 = layer1.matMul(layer2Weights).add(layer2Bias).relu();
-                    const layer3 = layer2.matMul(layer3Weights).add(layer3Bias).relu();
-                    const output = layer3.matMul(layer4Weights).add(layer4Bias).softmax();
-                    return tf.exp(tf.losses.meanSquaredError(output, classification_valid_labels).mean().mul(tf.scalar(-1))).dataSync();
-                });
-            }
-        }
-        plot_contour(train_loss_plotter, train_contour_data, classification_contour_loss_color, classification_contour_loss_scale);
-        plot_contour(valid_loss_plotter, valid_contour_data, classification_contour_loss_color, classification_contour_loss_scale);
-    }
-
-    function plot_contour(plotter, data, color, contours) {
-        plotter.plot_contour(data, {
-            n: param.n,
-            m: param.m,
-            color_scale: color,
-            contour_scale: contours,
-            flip_color: true,
-            id: "#contour"
-        });
     }
 
     return {
